@@ -17,6 +17,11 @@ service cloud.firestore {
       allow read: if isPM() || (signedIn() && email == em());
       allow write: if isPM();
     }
+    // username -> internal sign-in id. Readable before sign-in so usernames work.
+    match /logins/{username} {
+      allow read: if true;
+      allow write: if isPM();
+    }
     match /config/{doc} {
       allow read: if isPM() || isSup();
       allow write: if isPM();

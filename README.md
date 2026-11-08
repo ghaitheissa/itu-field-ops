@@ -19,8 +19,8 @@ No staff data is kept in this repository. The PM imports the Excel file from ins
 5. Tick "Enforce HTTPS" when it becomes available.
 
 ## 3. First day
-1. The PM signs in with "First time? Create password", using the username in `config.js`.
+1. The PM opens the site, types the username from `config.js` and a password, and taps "Project Manager: first sign-in".
 2. In Data & import, upload the staff Excel file and confirm.
-3. In Data & import > Supervisor accounts, give each supervisor a username, for example `sup01`.
-4. Each supervisor opens the site and uses "First time? Create password" with that username. They see only their own team, and can only record attendance for today.
+3. In Data & import > Supervisor accounts, type a username and password for each supervisor and tap Set password. Use the same button to change a password later.
+4. Each supervisor signs in with the username and password you gave them. They see only their own team, and can only record attendance for today.
 5. In Staff & assignment, filter Role = Marshal and Assignment = Not assigned. Select marshals, choose supervisor, department and shift, then Apply.

@@ -165,7 +165,7 @@ const AR={
 'Departments':'الأقسام','Shifts':'الورديات','Add':'إضافة','Grace period (min)':'فترة السماح (دقيقة)','Settings':'الإعدادات','Start':'البداية','End':'النهاية',
 'Live vs demo':'الفعلي مقابل التجريبي','Edit attendance':'تعديل الحضور','Clear record':'حذف السجل','Supervisors':'المشرفون','Marshals':'المارشال','No marshals are assigned to you yet.':'لا يوجد مارشال موزَّع عليك بعد.',
 'Sample staff list (68)':'قائمة موظفين نموذجية (68)','Import your Excel file in Data & import before go-live.':'استورد ملف Excel من صفحة البيانات قبل التشغيل الفعلي.','Demo scenario loaded':'تم تحميل سيناريو تجريبي','Generated attendance and incidents are fake. Reset before go-live.':'الحضور والحوادث المولّدة وهمية. أعد الضبط قبل التشغيل الفعلي.',
-'Language':'اللغة','Nationality':'الجنسية','Sign out':'تسجيل خروج','Supervisor accounts':'حسابات المشرفين','Email':'البريد الإلكتروني','Username':'اسم المستخدم','Present':'حاضر','Nothing matches these filters.':'لا توجد نتائج لهذه الفلاتر.','No incidents recorded.':'لا توجد حوادث مسجلة.','No shift changes recorded yet.':'لا توجد تغييرات ورديات بعد.',
+'Language':'اللغة','Nationality':'الجنسية','Sign out':'تسجيل خروج','Supervisor accounts':'حسابات المشرفين','Email':'البريد الإلكتروني','Username':'اسم المستخدم','New password':'كلمة سر جديدة','Set password':'تعيين كلمة السر','Active':'مفعّل','Remove':'إزالة','Account ready':'الحساب جاهز','Present':'حاضر','Nothing matches these filters.':'لا توجد نتائج لهذه الفلاتر.','No incidents recorded.':'لا توجد حوادث مسجلة.','No shift changes recorded yet.':'لا توجد تغييرات ورديات بعد.',
 'Only staff who already have a shift appear here. First-time shift assignment is done in Staff & assignment.':'يظهر هنا فقط من لديه وردية. التوزيع الأول للوردية يتم من صفحة الموظفين والتوزيع.',
 'I confirm Rabea approved this change by email.':'أؤكد أن ربيع وافق على هذا التغيير عبر البريد.','Staff member':'الموظف','Saved':'تم الحفظ','Day summary':'ملخص اليوم','Employees':'الموظفون','Rows shown':'الصفوف المعروضة',
 };
@@ -213,7 +213,7 @@ let S=LIVE?{...freshState([],'live'),audit:[]}:(Store.load()||freshState(sampleS
 const save=()=>LIVE?Cloud.sync():Store.save(S);
 /* Stable stringify so local state and Firestore docs compare equal regardless of key order */
 const stable=v=>JSON.stringify(v,(k,x)=>x&&typeof x==='object'&&!Array.isArray(x)?Object.keys(x).sort().reduce((o,kk)=>(x[kk]!==undefined&&(o[kk]=x[kk]),o),{}):x);
-const Cloud={db:null,auth:null,user:null,email:'',synced:{},unsubs:[],loaded:new Set(),access:new Map(),priv:new Map(),
+const Cloud={db:null,auth:null,user:null,email:'',synced:{},unsubs:[],loaded:new Set(),access:new Map(),logins:new Map(),priv:new Map(),
   docs(){return{
     config:new Map([['main',{departments:S.departments,shifts:S.shifts,settings:S.settings,source:S.source}]]),
     staff:new Map(S.staff.map(({qid,...s})=>[s.id,s])),
@@ -243,7 +243,8 @@ const Cloud={db:null,auth:null,user:null,email:'',synced:{},unsubs:[],loaded:new
     this.watch(pm?db.collection('attendance'):db.collection('attendance').where('sup','==',me),'attendance',m=>{S.att={};for(const v of m.values()){const{date,staffId,sup,...r}=v;S.att[date+'|'+staffId]=r}});
     this.watch(pm?db.collection('incidents'):db.collection('incidents').where('byId','==',me),'incidents',m=>{S.incidents=[...m.values()]});
     if(pm){this.watch(db.collection('audit').orderBy('ts','desc').limit(3000),'audit',m=>{S.audit=[...m.values()]});
-      this.unsubs.push(db.collection('access').onSnapshot(s=>{this.access=new Map();s.forEach(d=>this.access.set(d.id,d.data()));scheduleRender()}))}
+      this.unsubs.push(db.collection('access').onSnapshot(s=>{this.access=new Map();s.forEach(d=>this.access.set(d.id,d.data()));scheduleRender()}));
+      this.unsubs.push(db.collection('logins').onSnapshot(s=>{this.logins=new Map();s.forEach(d=>this.logins.set(d.id,d.data()));scheduleRender()}))}
   },
   afterLoad(){ /* first PM sign-in on an empty database: create settings */
     if(ui.role==='pm'&&this.loaded.has('config')&&this.loaded.has('staff')&&!this.synced.config.has('main')&&!this.initDone){this.initDone=true;
@@ -359,7 +360,7 @@ function render(){
       <div class="ctrls">
         ${LIVE?`<span class="live-tag">● Live</span>`:`<button class="demo-tag" data-act="legend" title="${t('Live vs demo')}">● ${t('Demo mode')}</button>`}
         <label class="small muted" style="display:flex;gap:6px;align-items:center">${t('Operating day')}<select id="day-sel" data-act-change="day">${dayOptions(ui.day)}</select></label>
-        ${LIVE?`<span class="small muted">${esc(ui.role==='pm'?t('Project Manager'):supName(ui.role))} · ${esc(userLabel(Cloud.email))}</span><button class="btn sm" data-act="signout">${t('Sign out')}</button>`
+        ${LIVE?`<span class="small muted">${esc(ui.role==='pm'?t('Project Manager'):supName(ui.role))} · ${esc(Cloud.uname||userLabel(Cloud.email))}</span><button class="btn sm" data-act="signout">${t('Sign out')}</button>`
         :`<label class="small muted" style="display:flex;gap:6px;align-items:center">${t('Signed in as')}<select id="role-sel" data-act-change="role" aria-label="Demo sign-in">
           ${opt('pm',t('Project Manager'),ui.role)}<optgroup label="${t('Supervisors')}">${sups().map(s=>opt(s.id,s.name+' ('+t('Supervisor')+')',ui.role)).join('')}</optgroup></select></label>`}
         <button class="btn sm" data-act="lang" aria-label="${t('Language')}">${ui.lang==='ar'?'English':'العربية'}</button>
@@ -617,11 +618,33 @@ VIEWS.data=()=>{const p=ui.importPreview;return `<h2>${t('Data & import')}</h2>
   <section class="panel" style="display:flex;flex-direction:column;gap:10px"><div class="row between"><h3>${t('Audit log')}</h3><div class="row"><button class="btn sm" data-act="audit-xlsx">${t('Export Excel')}</button><button class="btn sm" data-act="audit-pdf">${t('Export PDF')}</button></div></div>
    <div class="filters">${fInp('audit','q','Search name or ID','search')}${fSel('audit','type','Type',opt('',t('All'),ui.f.audit.type)+[...new Set(S.audit.map(a=>a.type))].map(x=>opt(x,x,ui.f.audit.type)).join(''))}</div>
    <div id="res-audit">${RES.audit()}</div></section>`};
-function accountsPanel(){const byStaff=new Map([...Cloud.access].map(([em,a])=>[a.staffId,em]));
+function accountsPanel(){const userOf=new Map([...Cloud.logins].map(([u,l])=>[l.staffId,u]));
   return `<section class="panel" style="display:flex;flex-direction:column;gap:12px"><div class="row between"><h3>${t('Supervisor accounts')}</h3><span class="live-tag">Live</span></div>
-   <div class="small muted">${ui.lang==='ar'?'أعطِ كل مشرف اسم مستخدم. المشرف يفتح الموقع ويختار "First time? Create password" بنفس الاسم، وبعدها يرى فريقه فقط. لإعادة تعيين كلمة السر احذف المستخدم من Firebase > Authentication ليُنشئ كلمة جديدة.':'Give each supervisor a username. The supervisor opens the site, taps "First time? Create password" with that username, and then sees only their own team. To reset a forgotten password, delete the user in Firebase console > Authentication and they create a new one.'} Project Manager: ${esc(PM_EMAILS.map(userLabel).join(', '))}</div>
-   ${sups().length?`<div class="tbl-wrap"><table><thead><tr><th>${t('ID')}</th><th>${t('Name')}</th><th>${t('Username')}</th><th></th></tr></thead><tbody>${sups().map(s=>`<tr><td class="mono">${esc(s.code)}</td><td>${esc(s.name)}</td><td><input type="text" autocomplete="off" autocapitalize="none" spellcheck="false" id="acc-${s.id}" value="${esc(userLabel(byStaff.get(s.id)||''))}" placeholder="e.g. ${esc(s.code.toLowerCase())}" style="min-width:200px"></td><td><button class="btn sm" data-act="acc-save" data-id="${s.id}">${t('Save')}</button></td></tr>`).join('')}</tbody></table></div>`:`<div class="empty">${ui.lang==='ar'?'استورد ملف الموظفين أولاً.':'Import the staff file first.'}</div>`}
+   <div class="small muted">${ui.lang==='ar'?'اكتب اسم مستخدم وكلمة سر لكل مشرف واكبس Set password. لتغيير كلمة السر لاحقاً اكتب كلمة جديدة واكبس الزر نفسه، فتتوقف الكلمة القديمة فوراً. كل مشرف يرى فريقه فقط.':'Type a username and password for each supervisor, then tap Set password. To change a password later, type a new one and tap the same button; the old password stops working at once. Each supervisor sees only their own team.'} Project Manager: ${esc(PM_EMAILS.map(userLabel).join(', '))}</div>
+   ${sups().length?`<div class="tbl-wrap"><table><thead><tr><th>${t('ID')}</th><th>${t('Name')}</th><th>${t('Username')}</th><th>${t('New password')}</th><th></th></tr></thead><tbody>${sups().map(s=>{const u=userOf.get(s.id)||'';return `<tr><td class="mono">${esc(s.code)}</td><td>${esc(s.name)}</td>
+     <td><input type="text" autocomplete="off" autocapitalize="none" spellcheck="false" id="acc-${s.id}" value="${esc(u)}" placeholder="e.g. ${esc(s.code.toLowerCase())}" style="width:150px"></td>
+     <td><input type="text" autocomplete="off" autocapitalize="none" spellcheck="false" id="pw-${s.id}" placeholder="${u?'••••••':'min 6 characters'}" style="width:150px"></td>
+     <td><div class="row"><button class="btn sm ${u?'':'pri'}" data-act="acc-save" data-id="${s.id}">${t('Set password')}</button>${u?`<span class="chip c-on_time">${t('Active')}</span><button class="btn sm ghost" data-act="acc-del" data-id="${s.id}">${t('Remove')}</button>`:''}</div></td></tr>`}).join('')}</tbody></table></div>`:`<div class="empty">${ui.lang==='ar'?'استورد ملف الموظفين أولاً.':'Import the staff file first.'}</div>`}
   </section>`}
+async function setAccount(id){const s=byId(id),raw=($('#acc-'+id).value||'').trim().toLowerCase(),pw=$('#pw-'+id).value;
+  if(!/^[a-z0-9._-]{3,30}$/.test(raw)){toast('Username: 3+ letters, numbers, dots or dashes. No spaces.');return}
+  if(pw.length<6){toast('Password: at least 6 characters.');return}
+  const owner=Cloud.logins.get(raw);if(owner&&owner.staffId!==id||PM_EMAILS.includes(toEmail(raw))){toast('This username is already taken.');return}
+  const email=`${raw}.${Date.now().toString(36)}@${USER_DOMAIN}`;
+  try{if(!Cloud.second){Cloud.second=firebase.initializeApp(FIREBASE_CONFIG,'accounts');try{await Cloud.second.auth().setPersistence(firebase.auth.Auth.Persistence.NONE)}catch(e){}}
+    const sa=Cloud.second.auth();await sa.createUserWithEmailAndPassword(email,pw);await sa.signOut();
+    const b=Cloud.db.batch();
+    for(const[e2,a]of Cloud.access)if(a.staffId===id)b.delete(Cloud.db.collection('access').doc(e2));
+    for(const[u2,l]of Cloud.logins)if(l.staffId===id&&u2!==raw)b.delete(Cloud.db.collection('logins').doc(u2));
+    b.set(Cloud.db.collection('logins').doc(raw),{email,staffId:id});
+    b.set(Cloud.db.collection('access').doc(email),{role:'supervisor',staffId:id,name:s.name,username:raw});
+    await b.commit();log('Account',`${s.code} ${s.name}: username ${raw}, password set by Project Manager`);save();
+    modal(`<h2>${t('Account ready')}</h2><div class="muted">${esc(s.name)}</div><div class="panel mono" style="background:var(--sunk)">${t('Username')}: ${esc(raw)}<br>Password: ${esc(pw)}</div><div class="small muted">${ui.lang==='ar'?'أرسل هذه البيانات للمشرف. لن تظهر كلمة السر مرة أخرى.':'Send these to the supervisor. The password is not shown again.'}</div><div class="row" style="justify-content:flex-end"><button class="btn pri" data-act="close">${t('Close')}</button></div>`);
+  }catch(e){toast('Not saved: '+(e.code||e.message))}}
+async function delAccount(id){const s=byId(id),b=Cloud.db.batch();
+  for(const[e2,a]of Cloud.access)if(a.staffId===id)b.delete(Cloud.db.collection('access').doc(e2));
+  for(const[u2,l]of Cloud.logins)if(l.staffId===id)b.delete(Cloud.db.collection('logins').doc(u2));
+  try{await b.commit();log('Account',`${s.code} ${s.name}: account removed`);save();toast(t('Saved'))}catch(e){toast('Not saved: '+e.code)}}
 const auditList=()=>{const f=ui.f.audit,q=f.q.trim().toLowerCase();return S.audit.filter(a=>(!f.type||a.type===f.type)&&(!q||(a.detail+' '+a.by).toLowerCase().includes(q)))};
 RES.audit=()=>{const l=auditList();return `<div class="tbl-wrap"><table><thead><tr><th>${t('Recorded')}</th><th>${t('Type')}</th><th>${t('Detail')}</th><th>${t('By')}</th></tr></thead><tbody>${l.slice(0,200).map(a=>`<tr><td class="mono small">${tsFmt(a.ts)}</td><td>${esc(a.type)}</td><td style="white-space:normal">${esc(a.detail)}</td><td class="small">${esc(a.by)}</td></tr>`).join('')}</tbody></table></div><div class="small muted">${l.length} ${t('results')}${l.length>200?' · 200 shown, export includes all':''}</div>`};
 function readImport(file){const rd=new FileReader();rd.onload=()=>{try{
@@ -706,12 +729,8 @@ document.addEventListener('click',e=>{
     case 'demo':if(LIVE)break;confirmBox(ui.lang==='ar'?'سيتم استبدال التوزيع الحالي ببيانات وهمية. متابعة؟':'This replaces current assignments and attendance with fake demo data. Continue?',loadDemo);break;
     case 'reset-sample':if(LIVE)break;confirmBox(ui.lang==='ar'?'إعادة القائمة النموذجية: 68 موظفاً غير موزَّعين وبدون سجلات.':'Reset to the clean sample: 68 unassigned staff, no records.',()=>{S=freshState(sampleStaff(),'sample');ui.role='pm';Prefs.set('role','pm');save();render()});break;
     case 'signout':Cloud.auth.signOut().then(()=>location.reload());break;
-    case 'acc-save':{if(!LIVE||!pm)break;const raw=($('#acc-'+id).value||'').trim().toLowerCase(),em=toEmail(raw),s=byId(id);
-      if(raw&&!(/^[a-z0-9._-]{3,40}$/.test(raw)||/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(raw))){toast('Use 3+ letters, numbers, dots or dashes.');break}
-      if(em&&[...Cloud.access].some(([e2,a])=>e2===em&&a.staffId!==id)||PM_EMAILS.includes(em)){toast('This username is already taken.');break}
-      const b=Cloud.db.batch();for(const[e2,a]of Cloud.access)if(a.staffId===id&&e2!==em)b.delete(Cloud.db.collection('access').doc(e2));
-      if(em)b.set(Cloud.db.collection('access').doc(em),{role:'supervisor',staffId:id,name:s.name});
-      b.commit().then(()=>{log('Account',`${s.code} ${s.name}: username ${userLabel(em)||'removed'}`);save();toast(t('Saved'))}).catch(e=>toast('Not saved: '+e.code));break}
+    case 'acc-save':if(LIVE&&pm)setAccount(id);break;
+    case 'acc-del':if(LIVE&&pm)confirmBox(ui.lang==='ar'?'سيتم إيقاف دخول هذا المشرف. متابعة؟':'This supervisor will no longer be able to sign in. Continue?',()=>delAccount(id));break;
     case 'auth-in':case 'auth-up':case 'auth-reset':authAction(a);break;
     case 'dept-add':{const v2=$('#new-dept').value.trim();if(v2&&!S.departments.includes(v2)){S.departments.push(v2);log('Settings','Department added: '+v2);save();render()}break}
     case 'dept-del':{if(S.staff.some(s=>s.dept===v)){toast('Staff are assigned to this department.');break}S.departments=S.departments.filter(d=>d!==v);log('Settings','Department removed: '+v);save();render();break}
@@ -736,18 +755,20 @@ function filterInput(el){const [scope,key]=el.dataset.f.split('.');ui.f[scope][k
 /* ---------- Live sign-in ---------- */
 function signInView(){return `<div class="wrap" style="padding-block:48px;display:flex;justify-content:center"><form class="panel" id="auth-form" style="width:min(400px,100%);display:flex;flex-direction:column;gap:12px;padding:22px">
   <div class="brand"><b>ITU FIELD OPS 2026</b><span>DECC · Doha · 9–27 Nov</span></div>
-  <label class="small muted" style="display:flex;flex-direction:column;gap:4px">${t('Username')}<input type="text" autocomplete="username" autocapitalize="none" spellcheck="false" id="au-email" value="${esc(userLabel(ui.authEmail||''))}"></label>
+  <label class="small muted" style="display:flex;flex-direction:column;gap:4px">${t('Username')}<input type="text" autocomplete="username" autocapitalize="none" spellcheck="false" id="au-email" value="${esc(ui.authEmail||'')}"></label>
   <label class="small muted" style="display:flex;flex-direction:column;gap:4px">Password<input type="password" autocomplete="current-password" id="au-pass"></label>
   ${ui.authMsg?`<div class="small" style="color:var(--bad)">${esc(ui.authMsg)}</div>`:''}
   <button class="btn pri" type="submit">Sign in</button>
-  <div class="row between small"><button class="btn ghost sm" type="button" data-act="auth-up">First time? Create password</button><button class="btn ghost sm" type="button" data-act="auth-reset">Forgot password</button></div>
+  <div class="small muted">${ui.lang==='ar'?'نسيت كلمة السر؟ اطلب من مدير المشروع كلمة جديدة.':'Forgot your password? Ask the Project Manager for a new one.'}</div>
+  <button class="btn ghost sm" type="button" data-act="auth-up">Project Manager: first sign-in</button>
   <button class="btn ghost sm" type="button" data-act="lang">${ui.lang==='ar'?'English':'العربية'}</button></form></div>`}
-async function authAction(kind){const em=toEmail($('#au-email').value),pw=$('#au-pass').value;ui.authEmail=em;ui.authMsg='';
-  try{if(kind==='auth-reset'){if(!em)throw{message:'Enter your username first.'};if(em.endsWith('@'+USER_DOMAIN))throw{message:'Ask the Project Manager to reset your password.'};await Cloud.auth.sendPasswordResetEmail(em);ui.authMsg='';toast('Password reset email sent to '+em);return}
-    if(!em||!pw)throw{message:'Enter your username and password.'};
-    if(kind==='auth-up'){if(pw.length<8)throw{message:'Use at least 8 characters for the password.'};await Cloud.auth.createUserWithEmailAndPassword(em,pw)}
-    else await Cloud.auth.signInWithEmailAndPassword(em,pw);
-  }catch(e){const c=e.code||'';ui.authMsg=c.includes('invalid-credential')||c.includes('wrong-password')||c.includes('user-not-found')?'Username or password is wrong. First time here? Use "Create password".':c.includes('email-already-in-use')?'This username already has a password. Sign in, or ask the Project Manager to reset it.':c.includes('invalid-email')?'Use letters, numbers, dots or dashes in the username.':c.includes('too-many-requests')?'Too many attempts. Wait a few minutes.':(e.message||'Sign-in failed.');render()}}
+async function authAction(kind){const raw=($('#au-email').value||'').trim().toLowerCase(),pw=$('#au-pass').value;let em=toEmail(raw);ui.authEmail=raw;ui.authMsg='';
+  try{if(!raw||!pw)throw{message:'Enter your username and password.'};
+    if(kind==='auth-up'){if(!PM_EMAILS.includes(em))throw{message:'Only the Project Manager creates a password here. Supervisors get theirs from the Project Manager.'};if(pw.length<8)throw{message:'Use at least 8 characters for the password.'};await Cloud.auth.createUserWithEmailAndPassword(em,pw);return}
+    if(!raw.includes('@')&&!PM_EMAILS.includes(em)){const d=await Cloud.db.collection('logins').doc(raw).get();if(d.exists)em=d.data().email}
+    Cloud.uname=raw;
+    await Cloud.auth.signInWithEmailAndPassword(em,pw);
+  }catch(e){const c=e.code||'';ui.authMsg=c.includes('invalid-credential')||c.includes('wrong-password')||c.includes('user-not-found')?'Username or password is wrong.':c.includes('email-already-in-use')?'This username already has a password. Sign in, or ask the Project Manager to reset it.':c.includes('invalid-email')?'Use letters, numbers, dots or dashes in the username.':c.includes('too-many-requests')?'Too many attempts. Wait a few minutes.':(e.message||'Sign-in failed.');render()}}
 document.addEventListener('submit',e=>{if(e.target.id==='auth-form'){e.preventDefault();authAction('auth-in')}});
 async function bootLive(){
   firebase.initializeApp(FIREBASE_CONFIG);Cloud.auth=firebase.auth();Cloud.db=firebase.firestore();
@@ -757,7 +778,7 @@ async function bootLive(){
     const em=(u.email||'').toLowerCase();Cloud.email=em;
     if(PM_EMAILS.includes(em))ui.role='pm';
     else{try{const d=await Cloud.db.collection('access').doc(em).get();ui.role=d.exists&&d.data().role==='supervisor'?d.data().staffId:''}catch(e){ui.role=''}
-      if(!ui.role){ui.authMsg=`${userLabel(em)} is not registered yet. Ask the Project Manager to add your username.`;await Cloud.auth.signOut();return}}
+      if(!ui.role){ui.authMsg=ui.lang==='ar'?'هذا الحساب غير مفعّل. اطلب من مدير المشروع حساباً جديداً.':'This account is not active. Ask the Project Manager for a new one.';await Cloud.auth.signOut();return}}
     ui.authMsg='';render();Cloud.start()});
 }
 /* Live refresh: statuses like "Not checked in" change with the clock */
