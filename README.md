@@ -7,9 +7,9 @@ No staff data is kept in this repository. The PM imports the Excel file from ins
 1. Go to console.firebase.google.com and add a project.
 2. In Build > Authentication > Sign-in method, enable **Email/Password**.
 3. In Build > Firestore Database, create a database in production mode.
-4. In Firestore > Rules, paste `firestore.rules`. Replace `PM_EMAIL_HERE` with the PM's email, then click Publish.
+4. In Firestore > Rules, paste `firestore.rules`. Replace `PM_EMAIL_HERE` with the PM username plus `@itufieldops.local`, then click Publish.
 5. In Project settings > Your apps, add a Web app and copy its `firebaseConfig` into `config.js`.
-6. In Authentication > Settings > Authorized domains, add your domain, for example `ops.example.com`.
+6. In Authentication > Settings > Authorized domains, add `ghaitheissa.github.io` and your own domain.
 
 ## 2. GitHub Pages
 1. Push this folder to the repository root.
@@ -19,8 +19,8 @@ No staff data is kept in this repository. The PM imports the Excel file from ins
 5. Tick "Enforce HTTPS" when it becomes available.
 
 ## 3. First day
-1. The PM signs in with "First time? Create password", using the email in `config.js`.
+1. The PM signs in with "First time? Create password", using the username in `config.js`.
 2. In Data & import, upload the staff Excel file and confirm.
-3. In Data & import > Supervisor accounts, enter each supervisor's email.
-4. Each supervisor opens the site and uses "First time? Create password" with that email. They see only their own team, and can only record attendance for today.
+3. In Data & import > Supervisor accounts, give each supervisor a username, for example `sup01`.
+4. Each supervisor opens the site and uses "First time? Create password" with that username. They see only their own team, and can only record attendance for today.
 5. In Staff & assignment, filter Role = Marshal and Assignment = Not assigned. Select marshals, choose supervisor, department and shift, then Apply.

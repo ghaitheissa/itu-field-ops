@@ -9,4 +9,5 @@ window.FIREBASE_CONFIG = {
   messagingSenderId: "PASTE",
   appId: "PASTE"
 };
-window.PM_EMAILS = ["PM_EMAIL_HERE"];
+// Username (e.g. "ghaith") or a real email.
+window.PM_EMAILS = ["PM_USERNAME_HERE"];
