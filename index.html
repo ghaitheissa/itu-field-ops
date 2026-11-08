@@ -343,6 +343,7 @@ nav.tabs button{border-radius:10px 10px 0 0}
 .rc-d{height:40px;border-radius:10px;border:0;background:var(--sunk);font:inherit;font-weight:600;color:var(--fg);cursor:pointer;display:grid;place-items:center}.rc-d.off{background:none;color:var(--muted);opacity:.35;cursor:default;font-weight:400}
 .rc-d.in{background:var(--accent-soft);color:var(--accent)}.rc-d.end{background:var(--accent);color:#ffffff}
 .rc-msg{text-align:center;font-weight:600;min-height:22px}
+.dot-pulse{width:10px;height:10px;border-radius:50%;background:var(--accent);animation:dp 1.2s infinite}@keyframes dp{50%{opacity:.25;transform:scale(.7)}}
 </style>
 
 <div id="app"></div>
@@ -513,7 +514,7 @@ const Cloud={db:null,auth:null,user:null,email:'',synced:{},unsubs:[],loaded:new
       if(can('accounts')){this.unsubs.push(db.collection('access').onSnapshot(s=>{this.access=new Map();s.forEach(d=>this.access.set(d.id,d.data()));scheduleRender()}));
       this.unsubs.push(db.collection('logins').onSnapshot(s=>{this.logins=new Map();s.forEach(d=>this.logins.set(d.id,d.data()));scheduleRender()}));
       this.unsubs.push(db.collection('devices').onSnapshot(s=>{this.devices=new Map();s.forEach(d=>this.devices.set(d.id,d.data()));scheduleRender()},()=>{}));
-      this.unsubs.push(db.collection('alerts').onSnapshot(s=>{this.alerts=[];s.forEach(d=>this.alerts.push({id:d.id,...d.data()}));this.alerts.sort((a,b)=>b.ts.localeCompare(a.ts));scheduleRender();setTimeout(alertPopup,300)},()=>{}))}
+      this.unsubs.push(db.collection('alerts').onSnapshot(s=>{this.alerts=[];s.forEach(d=>this.alerts.push({id:d.id,...d.data()}));this.alerts.sort((a,b)=>b.ts.localeCompare(a.ts));scheduleRender();setTimeout(alertPopup,300);devNotify(this.alerts)},()=>{}))}
       if(!ui.owner)this.unsubs.push(db.collection('access').doc(this.email).onSnapshot(d=>{if(!d.exists||d.data().role!=='admin'){this.auth.signOut();return}
         const a=d.data(),before=stable(ui.perms);ui.perms=a.perms||{};ui.adminName=a.name||a.username||'';if(stable(ui.perms)!==before)location.reload();else scheduleRender()},()=>{}))}
   },
@@ -1132,7 +1133,7 @@ VIEWS.data=()=>{const p=ui.importPreview;return `<h2>${t('Data & import')}</h2>
 function devChip(em){if(!em)return '';const d=Cloud.devices&&Cloud.devices.get(em),ar=ui.lang==='ar';
   return d?`<span class="chip c-scheduled" title="${esc(d.ua||'')}">📱 ${esc(d.plat)}${d.standalone?' · app':''}</span><button class="btn sm ghost" data-act="dev-reset" data-v="${esc(em)}">${ar?'فك ربط التلفون':'Unlock phone'}</button>`:`<span class="chip c-scheduled">📱 ${ar?'لم يدخل بعد':'No phone yet'}</span>`}
 function accountsPanel(){const userOf=new Map([...Cloud.logins].map(([u,l])=>[l.staffId,u]));
-  return `<section class="panel" style="display:flex;flex-direction:column;gap:12px"><div class="row between"><h3>${t('Supervisor accounts')}</h3><span class="live-tag">Live</span></div>
+  return `<section class="panel" style="display:flex;flex-direction:column;gap:12px"><div class="row between"><h3>${t('Supervisor accounts')}</h3><span class="row" style="gap:8px">${'Notification' in window&&Notification.permission!=='granted'?`<button class="btn sm" data-act="notif-on">🔔 ${ui.lang==='ar'?'فعّل التنبيهات':'Turn on alerts'}</button>`:''}<span class="live-tag">Live</span></span></div>
    <div class="small muted">${ui.lang==='ar'?'اكتب اسم مستخدم وكلمة سر لكل مشرف واكبس Set password. لتغيير كلمة السر لاحقاً اكتب كلمة جديدة واكبس الزر نفسه، فتتوقف الكلمة القديمة فوراً. كل مشرف يرى فريقه فقط.':'Type a username and password for each supervisor, then tap Set password. To change a password later, type a new one and tap the same button; the old password stops working at once. Each supervisor sees only their own team.'} Project Manager: ${esc(PM_EMAILS.map(userLabel).join(', '))}</div>
    ${sups().length?`<div class="tbl-wrap"><table><thead><tr><th>${t('ID')}</th><th>${t('Name')}</th><th>${t('Username')}</th><th>${t('New password')}</th><th></th></tr></thead><tbody>${sups().map(s=>{const u=userOf.get(s.id)||'';return `<tr><td class="mono">${esc(s.code)}</td><td>${esc(s.name)}</td>
      <td><input type="text" autocomplete="off" autocapitalize="none" spellcheck="false" id="acc-${s.id}" value="${esc(u)}" placeholder="e.g. ${esc(s.code.toLowerCase())}" style="width:150px"></td>
@@ -1336,6 +1337,12 @@ document.addEventListener('click',e=>{
   const pm=ui.role==='pm';
   switch(a){
     case 'tab':closeModal();if(v!==ui.tab)try{history.pushState(null,'','#'+v)}catch(e){}ui.tab=v;ui.sel.clear();render();window.scrollTo(0,0);break;
+    case 'alert-yes':case 'alert-no':{const yes=a==='alert-yes',al=(Cloud.alerts||[]).find(x=>x.id===id);closeModal();if(!al)break;const ref=Cloud.db.collection('devices').doc(al.email);
+      (yes?ref.set({id:al.devId,plat:al.plat,standalone:!!al.standalone,ua:al.ua||'',ts:new Date().toISOString(),approved:true}):ref.update({denied:al.devId})).catch(e=>toast(e.message));
+      Cloud.db.collection('alerts').doc(id).update({seen:true,approved:yes}).catch(()=>{});log('Account',`${al.username}: new phone ${yes?'approved':'refused'}`);save();
+      toast(yes?(ui.lang==='ar'?'تمت الموافقة، رح يفوت هلق':'Approved, they are signing in now'):(ui.lang==='ar'?'تم الرفض':'Refused'));setTimeout(alertPopup,400);break}
+    case 'notif-on':try{Notification.requestPermission().then(p=>{toast(p==='granted'?(ui.lang==='ar'?'التنبيهات شغالة':'Alerts on'):(ui.lang==='ar'?'التنبيهات ممنوعة من إعدادات المتصفح':'Alerts are blocked in browser settings'));render()})}catch(e){}break;
+    case 'wait-cancel':ui.waitDev=false;Cloud.unsubs.forEach(f=>f());Cloud.unsubs=[];Cloud.auth.signOut();break;
     case 'alert-ok':closeModal();Cloud.db.collection('alerts').doc(id).update({seen:true}).catch(()=>{});setTimeout(alertPopup,400);break;
     case 'alert-reset':{const a=(Cloud.alerts||[]).find(x=>x.id===id);closeModal();if(a){Cloud.db.collection('devices').doc(a.email).delete().catch(()=>{});Cloud.db.collection('alerts').doc(id).update({seen:true}).catch(()=>{});log('Account',`${a.username}: phone lock reset, the next phone to sign in owns the account`);save();toast(ui.lang==='ar'?'أول تلفون يدخل الآن يصبح تلفون الحساب.':'The next phone that signs in becomes the account phone.')}break}
     case 'dev-reset':{const e2=v;confirmBox(ui.lang==='ar'?'فك ربط التلفون؟ أول تلفون يدخل بعدها يصبح تلفون الحساب.':'Unlock the phone? The next phone that signs in becomes the account phone.',()=>{Cloud.db.collection('devices').doc(e2).delete().then(()=>{log('Account',`Phone lock reset for ${userLabel(e2)}`);save();toast(t('Saved'))}).catch(e=>toast('Not saved: '+e.code))})}break;
@@ -1438,7 +1445,10 @@ function filterInput(el){const [scope,key]=el.dataset.f.split('.');ui.f[scope][k
 function signInView(){return `<div class="auth">
   <div class="auth-side"><div class="tri" aria-hidden="true"></div><div class="meta">ITU 2026 · DECC Doha</div>
    <h1>FIELD<br>OPS<br><em>2026</em></h1><div class="meta">9–27 November</div></div>
-  <div class="auth-main">${installBanner()}<form class="auth-form" id="auth-form" autocomplete="on">
+  <div class="auth-main">${ui.waitDev?`<div class="auth-form">${logoImg(44)}<h2>${ui.lang==='ar'?'بانتظار الموافقة':'Waiting for approval'}</h2>
+   <div>${ui.lang==='ar'?'هذا الحساب مربوط بتلفون آخر. وصل طلب لمدير المشروع، وأول ما يوافق بتدخل تلقائياً. خلّي الصفحة مفتوحة.':'This account is linked to another phone. The Project Manager has been asked, and you will be let in as soon as they approve. Keep this page open.'}</div>
+   <div class="row" style="gap:8px;align-items:center"><span class="dot-pulse"></span><span class="small muted">${ui.lang==='ar'?'عم نستنى...':'Waiting...'}</span></div>
+   <button class="btn sm" type="button" data-act="wait-cancel">${ui.lang==='ar'?'إلغاء':'Cancel'}</button></div>`:`<form class="auth-form" id="auth-form" autocomplete="on">
    ${logoImg(44)}
    <h2>${ui.lang==='ar'?'تسجيل الدخول':'Sign in'}</h2>
    <label>${t('Username')}<input type="text" autocomplete="username" autocapitalize="none" spellcheck="false" id="au-email" value="${esc(ui.authEmail||'')}"></label>
@@ -1447,7 +1457,7 @@ function signInView(){return `<div class="auth">
    <button class="btn pri go" type="submit">${ui.lang==='ar'?'دخول':'Sign in'}</button>
    <div class="small muted">${ui.lang==='ar'?'نسيت كلمة السر؟ اطلب من مدير المشروع كلمة جديدة.':'Forgot your password? Ask the Project Manager for a new one.'}</div>
    <div class="row between"><button class="btn ghost sm" type="button" data-act="auth-up">Project Manager: first sign-in</button><button class="btn ghost sm" type="button" data-act="lang">${ui.lang==='ar'?'English':'العربية'}</button></div>
-  </form></div></div>`}
+  </form>`}</div></div>`}
 async function authAction(kind){const raw=($('#au-email').value||'').trim().toLowerCase(),pw=$('#au-pass').value;let em=toEmail(raw);ui.authEmail=raw;ui.authMsg='';
   try{if(!raw||!pw)throw{message:'Enter your username and password.'};
     if(kind==='auth-up'){if(!PM_EMAILS.includes(em))throw{message:'Only the Project Manager creates a password here. Supervisors get theirs from the Project Manager.'};if(pw.length<8)throw{message:'Use at least 8 characters for the password.'};await Cloud.auth.createUserWithEmailAndPassword(em,pw);return}
@@ -1464,14 +1474,19 @@ async function deviceCheck(em){const ref=Cloud.db.collection('devices').doc(em),
   const cur=d.data();if(cur.id===me.id)return true;
   /* iPhone keeps the installed app apart from Safari: moving from the browser into the app on the same kind of phone is allowed once */
   if(!cur.standalone&&me.standalone&&cur.plat===me.plat&&!cur.prev){try{await ref.set({...me,prev:cur.id})}catch(e){}return true}
-  try{const a=(await Cloud.db.collection('access').doc(em).get()).data()||{};await Cloud.db.collection('alerts').doc(Date.now().toString(36)+DEV_ID.slice(0,6)).set({email:em,username:a.username||Cloud.uname||'',name:a.name||'',staffId:a.staffId||'',plat:me.plat,ua:me.ua,ts:me.ts,first:cur.plat||'',seen:false})}catch(e){console.error(e)}
+  try{const a=(await Cloud.db.collection('access').doc(em).get()).data()||{};await Cloud.db.collection('alerts').doc(Date.now().toString(36)+DEV_ID.slice(0,6)).set({email:em,username:a.username||Cloud.uname||'',name:a.name||'',staffId:a.staffId||'',plat:me.plat,ua:me.ua,ts:me.ts,first:cur.plat||'',seen:false,devId:me.id,standalone:me.standalone})}catch(e){console.error(e)}
   return false}
+const notified=new Set();
+function devNotify(list){list.filter(a=>!a.seen&&!notified.has(a.id)).forEach(a=>{notified.add(a.id);if(Date.now()-new Date(a.ts)>36e5)return;
+  try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch(e){}
+  if(!('Notification' in window)||Notification.permission!=='granted')return;const ar=ui.lang==='ar',title=ar?'طلب دخول من تلفون جديد':'New phone sign-in request',body=`${a.name||a.username} · ${a.plat}`;
+  (navigator.serviceWorker?navigator.serviceWorker.ready.then(r=>r.showNotification(title,{body,icon:'icon-192.png',tag:a.id,requireInteraction:true})):Promise.reject()).catch(()=>{try{new Notification(title,{body,tag:a.id})}catch(e){}})})}
 function alertPopup(){if(!can('accounts')||!$('#modal').hidden)return;const a=(Cloud.alerts||[]).find(x=>!x.seen);if(!a)return;const ar=ui.lang==='ar';
   modal(`<div class="small" style="text-transform:uppercase;letter-spacing:.08em;font-weight:800;color:var(--bad)">⚠ ${ar?'محاولة دخول من جهاز آخر':'Sign-in from another phone'}</div>
    <div style="font-size:16px"><b>${esc(a.name||a.username)}</b> <span class="mono small muted">${esc(a.username)}</span></div>
-   <div>${ar?`حاول أحدهم الدخول بهذا الحساب من ${esc(a.plat)} آخر، وتم منعه. الحساب مربوط بـ ${esc(a.first)} الأول.`:`Someone tried to sign in to this account on another ${esc(a.plat)} and was blocked. The account stays on its first ${esc(a.first)}.`}</div>
+   <div>${ar?`حاول أحدهم الدخول بهذا الحساب من ${esc(a.plat)} آخر، وهو ينتظر موافقتك. إذا وافقت، يصير الحساب على التلفون الجديد ويطلع من الأول (${esc(a.first)}).`:`Someone is trying to sign in to this account on another ${esc(a.plat)} and is waiting for your approval. If you approve, the account moves to the new phone and the first one (${esc(a.first)}) is signed out.`}</div>
    <div class="small muted">${esc(tsFmt(a.ts))} (Doha)</div>
-   <div class="row" style="justify-content:flex-end"><button class="btn" data-act="alert-reset" data-id="${esc(a.id)}">${ar?'السماح بالجهاز الجديد':'Allow the new phone'}</button><button class="btn pri" data-act="alert-ok" data-id="${esc(a.id)}">OK</button></div>`)}
+   <div class="row" style="justify-content:flex-end">${a.devId?`<button class="btn" data-act="alert-no" data-id="${esc(a.id)}">${ar?'رفض':'Refuse'}</button><button class="btn pri" data-act="alert-yes" data-id="${esc(a.id)}">${ar?'موافقة ودخول':'Approve'}</button>`:`<button class="btn" data-act="alert-reset" data-id="${esc(a.id)}">${ar?'السماح بالجهاز الجديد':'Allow the new phone'}</button><button class="btn pri" data-act="alert-ok" data-id="${esc(a.id)}">OK</button>`}</div>`)}
 async function bootLive(){
   firebase.initializeApp(FIREBASE_CONFIG);Cloud.auth=firebase.auth();Cloud.db=firebase.firestore();
   const sid=new URLSearchParams(location.search).get('ts');if(sid){sharedView(sid);return}
@@ -1485,7 +1500,13 @@ async function bootLive(){
         if(a&&a.role==='supervisor')ui.role=a.staffId;else if(a&&a.role==='admin'){ui.role='pm';ui.perms=a.perms||{};ui.adminName=a.name||a.username||''}else ui.role='';
         if(a&&a.username)Cloud.uname=a.username}catch(e){ui.role=''}
       if(!ui.role){ui.authMsg=ui.lang==='ar'?'هذا الحساب غير مفعّل. اطلب من مدير المشروع حساباً جديداً.':'This account is not active. Ask the Project Manager for a new one.';await Cloud.auth.signOut();return}}
-    if(!ui.owner&&!(await deviceCheck(em))){ui.authMsg=ui.lang==='ar'?'هذا الحساب مستخدم على تلفون آخر. تم إرسال تنبيه لمدير المشروع.':'This account is already used on another phone. The Project Manager has been notified.';ui.role='';await Cloud.auth.signOut();return}
+    if(!ui.owner&&!(await deviceCheck(em))){ui.role='';ui.waitDev=true;render();
+      const off=Cloud.db.collection('devices').doc(em).onSnapshot(d=>{const x=d.data()||{};
+        if(x.id===DEV_ID){off();ui.waitDev=false;location.reload()}
+        else if(x.denied===DEV_ID){off();ui.waitDev=false;ui.authMsg=ui.lang==='ar'?'رفض مدير المشروع الدخول من هذا التلفون.':'The Project Manager refused sign-in on this phone.';Cloud.auth.signOut()}},()=>{});
+      Cloud.unsubs.push(off);return}
+    ui.waitDev=false;
+    if(!ui.owner)Cloud.unsubs.push(Cloud.db.collection('devices').doc(em).onSnapshot(d=>{const x=d.data();if(x&&x.id&&x.id!==DEV_ID&&x.prev!==DEV_ID){ui.authMsg=ui.lang==='ar'?'تم نقل هذا الحساب لتلفون آخر بموافقة مدير المشروع.':'This account was moved to another phone by the Project Manager.';Cloud.auth.signOut()}},()=>{}));
     ui.authMsg='';render();Cloud.start()});
 }
 /* Live refresh: statuses like "Not checked in" change with the clock */
