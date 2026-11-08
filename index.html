@@ -279,7 +279,7 @@ const AR={
 'Language':'اللغة','Nationality':'الجنسية','Sign out':'تسجيل خروج','Supervisor accounts':'حسابات المشرفين','Email':'البريد الإلكتروني','Username':'اسم المستخدم','Password':'كلمة السر','Operational summary':'الملخص التشغيلي','Announcements':'الإعلانات','Announcement':'إعلان','Received':'تم الاستلام','received':'استلموا','Send to supervisors':'إرسال للمشرفين','Sent':'تم الإرسال','Install app':'تثبيت التطبيق','New password':'كلمة سر جديدة','Set password':'تعيين كلمة السر','Active':'مفعّل','Remove':'إزالة','Account ready':'الحساب جاهز','Present':'حاضر','Nothing matches these filters.':'لا توجد نتائج لهذه الفلاتر.','No incidents recorded.':'لا توجد حوادث مسجلة.','No shift changes recorded yet.':'لا توجد تغييرات ورديات بعد.',
 'Only staff who already have a shift appear here. First-time shift assignment is done in Staff & assignment.':'يظهر هنا فقط من لديه وردية. التوزيع الأول للوردية يتم من صفحة الموظفين والتوزيع.',
 'I confirm Rabea approved this change by email.':'أؤكد أن ربيع وافق على هذا التغيير عبر البريد.','Staff member':'الموظف','Saved':'تم الحفظ','Day summary':'ملخص اليوم','Employees':'الموظفون','Rows shown':'الصفوف المعروضة',
-'Timesheet':'كشف الدوام','By person':'حسب الشخص','Days':'الأيام','Late, absent or not in':'متأخر أو غائب أو لم يسجّل','Signature':'التوقيع','Sign with your finger':'وقّع بإصبعك','Clear':'مسح','Send to':'إرسال إلى','Share PDF':'مشاركة PDF','Hours':'الساعات','Total hours':'مجموع الساعات','Timesheet recipients':'مستلمو كشف الدوام','Title':'المسمى','Team accounts':'حسابات الفريق','Full access':'صلاحيات كاملة','Create account':'إنشاء حساب','Display name':'الاسم الظاهر','Username or email':'اسم المستخدم أو الإيميل','Attendance corrections':'تعديل الحضور','Shift changes':'تغيير الورديات','Reports, timesheets & exports':'التقارير وكشوف الدوام والتصدير','Announcements':'الإعلانات','Import & settings':'الاستيراد والإعدادات','Accounts & permissions':'الحسابات والصلاحيات','Permissions':'الصلاحيات',
+'Timesheet':'كشف الدوام','Withdrawn':'منسحبون','Replacements & added':'بدلاء ومضافون','Add staff':'إضافة موظف','Withdraw / replace':'انسحاب / بديل','Reinstate':'إرجاع','Withdrew':'انسحب','Replaces':'بديل عن','From':'من','No show':'لم يحضر','Dismissed':'تم الاستغناء','Not working from':'لا يعمل اعتباراً من','Reason':'السبب','Add a replacement':'إضافة بديل','Employee ID':'الرقم الوظيفي','Start date':'تاريخ البدء','This ID is already used.':'هذا الرقم مستخدم.','Days worked':'أيام العمل','Replaced by':'البديل','Withdrawals & replacements':'الانسحابات والبدلاء','Pay (QAR)':'الأجر (ريال)','Total':'المجموع','Hourly rate, Marshal (QAR)':'أجر الساعة للمارشال (ريال)','Hourly rate, Supervisor (QAR)':'أجر الساعة للمشرف (ريال)','By person':'حسب الشخص','Days':'الأيام','Late, absent or not in':'متأخر أو غائب أو لم يسجّل','Signature':'التوقيع','Sign with your finger':'وقّع بإصبعك','Clear':'مسح','Send to':'إرسال إلى','Share PDF':'مشاركة PDF','Hours':'الساعات','Total hours':'مجموع الساعات','Timesheet recipients':'مستلمو كشف الدوام','Title':'المسمى','Team accounts':'حسابات الفريق','Full access':'صلاحيات كاملة','Create account':'إنشاء حساب','Display name':'الاسم الظاهر','Username or email':'اسم المستخدم أو الإيميل','Attendance corrections':'تعديل الحضور','Shift changes':'تغيير الورديات','Reports, timesheets & exports':'التقارير وكشوف الدوام والتصدير','Announcements':'الإعلانات','Import & settings':'الاستيراد والإعدادات','Accounts & permissions':'الحسابات والصلاحيات','Permissions':'الصلاحيات',
 };
 const t=s=>ui.lang==='ar'&&AR[s]?AR[s]:s;
 const STATUS_LABEL={on_time:'On time',late:'Late',absent:'Absent',not_in:'Not checked in',scheduled:'Scheduled',unassigned:'Unassigned'};
@@ -389,7 +389,9 @@ const shiftById=id=>S.shifts.find(x=>x.id===id);
 function shiftOf(s,date){let cur=null;for(const h of s.shifts)if(h.from<=date)cur=h.id;return cur?shiftById(cur):null}
 const shLabel=sh=>sh?`${sh.name} ${sh.start}–${sh.end}`:'';
 function lateMin(sh,tm){let a=toMin(tm);const st=toMin(sh.start),en=toMin(sh.end);if(en<=st&&a<st-240)a+=1440;const d=a-st;return d>S.settings.grace?d:0}
+const active=(s,d)=>!(s.left&&d>=s.left)&&!(s.joined&&d<s.joined);
 function statusOf(s,date){
+  if(!active(s,date))return{k:'unassigned',inactive:true,sh:null,late:0};
   const sh=shiftOf(s,date),r=S.att[date+'|'+s.id];
   if(r&&r.absent)return{k:'absent',r,sh,late:0};
   if(r&&r.in){const late=sh?lateMin(sh,r.in):0;return{k:late?'late':'on_time',late,r,sh}}
@@ -411,7 +413,7 @@ function closeModal(){$('#modal').hidden=true;$('#modal').innerHTML=''}
 function confirmBox(msg,yes,label){modal(`<h2>${t('Confirm')}</h2><p>${msg}</p><div class="row" style="justify-content:flex-end"><button class="btn" data-act="close">${t('Cancel')}</button><button class="btn pri" id="cfm-yes">${esc(label||t('Confirm'))}</button></div>`);$('#cfm-yes').onclick=()=>{closeModal();yes()}}
 const chip=k=>`<span class="chip c-${k}">${t(STATUS_LABEL[k]||k)}</span>`;
 const opt=(v,l,cur)=>`<option value="${esc(v)}"${String(v)===String(cur)?' selected':''}>${esc(l)}</option>`;
-const supOptions=(cur,blank)=>opt('',blank,cur)+sups().map(s=>opt(s.id,s.name,cur)).join('');
+const supOptions=(cur,blank)=>opt('',blank,cur)+sups().filter(s=>!s.left||s.id===cur).map(s=>opt(s.id,s.name,cur)).join('');
 const deptOptions=(cur,blank)=>opt('',blank,cur)+S.departments.map(d=>opt(d,d,cur)).join('');
 const shiftOptions=(cur,blank)=>opt('',blank,cur)+S.shifts.map(x=>opt(x.id,shLabel(x),cur)).join('');
 const fSel=(scope,key,label,opts)=>`<label>${t(label)}<select data-f="${scope}.${key}">${opts}</select></label>`;
@@ -609,30 +611,78 @@ VIEWS.dash=()=>{
 /* ---------- Staff & assignment ---------- */
 function staffRows(){const f=ui.f.staff,q=f.q.trim().toLowerCase();
   return S.staff.filter(s=>(!q||s.name.toLowerCase().includes(q)||s.code.toLowerCase().includes(q)||String(s.qid||'').includes(q)||String(s.phone||'').includes(q))&&(!f.role||s.role===f.role)&&(!f.sup||(f.sup==='none'?!s.sup&&s.role==='Marshal':s.sup===f.sup||s.id===f.sup))&&(!f.dept||(f.dept==='none'?!s.dept:s.dept===f.dept))&&(!f.shift||(f.shift==='none'?!s.shifts.length:shiftOf(s,ui.day)?.id===f.shift))
-    &&(!f.asg||(f.asg==='no')===!(s.shifts.length&&s.dept&&(s.role==='Supervisor'||s.sup))))}
-VIEWS.staff=()=>`<div class="row between"><h2>${t('Staff & assignment')}</h2><div class="row">${DL('staff-pdf','pdf')}${DL('staff-xlsx','xlsx')}</div></div>
+    &&(!f.asg||(f.asg==='left'?!!s.left:f.asg==='new'?!!s.joined:(f.asg==='no')===!(s.shifts.length&&s.dept&&(s.role==='Supervisor'||s.sup)))))}
+VIEWS.staff=()=>`<div class="row between"><h2>${t('Staff & assignment')}</h2><div class="row">${can('staff')?`<button class="btn pri" data-act="st-add">+ ${t('Add staff')}</button>`:''}${DL('staff-pdf','pdf')}${DL('staff-xlsx','xlsx')}</div></div>
   <div class="panel filters">${fInp('staff','q','Search name or ID','search')}
   ${fSel('staff','role','Role',opt('',t('All'),ui.f.staff.role)+opt('Marshal',t('Marshal'),ui.f.staff.role)+opt('Supervisor',t('Supervisor'),ui.f.staff.role))}
   ${fSel('staff','sup','Supervisor',supOptions(ui.f.staff.sup,t('All'))+opt('none',t('Unassigned'),ui.f.staff.sup))}
   ${fSel('staff','dept','Department',deptOptions(ui.f.staff.dept,t('All'))+opt('none',t('Unassigned'),ui.f.staff.dept))}
   ${fSel('staff','shift','Shift',shiftOptions(ui.f.staff.shift,t('All'))+opt('none',t('Unassigned'),ui.f.staff.shift))}
-  ${fSel('staff','asg','Assignment',opt('',t('All'),ui.f.staff.asg)+opt('no',t('Not assigned'),ui.f.staff.asg)+opt('yes',t('Fully assigned'),ui.f.staff.asg))}
+  ${fSel('staff','asg','Assignment',opt('',t('All'),ui.f.staff.asg)+opt('no',t('Not assigned'),ui.f.staff.asg)+opt('yes',t('Fully assigned'),ui.f.staff.asg)+opt('left',t('Withdrawn'),ui.f.staff.asg)+opt('new',t('Replacements & added'),ui.f.staff.asg))}
   <button class="btn ghost" data-act="clear-f" data-v="staff">${t('Clear filters')}</button></div>
   <div id="res-staff">${RES.staff()}</div>`;
 const RES={};
 RES.staff=()=>{const rows=staffRows();
   return `<div class="small muted" style="margin-bottom:8px">${rows.length} ${t('results')} · ${ui.lang==='ar'?'التوزيع الأول للوردية لا يحتاج موافقة؛ أي تغيير لاحق يتم من صفحة تغيير الورديات.':'First shift assignment needs no approval. Any later change goes through Shift changes.'}</div>
-  ${rows.length?`<div class="tbl-wrap"><table><thead><tr><th><input type="checkbox" data-act="sel-all" aria-label="Select all" ${rows.length&&rows.every(r=>ui.sel.has(r.id))?'checked':''}></th><th>${t('ID')}</th><th>${t('Name')}</th><th>${t('Role')}</th><th>${t('Supervisor')}</th><th>${t('Department')}</th><th>${t('Shift')}</th><th>${t('Phone')}</th><th>QID</th><th>${t('Nationality')}</th></tr></thead><tbody>
+  ${rows.length?`<div class="tbl-wrap"><table><thead><tr><th><input type="checkbox" data-act="sel-all" aria-label="Select all" ${rows.length&&rows.every(r=>ui.sel.has(r.id))?'checked':''}></th><th>${t('ID')}</th><th>${t('Name')}</th><th>${t('Role')}</th><th>${t('Supervisor')}</th><th>${t('Department')}</th><th>${t('Shift')}</th><th>${t('Phone')}</th><th>QID</th><th>${t('Nationality')}</th><th></th></tr></thead><tbody>
   ${rows.map(s=>{const sh=shiftOf(s,ui.day)||(s.shifts.length?shiftById(s.shifts[0].id):null);return `<tr><td><input type="checkbox" data-act="sel" data-id="${s.id}" ${ui.sel.has(s.id)?'checked':''} aria-label="Select ${esc(s.name)}"></td>
-    <td class="mono">${esc(s.code)}</td><td>${esc(s.name)}</td><td>${t(s.role)}</td>
+    <td class="mono">${esc(s.code)}</td><td>${esc(s.name)}${lifeChips(s)}</td><td>${t(s.role)}</td>
     <td>${s.role==='Marshal'?`<select data-assign="sup" data-id="${s.id}">${supOptions(s.sup,'—')}</select>`:'<span class="muted">—</span>'}</td>
     <td><select data-assign="dept" data-id="${s.id}">${deptOptions(s.dept,'—')}</select></td>
     <td>${s.shifts.length?`<span>${esc(shLabel(sh))}</span> <button class="btn sm ghost" data-act="shift-change" data-id="${s.id}">${t('Change')}</button>`:`<select data-assign="shift" data-id="${s.id}">${shiftOptions('','—')}</select>`}</td>
-    <td class="mono small">${esc(s.phone)}${waLink(s.phone)}</td><td class="mono small">${esc(s.qid||'')}</td><td class="small">${esc(s.nat||'')}</td></tr>`}).join('')}</tbody></table></div>`:`<div class="panel empty">${t('Nothing matches these filters.')}</div>`}
+    <td class="mono small">${esc(s.phone)}${waLink(s.phone)}</td><td class="mono small">${esc(s.qid||'')}</td><td class="small">${esc(s.nat||'')}</td><td>${can('staff')?(s.left?`<button class="btn sm ghost" data-act="st-back" data-id="${s.id}">${t('Reinstate')}</button>`:`<button class="btn sm" data-act="st-out" data-id="${s.id}">${t('Withdraw / replace')}</button>`):''}</td></tr>`}).join('')}</tbody></table></div>`:`<div class="panel empty">${t('Nothing matches these filters.')}</div>`}
   ${ui.sel.size?`<div class="bulk" style="margin-top:10px"><b>${ui.sel.size} ${t('selected')}</b>
     <select id="b-sup" aria-label="${t('Supervisor')}">${supOptions('',t('Supervisor')+'…')}</select><select id="b-dept" aria-label="${t('Department')}">${deptOptions('',t('Department')+'…')}</select><select id="b-shift" aria-label="${t('Shift')}">${shiftOptions('',t('Shift')+'…')}</select>
     <button class="btn pri sm" data-act="bulk">${t('Apply')}</button><button class="btn sm" data-act="sel-none">${t('Cancel')}</button></div>`:''}`;
 };
+/* ---------- Withdrawals, replacements, added staff ---------- */
+const REASONS=['No show','Withdrew','Dismissed','Other'];
+function lifeChips(s){const o=[];if(s.left)o.push(`<span class="chip c-absent">${t('Withdrew')} ${esc(fmtD(s.left))}${s.leftReason&&s.leftReason!=='Withdrew'?' · '+esc(t(s.leftReason)):''}</span>`);
+  if(s.replacedBy&&byId(s.replacedBy))o.push(`<span class="chip c-scheduled">→ ${esc(byId(s.replacedBy).name)}</span>`);
+  if(s.replaces&&byId(s.replaces))o.push(`<span class="chip c-on_time">${t('Replaces')} ${esc(byId(s.replaces).name)}</span>`);else if(s.joined)o.push(`<span class="chip c-on_time">${t('From')} ${esc(fmtD(s.joined))}</span>`);
+  return o.length?`<div class="row" style="gap:4px;margin-top:3px">${o.join('')}</div>`:''}
+function nextCode(role){const all=new Set(S.staff.map(x=>x.code)),pool=S.staff.filter(x=>x.role===role).map(x=>x.code).filter(c=>/\d+$/.test(c));
+  let pre=role==='Supervisor'?'SUP-':'MAR-',w=3,n=0;for(const c of pool){const m=c.match(/^(.*?)(\d+)$/);if(+m[2]>=n){n=+m[2];pre=m[1];w=m[2].length}}
+  let c;do{n++;c=pre+String(n).padStart(w,'0')}while(all.has(c));return c}
+function personFields(role){return `<label>${t('Name')}<input type="text" id="np-name" autocomplete="off"></label><label>${t('Employee ID')}<input type="text" id="np-code" value="${esc(nextCode(role))}"></label>
+  <label>${t('Phone')}<input type="text" id="np-phone" inputmode="tel" autocomplete="off"></label><label>QID<input type="text" id="np-qid" inputmode="numeric" autocomplete="off"></label><label>${t('Nationality')}<input type="text" id="np-nat" autocomplete="off"></label>`}
+function readPerson(role,from,base){const name=$('#np-name').value.trim();if(!name)return null;
+  return {id:uid(),code:$('#np-code').value.trim()||nextCode(role),name,role,phone:$('#np-phone').value.trim(),qid:$('#np-qid').value.trim(),nat:$('#np-nat').value.trim(),sup:base.sup||'',dept:base.dept||'',shifts:base.shift?[{id:base.shift,from}]:[],joined:from>EVENT_START?from:''}}
+function staffOut(id){const s=byId(id);if(!s)return;const ar=ui.lang==='ar';
+  modal(`<h2>${t('Withdraw / replace')}</h2><div class="muted">${esc(s.code)} · ${esc(s.name)} · ${t(s.role)}</div>
+  <div class="form"><label>${t('Not working from')}<input type="date" id="wo-date" min="${EVENT_START}" max="${EVENT_END}" value="${ui.day}"></label>
+   <label>${t('Reason')}<select id="wo-reason">${REASONS.map(r=>opt(r,t(r),'Withdrew')).join('')}</select></label>
+   <label class="full">${t('Notes')}<input type="text" id="wo-note" autocomplete="off"></label></div>
+  <div class="small muted">${ar?'أيامه السابقة وساعاته تبقى في التقارير. من هذا التاريخ لا يظهر عند المشرف ولا يُحسب غائباً.':'Earlier days and hours stay in the reports. From this date the person is off the supervisor list and is not counted absent.'}</div>
+  <div class="perm"><b>${t('Add a replacement')}</b><label class="sw"><input type="checkbox" id="wo-rep" checked><span></span></label></div>
+  <div class="form" id="wo-new">${personFields(s.role)}<div class="full small muted">${ar?'البديل يأخذ نفس المشرف والقسم والوردية من نفس التاريخ.':'The replacement takes the same supervisor, department and shift from the same date.'}</div></div>
+  <div class="row" style="justify-content:flex-end"><button class="btn" data-act="close">${t('Cancel')}</button><button class="btn pri" id="wo-save">${t('Save')}</button></div>`);
+  $('#wo-rep').onchange=e=>{$('#wo-new').hidden=!e.target.checked};
+  $('#wo-save').onclick=()=>{const d=$('#wo-date').value||ui.day,reason=$('#wo-reason').value,note=$('#wo-note').value.trim();let n=null;
+    if($('#wo-rep').checked){n=readPerson(s.role,d,{sup:s.sup,dept:s.dept,shift:shiftOf(s,d)?.id||(s.shifts[0]&&s.shifts[0].id)});if(!n){toast(ar?'اكتب اسم البديل، أو أطفئ خيار البديل.':'Type the replacement name, or switch the replacement off.');return}
+      if(S.staff.some(x=>x.code===n.code)){toast(t('This ID is already used.'));return}n.replaces=s.id;n.joined=d}
+    s.left=d;s.leftReason=reason;s.leftNote=note;log('Withdrawal',`${s.code} ${s.name}: ${reason} from ${d}${note?' · '+note:''}`);
+    if(n){S.staff.push(n);s.replacedBy=n.id;if(s.role==='Supervisor')for(const m of S.staff)if(m.sup===s.id&&m.id!==n.id)m.sup=n.id;
+      log('Replacement',`${n.code} ${n.name} replaces ${s.code} ${s.name} from ${d}${s.role==='Supervisor'?' (team moved to the replacement)':''}`)}
+    closeModal();save();render();toast(t('Saved'))}}
+function staffAdd(){const ar=ui.lang==='ar';
+  modal(`<h2>${t('Add staff')}</h2><div class="form"><label>${t('Role')}<select id="np-role">${opt('Marshal',t('Marshal'),'Marshal')}${opt('Supervisor',t('Supervisor'),'')}</select></label><label>${t('Start date')}<input type="date" id="np-from" min="${EVENT_START}" max="${EVENT_END}" value="${ui.day}"></label>
+   ${personFields('Marshal')}<label>${t('Supervisor')}<select id="np-sup">${supOptions('','—')}</select></label><label>${t('Department')}<select id="np-dept">${deptOptions('','—')}</select></label><label>${t('Shift')}<select id="np-shift">${shiftOptions('','—')}</select></label></div>
+  <div class="row" style="justify-content:flex-end"><button class="btn" data-act="close">${t('Cancel')}</button><button class="btn pri" id="np-save">${t('Save')}</button></div>`);
+  $('#np-role').onchange=e=>{$('#np-code').value=nextCode(e.target.value)};
+  $('#np-save').onclick=()=>{const role=$('#np-role').value,from=$('#np-from').value||ui.day,n=readPerson(role,from,{sup:role==='Marshal'?$('#np-sup').value:'',dept:$('#np-dept').value,shift:$('#np-shift').value});
+    if(!n){toast(ar?'اكتب الاسم.':'Type the name.');return}if(S.staff.some(x=>x.code===n.code)){toast(t('This ID is already used.'));return}
+    S.staff.push(n);log('Staff added',`${n.code} ${n.name} (${role}) from ${from}`);closeModal();save();render();toast(t('Saved'))}}
+/* Hours & pay */
+const rateOf=s=>+(s.role==='Supervisor'?(S.settings.rateS||S.settings.rateM):S.settings.rateM)||0;
+const payOf=(s,mins)=>Math.round(mins/60*rateOf(s)*100)/100;
+const money=v=>v.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2});
+const hasRate=()=>!!(+S.settings.rateM||+S.settings.rateS);
+function workedAll(s){let days=0,mins=0;for(const d of DAYS){const r=S.att[d+'|'+s.id];if(r&&r.in&&!r.absent){days++;mins+=minsWorked(r)||0}}return{days,mins}}
+const leavers=sc=>S.staff.filter(s=>s.left&&s.left<=sc.to&&s.left>=EVENT_START&&inScope(s,{...sc,shift:''})).sort((a,b)=>a.left.localeCompare(b.left));
+function leaversTable(list){if(!list.length)return `<div class="muted small">${t('None')}</div>`;
+  return `<div class="tbl-wrap"><table><thead><tr><th>${t('ID')}</th><th>${t('Name')}</th><th>${t('Role')}</th><th>${t('Supervisor')}</th><th>${t('Not working from')}</th><th>${t('Reason')}</th><th class="num">${t('Days worked')}</th><th class="num">${t('Hours')}</th><th>${t('Replaced by')}</th></tr></thead><tbody>
+  ${list.map(s=>{const w=workedAll(s),n=byId(s.replacedBy);return `<tr><td class="mono">${esc(s.code)}</td><td>${esc(s.name)}</td><td>${t(s.role)}</td><td class="small">${esc(s.role==='Marshal'?supName(s.sup):'—')}</td><td class="mono small">${esc(s.left)}</td><td>${esc(t(s.leftReason||''))}${s.leftNote?`<div class="small muted">${esc(s.leftNote)}</div>`:''}</td><td class="num">${w.days}</td><td class="num mono">${hm(w.mins)}</td><td>${n?`${esc(n.name)} <span class="mono small muted">${esc(n.code)}</span>`:'<span class="muted">—</span>'}</td></tr>`}).join('')}</tbody></table></div>`}
 function assign(s,field,val,quiet){
   if(field==='sup'){if(s.role!=='Marshal')return false;s.sup=val;log('Assignment',`${s.code} ${s.name} → supervisor: ${supName(val)||'none'}`)}
   if(field==='dept'){s.dept=val;log('Assignment',`${s.code} ${s.name} → department: ${val||'none'}`)}
@@ -681,7 +731,7 @@ function attEdit(id,d){const s=byId(id),r=S.att[d+'|'+id]||{};
 }
 
 /* ---------- Supervisor board ---------- */
-VIEWS.team=()=>{const me=byId(ui.role),team=S.staff.filter(m=>m.sup===ui.role).sort((a,b)=>a.code.localeCompare(b.code)),c=dayStats(ui.day,team);
+VIEWS.team=()=>{const me=byId(ui.role),team=S.staff.filter(m=>m.sup===ui.role&&active(m,ui.day)).sort((a,b)=>a.code.localeCompare(b.code)),c=dayStats(ui.day,team);
   return `<div class="row between"><h2>${t('My team')} · ${t('Day')} ${dayNo(ui.day)}, ${esc(fmtD(ui.day))}</h2><span class="muted small">${esc(me.name)}${me.dept?' · '+esc(me.dept):''}</span></div>
   ${kpiTiles(c)}
   <div class="panel row"><label class="small muted" style="display:flex;gap:8px;align-items:center">${t('Record time')}<input type="time" id="rec-time"></label><span class="small muted">${t('Leave empty to use current Doha time')} (${doha().time})</span></div>
@@ -763,11 +813,12 @@ const scExportRows=()=>shiftLog().map(a=>({Recorded:tsFmt(a.ts),'Employee ID':a.
 
 /* ---------- Reports: daily operational summary ---------- */
 function byPerson(rows){const m=new Map();for(const{d,s,st}of rows){let p=m.get(s.id);if(!p)m.set(s.id,p={s,days:0,on_time:0,late:0,lateMin:0,absent:0,not_in:0,mins:0});
-  p.days++;if(p[st.k]!=null&&st.k!=='days')p[st.k]++;p.lateMin+=st.late||0;p.mins+=minsWorked(st.r)||0}
+  p.days++;if(p[st.k]!=null&&st.k!=='days')p[st.k]++;p.lateMin+=st.late||0;p.mins+=minsWorked(st.r)||0;if(st.r&&st.r.in)p.worked=(p.worked||0)+1}
   return [...m.values()].sort((a,b)=>(b.late+b.absent+b.not_in)-(a.late+a.absent+a.not_in)||b.lateMin-a.lateMin||a.s.name.localeCompare(b.s.name))}
-function personTable(list){if(!list.length)return `<div class="muted small">${t('None')}</div>`;
-  return `<div class="tbl-wrap"><table><thead><tr><th>${t('ID')}</th><th>${t('Name')}</th><th>${t('Supervisor')}</th><th class="num">${t('Days')}</th><th class="num">${t('On time')}</th><th class="num">${t('Late')}</th><th class="num">${t('Late (min)')}</th><th class="num">${t('Absent')}</th><th class="num">${t('Not checked in')}</th><th>${t('Phone')}</th></tr></thead><tbody>
-  ${list.map(p=>`<tr><td class="mono">${esc(p.s.code)}</td><td>${esc(p.s.name)}</td><td class="small">${esc(p.s.role==='Marshal'?supName(p.s.sup):t('Supervisor'))}</td><td class="num">${p.days}</td><td class="num">${p.on_time||''}</td><td class="num"${p.late?' style="color:var(--warn);font-weight:700"':''}>${p.late||''}</td><td class="num mono">${p.lateMin?'+'+p.lateMin:''}</td><td class="num"${p.absent?' style="color:var(--bad);font-weight:700"':''}>${p.absent||''}</td><td class="num">${p.not_in||''}</td><td class="mono small">${waLink(p.s.phone)}</td></tr>`).join('')}</tbody></table></div><div class="small muted">${list.length} ${t('results')}</div>`}
+function personTable(list){if(!list.length)return `<div class="muted small">${t('None')}</div>`;const pay=hasRate()&&can('reports'),tm=list.reduce((n,p)=>n+p.mins,0),tp=list.reduce((n,p)=>n+payOf(p.s,p.mins),0);
+  return `<div class="tbl-wrap"><table><thead><tr><th>${t('ID')}</th><th>${t('Name')}</th><th>${t('Supervisor')}</th><th class="num">${t('Days worked')}</th><th class="num">${t('On time')}</th><th class="num">${t('Late')}</th><th class="num">${t('Late (min)')}</th><th class="num">${t('Absent')}</th><th class="num">${t('Not checked in')}</th><th class="num">${t('Hours')}</th>${pay?`<th class="num">${t('Pay (QAR)')}</th>`:''}<th>${t('Phone')}</th></tr></thead><tbody>
+  ${list.map(p=>`<tr><td class="mono">${esc(p.s.code)}</td><td>${esc(p.s.name)}${lifeChips(p.s)}</td><td class="small">${esc(p.s.role==='Marshal'?supName(p.s.sup):t('Supervisor'))}</td><td class="num">${p.worked||0}</td><td class="num">${p.on_time||''}</td><td class="num"${p.late?' style="color:var(--warn);font-weight:700"':''}>${p.late||''}</td><td class="num mono">${p.lateMin?'+'+p.lateMin:''}</td><td class="num"${p.absent?' style="color:var(--bad);font-weight:700"':''}>${p.absent||''}</td><td class="num">${p.not_in||''}</td><td class="num mono">${hm(p.mins)}</td>${pay?`<td class="num mono">${money(payOf(p.s,p.mins))}</td>`:''}<td class="mono small">${waLink(p.s.phone)}</td></tr>`).join('')}
+  <tr style="font-weight:700"><td></td><td>${t('Total')}</td><td colspan="7"></td><td class="num mono">${hm(tm)}</td>${pay?`<td class="num mono">${money(tp)}</td>`:''}<td></td></tr></tbody></table></div><div class="small muted">${list.length} ${t('results')}${pay?'':' · '+(ui.lang==='ar'?'حدّد أجر الساعة من البيانات › الإعدادات لحساب الرواتب.':'Set the hourly rate in Data & import › Settings to calculate pay.')} · ${ui.lang==='ar'?'الساعات تُحسب من الدخول إلى الخروج.':'Hours count from check-in to check-out.'}</div>`}
 function daySummary(sc){
   const rows=scopeRows(S.staff,sc),c=statsOf(rows),inc=scopeIncidents(sc),k=x=>rows.filter(r=>r.st.k===x);
   return {sc,rows,c,inc,late:k('late').sort((a,b)=>a.d.localeCompare(b.d)||b.st.late-a.st.late),absent:k('absent'),notin:k('not_in')};
@@ -778,6 +829,7 @@ VIEWS.rep=()=>{const R=daySummary(SC()),multi=R.sc.days.length>1,dt=d=>multi?`<t
   ${kpiTiles(R.c,R.inc.length)}
   <div class="grid2">
    <section class="panel" style="display:flex;flex-direction:column;gap:10px;grid-column:1/-1"><h3>${t('By person')}</h3><div class="small muted">${ui.lang==='ar'?'كل شخص ضمن الفلاتر: كم مرة تأخر أو غاب. اختر مشرفاً لترى فريقه، واختر الحالة لترى المتأخرين أو الغائبين فقط.':'Everyone in the filters, with how often they were late or absent. Pick a supervisor to see their team, and a status to see only late or absent.'}</div>${personTable(byPerson(R.rows))}</section>
+   <section class="panel" style="display:flex;flex-direction:column;gap:10px;grid-column:1/-1"><h3>${t('Withdrawals & replacements')} (${leavers(R.sc).length})</h3>${leaversTable(leavers(R.sc))}</section>
    <section class="panel" style="display:flex;flex-direction:column;gap:10px"><h3>${t('Late arrivals')} (${R.late.length})</h3>${pp(R.late,({d,s,st})=>`<tr>${dt(d)}<td class="mono">${esc(s.code)}</td><td>${esc(s.name)}</td><td>${esc(supName(s.sup))}</td><td class="mono">${esc(st.r.in)}</td><td class="num mono">+${st.late}</td></tr>`)}</section>
    <section class="panel" style="display:flex;flex-direction:column;gap:10px"><h3>${t('Absences')} (${R.absent.length}) · ${t('Not yet checked in')} (${R.notin.length})</h3>${pp([...R.absent,...R.notin],({d,s,st})=>`<tr>${dt(d)}<td class="mono">${esc(s.code)}</td><td>${esc(s.name)}</td><td>${esc(supName(s.sup))}</td><td>${chip(st.k)}</td><td>${waLink(s.phone)}</td></tr>`)}</section>
   </div>
@@ -791,14 +843,16 @@ function sumPdf(){const R=daySummary(SC()),sc=R.sc,multi=sc.days.length>1,fl=sco
   const D=d=>multi?[d.slice(5)]:[],DH=multi?['Date']:[];
   pdfSection(doc,'By supervisor');pdfTable(doc,['Supervisor','Team','On time','Late','Absent','Not in'],br(groupsBySup(R.rows,sc)));
   pdfSection(doc,'By department');pdfTable(doc,['Department','Team','On time','Late','Absent','Not in'],br(groupsByDept(R.rows,sc)));
-  {const bp=byPerson(R.rows);pdfSection(doc,`By person (${bp.length})`);pdfTable(doc,['ID','Name','Supervisor','Days','On time','Late','Late min','Absent','Not in'],bp.map(p=>[p.s.code,p.s.name,p.s.role==='Marshal'?supName(p.s.sup)||'-':'Supervisor',p.days,p.on_time||'',p.late||'',p.lateMin?'+'+p.lateMin:'',p.absent||'',p.not_in||'']))}
+  {const bp=byPerson(R.rows);pdfSection(doc,`By person (${bp.length})`);const pay=hasRate();pdfTable(doc,['ID','Name','Supervisor','Worked','On time','Late','Late min','Absent','Not in','Hours',...(pay?['Pay QAR']:[])],[...bp.map(p=>[p.s.code,p.s.name+(p.s.left?' (withdrew '+p.s.left.slice(5)+')':''),p.s.role==='Marshal'?supName(p.s.sup)||'-':'Supervisor',p.worked||0,p.on_time||'',p.late||'',p.lateMin?'+'+p.lateMin:'',p.absent||'',p.not_in||'',hm(p.mins),...(pay?[money(payOf(p.s,p.mins))]:[])]),['','Total','','','','','','','',hm(bp.reduce((n,p)=>n+p.mins,0)),...(pay?[money(bp.reduce((n,p)=>n+payOf(p.s,p.mins),0))]:[])]]);
+    const lv=leavers(sc);pdfSection(doc,`Withdrawals and replacements (${lv.length})`);pdfTable(doc,['ID','Name','Role','Not working from','Reason','Days worked','Hours','Replaced by'],lv.map(s=>{const w=workedAll(s),n=byId(s.replacedBy);return [s.code,s.name,s.role,s.left,s.leftReason||'',w.days,hm(w.mins),n?n.code+' '+n.name:'-']}))}
   pdfSection(doc,`Late arrivals (${R.late.length})`);pdfTable(doc,[...DH,'ID','Name','Supervisor','Shift','In','Late'],R.late.map(({d,s,st})=>[...D(d),s.code,s.name,supName(s.sup),st.sh?.name||'',st.r.in,'+'+st.late+' min']));
   pdfSection(doc,`Absent and not checked in (${R.absent.length+R.notin.length})`);pdfTable(doc,[...DH,'ID','Name','Supervisor','Shift','Status'],[...R.absent,...R.notin].map(({d,s,st})=>[...D(d),s.code,s.name,supName(s.sup),st.sh?.name||'',STATUS_LABEL[st.k]]));
   pdfSection(doc,`Incidents (${R.inc.length})`);pdfTable(doc,[...(multi?['Date']:[]),'Time','Category','Severity','Department','Description','By'],R.inc.map(i=>[...(multi?[i.date.slice(5)]:[]),i.time,i.cat,i.sev,i.dept,i.desc,i.by]));
   pdfFinish(doc,sumName(sc,'pdf'))}
 function sumXlsx(){const R=daySummary(SC()),sc=R.sc,br=g=>g.map(([l,rows])=>{const c=statsOf(rows);return {Group:l,Team:c.total,'On time':c.on_time,Late:c.late,Absent:c.absent,'Not checked in':c.not_in}});
   xlsx(sumName(sc,'xlsx'),{Summary:[{From:sc.from,To:sc.to,Department:sc.dept||'All',Shift:sc.shift?shiftById(sc.shift)?.name:'All',Supervisor:sc.sup?supName(sc.sup):'All',Status:sc.status?(ST_OPTS.find(x=>x[0]===sc.status)||[,''])[1]:'All',Assigned:R.c.total,'On time':R.c.on_time,Late:R.c.late,Absent:R.c.absent,'Not checked in':R.c.not_in,'Checked out':R.c.out,Incidents:R.inc.length}],
-    'By person':byPerson(R.rows).map(p=>({'Employee ID':p.s.code,Name:p.s.name,Role:p.s.role,Supervisor:p.s.role==='Marshal'?supName(p.s.sup):'',Days:p.days,'On time':p.on_time,Late:p.late,'Late minutes':p.lateMin,Absent:p.absent,'Not checked in':p.not_in,Hours:hm(p.mins)})),'By supervisor':br(groupsBySup(R.rows,sc)),'By department':br(groupsByDept(R.rows,sc)),Attendance:attExportRows(R.rows),Incidents:incExportRows(R.inc)})}
+    'By person':byPerson(R.rows).map(p=>({'Employee ID':p.s.code,Name:p.s.name,Role:p.s.role,Supervisor:p.s.role==='Marshal'?supName(p.s.sup):'','On time':p.on_time,Late:p.late,'Late minutes':p.lateMin,Absent:p.absent,'Not checked in':p.not_in,'Days worked':p.worked||0,Hours:hm(p.mins),'Hours (decimal)':Math.round(p.mins/60*100)/100,'Rate QAR/h':rateOf(p.s),'Pay QAR':payOf(p.s,p.mins),Status:p.s.left?'Withdrew '+p.s.left:p.s.replaces?'Replacement':''})),
+    'Withdrawals':leavers(sc).map(s=>{const w=workedAll(s),n=byId(s.replacedBy);return {'Employee ID':s.code,Name:s.name,Role:s.role,Supervisor:s.role==='Marshal'?supName(s.sup):'','Not working from':s.left,Reason:s.leftReason||'',Notes:s.leftNote||'','Days worked':w.days,Hours:hm(w.mins),'Replaced by':n?n.code+' '+n.name:''}}),'By supervisor':br(groupsBySup(R.rows,sc)),'By department':br(groupsByDept(R.rows,sc)),Attendance:attExportRows(R.rows),Incidents:incExportRows(R.inc)})}
 
 /* ---------- Data & import ---------- */
 VIEWS.data=()=>{const p=ui.importPreview;return `<h2>${t('Data & import')}</h2>
@@ -811,7 +865,9 @@ VIEWS.data=()=>{const p=ui.importPreview;return `<h2>${t('Data & import')}</h2>
      <div class="tbl-wrap" style="margin-top:8px"><table><thead><tr><th>${t('ID')}</th><th>${t('Name')}</th><th>${t('Role')}</th><th>${t('Phone')}</th></tr></thead><tbody>${p.rows.slice(0,8).map(r=>`<tr><td class="mono">${esc(r.code)}</td><td>${esc(r.name)}</td><td>${t(r.role)}</td><td class="mono">${esc(r.phone)}</td></tr>`).join('')}</tbody></table></div></div>`:''}
   </section>
   <section class="panel" style="display:flex;flex-direction:column;gap:12px"><h3>${t('Settings')}</h3>
-   <div class="form"><label>${t('Grace period (min)')}<input type="text" inputmode="numeric" id="set-grace" value="${S.settings.grace}"></label></div>
+   <div class="form"><label>${t('Grace period (min)')}<input type="text" inputmode="numeric" id="set-grace" value="${S.settings.grace}"></label>
+     <label>${t('Hourly rate, Marshal (QAR)')}<input type="text" inputmode="decimal" id="set-rate-m" value="${esc(S.settings.rateM||'')}" placeholder="0"></label>
+     <label>${t('Hourly rate, Supervisor (QAR)')}<input type="text" inputmode="decimal" id="set-rate-s" value="${esc(S.settings.rateS||'')}" placeholder="${ui.lang==='ar'?'نفس المارشال':'Same as Marshal'}"></label></div>
    <div class="grid2"><div style="display:flex;flex-direction:column;gap:8px"><b>${t('Departments')}</b><div class="row">${S.departments.map(d=>`<span class="chip c-out" style="cursor:pointer" data-act="dept-del" data-v="${esc(d)}" title="Remove">${esc(d)} ×</span>`).join('')}</div>
      <div class="row"><input type="text" id="new-dept" placeholder="${t('Department')}"><button class="btn sm" data-act="dept-add">${t('Add')}</button></div></div>
     <div style="display:flex;flex-direction:column;gap:8px"><b>${t('Shifts')}</b>${S.shifts.map(x=>`<div class="row small"><span class="mono">${esc(x.id)}</span><input type="text" data-shift="${x.id}" data-k="name" value="${esc(x.name)}" style="width:120px"><input type="time" data-shift="${x.id}" data-k="start" value="${x.start}"><input type="time" data-shift="${x.id}" data-k="end" value="${x.end}"></div>`).join('')}
@@ -1026,6 +1082,9 @@ document.addEventListener('click',e=>{
     case 'bulk':{if(!can('staff'))return;const bs=$('#b-sup').value,bd=$('#b-dept').value,bh=$('#b-shift').value;let skipped=0,n=0;
       for(const sid of ui.sel){const s=byId(sid);if(!s)continue;if(bs&&assign(s,'sup',bs))n++;if(bd)assign(s,'dept',bd);if(bh&&!assign(s,'shift',bh))skipped++}
       save();ui.sel.clear();render();toast(skipped?`${t('Saved')}. ${skipped} already had a shift: use Shift changes for them.`:t('Saved'));break}
+    case 'st-out':if(can('staff'))staffOut(id);break;
+    case 'st-add':if(can('staff'))staffAdd();break;
+    case 'st-back':if(can('staff')){const s=byId(id);confirmBox(ui.lang==='ar'?'إرجاع هذا الشخص للعمل؟ البديل (إن وجد) يبقى.':'Put this person back on the active list? Any replacement stays.',()=>{delete s.left;delete s.leftReason;delete s.leftNote;delete s.replacedBy;log('Withdrawal',`${s.code} ${s.name}: reinstated`);save();render()})}break;
     case 'shift-change':ui.scStaff=id;ui.tab='shift';render();break;
     case 'att-edit':if(can('attendance'))attEdit(id,el.dataset.d);break;
     case 'ci':case 'co':case 'abs':case 'undo':case 'undo-out':mark(id,a);break;
@@ -1076,6 +1135,7 @@ document.addEventListener('change',e=>{const el=e.target;
   if(el.dataset.actChange==='role'){ui.role=el.value;Prefs.set('role',el.value);ui.tab='';ui.annShown='';render();setTimeout(annPopup,200);return}
   if(el.dataset.assign&&can('staff')){const s=byId(el.dataset.id);if(assign(s,el.dataset.assign,el.value)){save();toast(t('Saved'));$('#res-staff').innerHTML=RES.staff()}return}
   if(el.id==='imp-file'&&el.files[0]){if(!window.XLSX){toast('Excel library failed to load.');return}readImport(el.files[0]);return}
+  if(el.id==='set-rate-m'||el.id==='set-rate-s'){const k=el.id==='set-rate-m'?'rateM':'rateS',v=Math.max(0,parseFloat(el.value)||0);S.settings[k]=v;log('Settings',`Hourly rate ${k==='rateM'?'Marshal':'Supervisor'}: ${v} QAR`);save();toast(t('Saved'));return}
   if(el.id==='set-grace'){const g=Math.max(0,Math.min(120,parseInt(el.value,10)||0));S.settings.grace=g;log('Settings','Grace period: '+g+' min');save();toast(t('Saved'));return}
   if(el.dataset.shift){const x=shiftById(el.dataset.shift);if(x&&el.value){x[el.dataset.k]=el.value;log('Settings',`Shift ${x.id} ${el.dataset.k}: ${el.value}`);save();toast(t('Saved'))}return}
   if(el.dataset.rcp!=null&&can('settings')){const l=recips().map(x=>({...x}));l[+el.dataset.rcp][el.dataset.k]=el.value.trim();S.settings.recipients=l;log('Settings','Timesheet recipient updated');save();toast(t('Saved'));return}
