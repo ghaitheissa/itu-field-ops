@@ -62,6 +62,28 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background
 .sig{width:100%;height:160px;border:1.5px dashed var(--muted);border-radius:8px;background:#ffffff;touch-action:none;cursor:crosshair;display:block}
 .send{display:flex;gap:10px;flex-wrap:wrap}.send button:not(.dl){display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:600}
 
+.inst{display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 12px;border-radius:8px;border:0;background:var(--accent);color:#ffffff;font-weight:700;cursor:pointer;font:inherit;font-weight:700}.inst svg{width:18px;height:18px}
+.inst-big{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--fg);color:var(--bg);border:0}.inst-big svg{width:20px;height:20px}
+@media (max-width:560px){.inst span{display:none}.inst{padding:0 10px}}
+.iosg{display:flex;gap:18px;align-items:center;flex-wrap:wrap;justify-content:center}
+.phone{position:relative;width:190px;height:310px;border:8px solid #111111;border-radius:30px;background:#f2f2f7;overflow:hidden;flex:none;color:#111111;font-size:11px}
+.phone .scr{position:absolute;inset:0;opacity:0;transition:opacity .4s}.phone .scr.on{opacity:1}
+.phone .pg{position:absolute;inset:0 0 44px;background:#ffffff;padding:18px 12px;display:flex;flex-direction:column;gap:8px}.phone .pg.dim{background:#c9c9cf}
+.phone .ln{height:8px;border-radius:4px;background:#e5e5ea}.phone .ln.s{width:60%}
+.phone .bar{position:absolute;left:0;right:0;bottom:0;height:44px;background:#f9f9f9;border-top:1px solid #d1d1d6;display:flex;justify-content:space-around;align-items:center;font-size:18px;color:#007aff}
+.phone .bar svg{width:20px;height:20px}
+.phone .hl{position:relative}
+.phone .tap{position:absolute;left:50%;top:50%;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;background:rgb(0 122 255 / .35);border:2px solid #007aff;animation:tap 1.1s ease-out infinite;pointer-events:none}
+@keyframes tap{0%{transform:scale(.4);opacity:1}100%{transform:scale(1.5);opacity:0}}
+.phone .sheet{position:absolute;left:0;right:0;bottom:0;background:#f2f2f7;border-radius:14px 14px 0 0;padding:12px 10px;display:flex;flex-direction:column;gap:10px;animation:up .4s}
+.phone .sheet.tall{top:70px;gap:0;padding:8px 10px}
+@keyframes up{from{transform:translateY(40%)}to{transform:none}}
+.phone .apps{display:flex;gap:10px;justify-content:center}.phone .apps i{width:32px;height:32px;border-radius:9px;display:block}
+.phone .acts{display:flex;flex-direction:column;background:#ffffff;border-radius:10px}.phone .acts span{padding:9px 10px;border-bottom:1px solid #e5e5ea}.phone .acts .hl{font-weight:700;color:#007aff}
+.phone .row1{background:#ffffff;padding:10px;border-bottom:1px solid #e5e5ea;display:flex;justify-content:space-between}.phone .row1.hl{font-weight:700}
+.phone .addh{display:flex;justify-content:space-between;align-items:center;padding:14px 10px;background:#f9f9f9;border-bottom:1px solid #d1d1d6;font-size:10.5px}
+.phone .addb{display:flex;gap:10px;align-items:center;margin:12px 10px;background:#ffffff;border-radius:10px;padding:10px}.phone .addb>div{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.phone .addb img{width:44px;height:44px;border-radius:10px;border:1px solid #e5e5ea}
+.isteps{margin:0;padding-inline-start:22px;display:flex;flex-direction:column;gap:10px;max-width:300px;flex:1;min-width:220px}.isteps li{opacity:.4;transition:opacity .3s}.isteps li.on{opacity:1;font-weight:500}
 .tel{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#111111;color:#ffffff;vertical-align:middle;margin-inline-start:6px;flex:none}.tel svg{width:13px;height:13px}
 .wa{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#25d366;color:#ffffff;vertical-align:middle;margin-inline-start:6px;flex:none}
 .wa svg{width:14px;height:14px}
@@ -189,11 +211,13 @@ const LOGO='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAoAAAACMCAYAAADskBhxAA
 const logoImg=h=>`<img class="logo-l" src="${LOGO}" alt="Elegancia Resources" style="height:${h}px"><img class="logo-d" src="${LOGO_W}" alt="" style="height:${h}px">`;
 const ICON={menu:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>',
  tel:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1z"/></svg>',
+ dl:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg>',
  mail:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6l8.5 7 8.5-7"/></svg>',
  share:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7.5 7.5L12 3l4.5 4.5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>',
  eye:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',
  eyeOff:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l18 18M10.6 5.1A10.4 10.4 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.2 4.1M6.6 6.6C3.8 8.4 2 12 2 12s3.5 7 10 7c1.6 0 3-.4 4.3-1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>',
  wa:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.5-3.9-4.7-4.1-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.3.5-.4.4c-.1.1-.3.3-.1.6.2.3.7 1.2 1.5 1.9 1 .9 1.9 1.2 2.2 1.3.3.1.4.1.6-.1l.8-1c.2-.2.4-.2.6-.1l1.9.9c.3.1.5.2.5.3.1.1.1.6-.1 1.2z"/></svg>'};
+const LOGO_ICON='data:image/png;base64,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';
 const DL=(act,kind,sm)=>`<button class="dl ${kind}${sm?' sm':''}" data-act="${act}" title="${kind==='pdf'?'Download PDF':'Download Excel'}" aria-label="${kind==='pdf'?'Download PDF':'Download Excel'}"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 3h12l7 7v19H7z" fill="var(--surface)" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M19 3v7h7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><rect x="3" y="13" width="18" height="9" rx="2" fill="currentColor"/><text x="12" y="20" text-anchor="middle" font-size="6.2" font-weight="800" font-family="Arial,sans-serif" fill="#fff">${kind==='pdf'?'PDF':'XLS'}</text><path d="M16.5 24v5M14 26.8l2.5 2.5 2.5-2.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`;
 function waLink(phone){let d=String(phone||'').replace(/\D/g,'');if(!d)return '';if(d.startsWith('00'))d=d.slice(2);if(d.length===8)d='974'+d;return `<a class="tel" href="tel:+${d}" title="Call" aria-label="Call">${ICON.tel}</a><a class="wa" href="https://wa.me/${d}" target="_blank" rel="noopener" title="WhatsApp" aria-label="WhatsApp">${ICON.wa}</a>`}
 const EVENT_START='2026-11-09', EVENT_END='2026-11-27', APPROVER='Rabea';
@@ -444,6 +468,7 @@ function render(){
         ${LIVE?'':`<label class="small muted" style="display:flex;gap:6px;align-items:center">${t('Signed in as')}<select id="role-sel" data-act-change="role" aria-label="Demo sign-in">
           ${opt('pm',t('Project Manager'),ui.role)}<optgroup label="${t('Supervisors')}">${sups().map(s=>opt(s.id,s.name+' ('+t('Supervisor')+')',ui.role)).join('')}</optgroup></select></label>`}
       </div>
+      ${canInstall()?`<button class="inst" data-act="install">${ICON.dl}<span>${t('Install app')}</span></button>`:''}
       <div class="menu-wrap"><button class="burger" data-act="menu" aria-label="Menu" aria-expanded="${!!ui.menu}">${ICON.menu}${unread?`<span class="badge">${unread}</span>`:''}</button>${ui.menu?menuHtml(unread):''}</div>
     </div>
     <nav class="tabs">${tabs.map(([k,l])=>`<button data-act="tab" data-v="${k}" aria-current="${ui.tab===k}">${t(l)}</button>`).join('')}</nav>
@@ -464,13 +489,33 @@ function menuHtml(unread){const who=ui.role==='pm'?t('Project Manager'):supName(
   return `<div class="menu" role="menu"><div class="who">${esc(who)}${LIVE?' · '+esc(Cloud.uname||userLabel(Cloud.email)):' · Demo'}</div>
   <div class="langsw"><button data-act="lang-set" data-v="en" class="${ui.lang==='en'?'on':''}">English</button><i></i><button data-act="lang-set" data-v="ar" class="${ui.lang==='ar'?'on':''}">العربية</button></div>
   <button data-act="ann-list">${t('Announcements')}${unread?`<span class="badge" style="position:static">${unread}</span>`:''}</button>
-  ${isStandalone()?'':`<button data-act="install">${t('Install app')}</button>`}
+  ${canInstall()?`<button data-act="install">${t('Install app')}</button>`:''}
   ${LIVE?'':`<button data-act="legend">${t('Live vs demo')}</button>`}
   ${LIVE?`<button class="danger" data-act="signout">${t('Sign out')}</button>`:''}</div>`}
 const isStandalone=()=>{try{return matchMedia('(display-mode: standalone)').matches||navigator.standalone===true}catch(e){return false}};
-let installEvt=null;addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e});
-async function installApp(){if(installEvt){installEvt.prompt();try{await installEvt.userChoice}catch(e){}installEvt=null;return}
-  const ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
+const UA=navigator.userAgent,IS_IOS=/iphone|ipad|ipod/i.test(UA)||(/macintosh/i.test(UA)&&navigator.maxTouchPoints>1),IS_ANDROID=/android/i.test(UA);
+let installEvt=null;addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;scheduleRender()});
+addEventListener('appinstalled',()=>{installEvt=null;Prefs.set('installed','1');scheduleRender();toast(ui.lang==='ar'?'تم تثبيت التطبيق على الشاشة الرئيسية.':'App installed on your home screen.')});
+if(isStandalone())Prefs.set('installed','1');
+try{navigator.getInstalledRelatedApps&&navigator.getInstalledRelatedApps().then(l=>{if(l&&l.length){Prefs.set('installed','1');scheduleRender()}}).catch(()=>{})}catch(e){}
+const canInstall=()=>!isStandalone()&&(!!installEvt||(!Prefs.get('installed','')&&(IS_IOS||IS_ANDROID)));
+let iosTimer=null;
+function iosGuide(){const ar=ui.lang==='ar';clearInterval(iosTimer);
+  const steps=ar?['اكبس زر المشاركة <b>⬆️</b> تحت بسفاري (بالآيفونات الجديدة اكبس <b>•••</b> أولاً ثم <b>Share</b>)','اكبس <b>View More</b>','اكبس <b>Add to Home Screen</b>','اكبس <b>Add</b> فوق على اليمين']:['Tap the Share button <b>⬆️</b> at the bottom of Safari (on newer iPhones tap <b>•••</b> first, then <b>Share</b>)','Tap <b>View More</b>','Tap <b>Add to Home Screen</b>','Tap <b>Add</b> at the top right'];
+  const share='<svg viewBox="0 0 24 24" fill="none" stroke="#007aff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4M6 11H5v10h14V11h-1"/></svg>';
+  modal(`<h2>${t('Install app')} · iPhone</h2>
+   <div class="iosg"><div class="phone">
+     <div class="scr on"><div class="pg">${logoImg(18)}<div class="ln"></div><div class="ln s"></div><div class="ln"></div></div><div class="bar"><span>‹</span><span>›</span><span class="hl">${share}<i class="tap"></i></span><span>▢</span><span>⧉</span></div></div>
+     <div class="scr"><div class="pg dim"></div><div class="sheet"><div class="apps"><i style="background:#1fb4ff"></i><i style="background:#34c759"></i><i style="background:#25d366"></i><i style="background:#ff9500"></i></div><div class="acts"><span>Copy</span><span>Add to Favourites</span><span class="hl">View More<i class="tap"></i></span></div></div></div>
+     <div class="scr"><div class="pg dim"></div><div class="sheet tall"><div class="row1">Copy</div><div class="row1">Add to Reading List</div><div class="row1">Add Bookmark</div><div class="row1 hl">Add to Home Screen <b>⊞</b><i class="tap"></i></div><div class="row1">Find on Page</div></div></div>
+     <div class="scr"><div class="addh"><span style="color:#007aff">Cancel</span><b>Add to Home Screen</b><span class="hl" style="color:#007aff;font-weight:700">Add<i class="tap"></i></span></div><div class="addb"><img src="${LOGO_ICON}" alt=""><div><b>ITU DOHA 2026</b><div class="small muted">ops.ghaitheissa.com</div></div></div></div>
+   </div>
+   <ol class="isteps">${steps.map((x,i)=>`<li class="${i?'':'on'}">${x}</li>`).join('')}</ol></div>
+   <div class="row" style="justify-content:flex-end"><button class="btn" data-act="close">${t('Close')}</button><button class="btn pri" data-act="ios-done">${ar?'تم، ضفته':'Done, I added it'}</button></div>`);
+  let k=0;iosTimer=setInterval(()=>{const sc=document.querySelectorAll('.iosg .scr'),li=document.querySelectorAll('.isteps li');if(!sc.length){clearInterval(iosTimer);return}
+    k=(k+1)%sc.length;sc.forEach((x,i)=>x.classList.toggle('on',i===k));li.forEach((x,i)=>x.classList.toggle('on',i===k))},2600)}
+async function installApp(){if(installEvt){const ev=installEvt;ev.prompt();try{const c=await ev.userChoice;if(c&&c.outcome==='accepted')Prefs.set('installed','1')}catch(e){}installEvt=null;render();return}
+  const ios=IS_IOS;if(ios){iosGuide();return}
   modal(`<h2>${t('Install app')}</h2><div>${ios?(ui.lang==='ar'?'في Safari: اضغط زر المشاركة ⬆️ ثم "إضافة إلى الشاشة الرئيسية".':'In Safari, tap the Share button ⬆️, then "Add to Home Screen".'):(ui.lang==='ar'?'في Chrome: افتح قائمة ⋮ ثم "تثبيت التطبيق" أو "إضافة إلى الشاشة الرئيسية".':'In Chrome, open the ⋮ menu, then "Install app" or "Add to Home screen".')}</div><div class="row" style="justify-content:flex-end"><button class="btn pri" data-act="close">${t('Close')}</button></div>`)}
 
 /* ---------- Announcements ---------- */
@@ -932,6 +977,7 @@ document.addEventListener('click',e=>{
     case 'lang':ui.lang=ui.lang==='ar'?'en':'ar';Prefs.set('lang',ui.lang);ui.menu=false;render();break;
     case 'menu':ui.menu=!ui.menu;render();break;
     case 'install':ui.menu=false;render();installApp();break;
+    case 'ios-done':Prefs.set('installed','1');clearInterval(iosTimer);closeModal();render();break;
     case 'ann-list':ui.menu=false;render();annList();break;
     case 'ann-ack':{const fromList=!!el.closest('.dlg')&&!!document.querySelector('.dlg h2');annAck(id);if(fromList&&!unreadAnns().length)annList();break}
     case 'ann-send':{if(!can('announcements'))break;const tx=$('#ann-text').value.trim();if(!tx){toast(ui.lang==='ar'?'اكتب نص الإعلان أولاً.':'Write the announcement first.');break}
@@ -1023,6 +1069,7 @@ function signInView(){return `<div class="auth">
    <label>${t('Password')}<span class="pw"><input type="password" autocomplete="current-password" id="au-pass"><button type="button" data-act="pw-eye" aria-label="Show password">${ICON.eye}</button></span></label>
    ${ui.authMsg?`<div class="small" style="color:var(--bad)">${esc(ui.authMsg)}</div>`:''}
    <button class="btn pri go" type="submit">${ui.lang==='ar'?'دخول':'Sign in'}</button>
+   ${canInstall()?`<button class="btn go inst-big" type="button" data-act="install">${ICON.dl}${t('Install app')}</button>`:''}
    <div class="small muted">${ui.lang==='ar'?'نسيت كلمة السر؟ اطلب من مدير المشروع كلمة جديدة.':'Forgot your password? Ask the Project Manager for a new one.'}</div>
    <div class="row between"><button class="btn ghost sm" type="button" data-act="auth-up">Project Manager: first sign-in</button><button class="btn ghost sm" type="button" data-act="lang">${ui.lang==='ar'?'English':'العربية'}</button></div>
   </form></div></div>`}
