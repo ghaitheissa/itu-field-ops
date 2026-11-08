@@ -50,7 +50,7 @@ table.stk thead th:nth-child(1),table.stk thead th:nth-child(3){z-index:3;backgr
 .acc-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
 .acc-card{border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:10px 12px;display:flex;flex-direction:column;gap:10px}
 .acc-card.open{grid-column:1/-1}
-.acc-head{display:flex;align-items:center;gap:10px}.acc-head .av{width:36px;height:36px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:800;flex:none}
+.acc-head{display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none}.acc-head .chev{color:var(--muted);font-size:12px}.acc-card.off .av,.acc-card.off .acc-t b{opacity:.45}.acc-head .av{width:36px;height:36px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:800;flex:none}
 .acc-t{display:flex;flex-direction:column;min-width:0;flex:1}.acc-t b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.acc-t span{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .acc-body{display:flex;flex-direction:column;gap:8px;border-top:1px dotted var(--line);padding-top:8px}
 .burger{width:38px;height:38px;border-radius:8px;border:1px solid var(--line);background:var(--surface);display:inline-grid;place-items:center;cursor:pointer;position:relative}
@@ -1222,8 +1222,8 @@ function teamPanel(){ui.newPerms=ui.newPerms||{};const ar=ui.lang==='ar';
      <label>${t('Password')}<input type="text" id="na-pw" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="min 6 characters"></label></div>
     ${permToggles('new',ui.newPerms)}
     <div class="row" style="justify-content:flex-end"><button class="btn pri" data-act="adm-new">${t('Create account')}</button></div></div>
-   ${admins().length?`<div class="acc-cards">${admins().map(a=>{const o=ui.accOpen===a.adminId,np=a.perms?.all?null:PERMS.filter(x=>a.perms?.[x[0]]).length;return `<div class="acc-card${o?' open':''}"><div class="acc-head"><span class="av">${esc(String(a.name||a.username).trim().charAt(0).toUpperCase())}</span><div class="acc-t"><b>${esc(a.name||a.username)}</b><span>${esc(a.position||'—')}</span></div>
-     <label class="sw" title="${ar?'عرض الصلاحيات':'Show access'}"><input type="checkbox" data-acc-open="${esc(a.adminId)}" ${o?'checked':''}><span></span></label></div>
+   ${admins().length?`<div class="acc-cards">${admins().map(a=>{const o=ui.accOpen===a.adminId,np=a.perms?.all?null:PERMS.filter(x=>a.perms?.[x[0]]).length;return `<div class="acc-card${o?' open':''}${a.disabled?' off':''}"><div class="acc-head" data-act="acc-open" data-id="${esc(a.adminId)}"><span class="av">${esc(String(a.name||a.username).trim().charAt(0).toUpperCase())}</span><div class="acc-t"><b>${esc(a.name||a.username)}</b><span>${esc(a.position||'—')}${a.disabled?` · <b style="color:var(--bad)">${ar?'موقوف':'Off'}</b>`:''}</span></div>
+     <span class="chev">${o?'▴':'▾'}</span><label class="sw" title="${ar?'تشغيل / إيقاف الحساب':'Account on / off'}"><input type="checkbox" data-acc-on="${esc(a.email)}" ${a.disabled?'':'checked'}><span></span></label></div>
      ${o?`<div class="acc-body"><div class="small muted"><span class="mono">${esc(a.username)}</span> · ${np===null?t('Full access'):`${np} ${ar?'صلاحيات':'permissions'}`}</div>
      <label class="small muted" style="display:flex;flex-direction:column;gap:4px">${t('Position')}<input type="text" data-acc-pos="${esc(a.email)}" value="${esc(a.position||'')}" autocomplete="off"></label>
      ${permToggles(a.email,a.perms)}
@@ -1460,6 +1460,7 @@ document.addEventListener('click',e=>{const pr=e.target.closest('table.pick tbod
     case 'reset-sample':if(LIVE)break;confirmBox(ui.lang==='ar'?'إعادة القائمة النموذجية: 68 موظفاً غير موزَّعين وبدون سجلات.':'Reset to the clean sample: 68 unassigned staff, no records.',()=>{S=freshState(sampleStaff(),'sample');ui.role='pm';Prefs.set('role','pm');save();render()});break;
     case 'signout':try{history.replaceState(null,'','#')}catch(e){}Prefs.set('tab','');Cloud.auth.signOut().then(()=>location.reload());break;
     case 'acc-save':if(LIVE&&can('accounts'))setAccount(id);break;
+    case 'acc-open':if(e.target.closest('.sw'))break;ui.accOpen=ui.accOpen===id?'':id;render();break;
     case 'adm-new':if(LIVE&&can('accounts'))createAdmin();break;
     case 'adm-pw':if(LIVE&&can('accounts'))adminPassword(id);break;
     case 'adm-del':if(LIVE&&can('accounts'))confirmBox(ui.lang==='ar'?'سيتم إيقاف دخول هذا الحساب. متابعة؟':'This account will no longer be able to sign in. Continue?',()=>delAdmin(id));break;
@@ -1486,7 +1487,8 @@ document.addEventListener('change',e=>{const el=e.target;
   if(el.dataset.shift){const x=shiftById(el.dataset.shift);if(x&&el.value){x[el.dataset.k]=el.value;log('Settings',`Shift ${x.id} ${el.dataset.k}: ${el.value}`);save();toast(t('Saved'))}return}
   if(el.dataset.rcp!=null&&can('settings')){const l=recips().map(x=>({...x}));l[+el.dataset.rcp][el.dataset.k]=el.value.trim();S.settings.recipients=l;log('Settings','Timesheet recipient updated');save();toast(t('Saved'));return}
   if(el.dataset.perm){permChange(el);return}
-  if(el.dataset.accOpen){ui.accOpen=el.checked?el.dataset.accOpen:'';render();return}
+  if(el.dataset.accOn){const em=el.dataset.accOn,a=Cloud.access.get(em),on=el.checked;if(!a||!can('accounts'))return;
+    Cloud.db.collection('access').doc(em).update({disabled:!on}).then(()=>{log('Account',`${a.name||a.username}: account ${on?'on':'off'}`);save();toast(on?(ui.lang==='ar'?'الحساب شغال':'Account on'):(ui.lang==='ar'?'الحساب موقوف، ما بيقدر يفوت':'Account off: they cannot sign in'))}).catch(e=>{toast('Not saved: '+(e.code||e.message));render()});return}
   if(el.dataset.accPos){const em=el.dataset.accPos,a=Cloud.access.get(em);if(a&&can('accounts'))Cloud.db.collection('access').doc(em).update({position:el.value.trim()}).then(()=>{log('Account',`${a.name||a.username}: position ${el.value.trim()}`);save();toast(t('Saved'))}).catch(e=>toast('Not saved: '+(e.code||e.message)));return}
   if(el.id==='lang-pick'){ui.lang=el.value;Prefs.set('lang',ui.lang);render();return}
   if(el.id==='ts-to'){tsToInfo();return}
@@ -1555,7 +1557,7 @@ async function bootLive(){
     ui.owner=false;ui.perms={};ui.adminName='';
     if(PM_EMAILS.includes(em)){ui.role='pm';ui.owner=true;ui.perms={all:true}}
     else{try{const d=await Cloud.db.collection('access').doc(em).get(),a=d.exists?d.data():null;
-        if(a&&a.role==='supervisor')ui.role=a.staffId;else if(a&&a.role==='admin'){ui.role='pm';ui.perms=a.perms||{};ui.adminName=a.name||a.username||''}else ui.role='';
+        if(a&&a.role==='supervisor')ui.role=a.staffId;else if(a&&a.role==='admin'&&!a.disabled){ui.role='pm';ui.perms=a.perms||{};ui.adminName=a.name||a.username||''}else ui.role='';
         if(a&&a.username)Cloud.uname=a.username}catch(e){ui.role=''}
       if(!ui.role){ui.authMsg=ui.lang==='ar'?'هذا الحساب غير مفعّل. اطلب من مدير المشروع حساباً جديداً.':'This account is not active. Ask the Project Manager for a new one.';await Cloud.auth.signOut();return}}
     if(!ui.owner&&!(await deviceCheck(em))){ui.role='';ui.waitDev=true;render();
@@ -1564,6 +1566,7 @@ async function bootLive(){
         else if(x.denied===DEV_ID){off();ui.waitDev=false;ui.authMsg=ui.lang==='ar'?'رفض مدير المشروع الدخول من هذا التلفون.':'The Project Manager refused sign-in on this phone.';Cloud.auth.signOut()}},()=>{});
       Cloud.unsubs.push(off);return}
     ui.waitDev=false;
+    if(!ui.owner)Cloud.unsubs.push(Cloud.db.collection('access').doc(em).onSnapshot(d=>{const x=d.data();if(x&&x.disabled){ui.authMsg=ui.lang==='ar'?'تم إيقاف هذا الحساب من مدير المشروع.':'This account was turned off by the Project Manager.';Cloud.auth.signOut()}},()=>{}));
     if(!ui.owner)Cloud.unsubs.push(Cloud.db.collection('devices').doc(em).onSnapshot(d=>{const x=d.data();if(x&&x.id&&x.id!==DEV_ID&&x.prev!==DEV_ID){ui.authMsg=ui.lang==='ar'?'تم نقل هذا الحساب لتلفون آخر بموافقة مدير المشروع.':'This account was moved to another phone by the Project Manager.';Cloud.auth.signOut()}},()=>{}));
     ui.authMsg='';render();Cloud.start()});
 }
