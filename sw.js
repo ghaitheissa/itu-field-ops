@@ -1,5 +1,5 @@
 // Network-first for the app shell so updates arrive at once; falls back to cache when offline.
-const C='fieldops-v1';
+const C='fieldops-v2';
 self.addEventListener('install',e=>{self.skipWaiting()});
 self.addEventListener('activate',e=>{e.waitUntil(self.clients.claim())});
 self.addEventListener('fetch',e=>{const r=e.request;const u=new URL(r.url);
