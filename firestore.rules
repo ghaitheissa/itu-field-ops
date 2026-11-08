@@ -67,6 +67,19 @@ service cloud.firestore {
       allow create: if office();
       allow update, delete: if isPM();
     }
+    // One phone per account: the first phone to sign in is recorded here (doc id = sign-in email).
+    match /devices/{email} {
+      allow read: if office() || (signedIn() && email == em());
+      allow create: if signedIn() && email == em();
+      allow update: if canP('accounts') || (signedIn() && email == em() && resource.data.standalone == false && request.resource.data.standalone == true && !('prev' in resource.data));
+      allow delete: if canP('accounts');
+    }
+    // A refused sign-in from another phone alerts the Project Manager.
+    match /alerts/{id} {
+      allow read: if canP('accounts');
+      allow create: if signedIn() && request.resource.data.email == em();
+      allow update, delete: if canP('accounts');
+    }
     // Append-only audit trail. Shift changes need the shifts permission.
     match /audit/{id} {
       allow read: if office();
