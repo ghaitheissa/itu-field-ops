@@ -41,6 +41,13 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background
 .brand b{font-family:var(--f-display);font-size:16px;font-weight:900;letter-spacing:.02em;color:var(--fg)}
 .brand span{font-size:10.5px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
 .menu-wrap{position:relative;order:2}.ctrls{order:1}
+.langpick{order:2;height:38px;width:auto;min-width:0;padding:0 26px 0 10px;border-radius:8px;font-size:13px;font-weight:700}
+.acc-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.acc-card{border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:10px 12px;display:flex;flex-direction:column;gap:10px}
+.acc-card.open{grid-column:1/-1}
+.acc-head{display:flex;align-items:center;gap:10px}.acc-head .av{width:36px;height:36px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:800;flex:none}
+.acc-t{display:flex;flex-direction:column;min-width:0;flex:1}.acc-t b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.acc-t span{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.acc-body{display:flex;flex-direction:column;gap:8px;border-top:1px dotted var(--line);padding-top:8px}
 .burger{width:38px;height:38px;border-radius:8px;border:1px solid var(--line);background:var(--surface);display:inline-grid;place-items:center;cursor:pointer;position:relative}
 .burger svg{width:20px;height:20px}
 .badge{position:absolute;top:-5px;inset-inline-end:-5px;min-width:18px;height:18px;border-radius:9px;background:var(--accent);color:var(--accent-ink);font-size:11px;font-weight:700;display:grid;place-items:center;padding:0 4px}
@@ -184,7 +191,7 @@ html[dir="rtl"] #toast{transform:translateX(50%)}
 .auth-form .go{min-height:50px;font-size:16px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;border-radius:8px;justify-content:center}
 @media (max-width:760px){.auth{grid-template-columns:1fr}.auth-side{padding-block:32px;min-height:220px}.auth-side .tri{width:40%}.auth-side h1{font-size:44px}}
 @media (prefers-reduced-motion:no-preference){.btn,.chip{transition:background .15s,border-color .15s}}
-@media (max-width:560px){header.top{position:static} .ctrls{order:3;width:100%} .brand img{height:22px} .brand b{font-size:13px} .kpi .v{font-size:28px} h2{font-size:21px}}
+@media (max-width:560px){.ctrls{order:3;width:100%;gap:6px 8px}.bar{gap:8px;padding-block:8px}.ctrls label{font-size:11px}.ctrls select{height:34px;padding-block:0}.brand{flex:1 1 0;gap:8px}.brand .bt{padding-inline-start:8px;min-width:0}.brand .bt span{display:none}.langpick{height:34px;padding:0 20px 0 8px}.burger{width:34px;height:34px}nav.tabs button{padding-block:8px} .brand img{height:22px} .brand b{font-size:13px} .kpi .v{font-size:28px} h2{font-size:21px}}
 
 /* modern look */
 :root{--r:14px}
@@ -661,6 +668,7 @@ function render(){
         ${LIVE?'':`<label class="small muted" style="display:flex;gap:6px;align-items:center">${t('Signed in as')}<select id="role-sel" data-act-change="role" aria-label="Demo sign-in">
           ${opt('pm',t('Project Manager'),ui.role)}<optgroup label="${t('Supervisors')}">${sups().map(s=>opt(s.id,s.name+' ('+t('Supervisor')+')',ui.role)).join('')}</optgroup></select></label>`}
       </div>
+      <select id="lang-pick" class="langpick" aria-label="Language"><option value="en" ${ui.lang==='en'?'selected':''}>EN</option><option value="ar" ${ui.lang==='ar'?'selected':''}>ع</option></select>
       <div class="menu-wrap"><button class="burger" data-act="menu" aria-label="Menu" aria-expanded="${!!ui.menu}">${ICON.menu}${unread?`<span class="badge">${unread}</span>`:''}</button>${ui.menu?menuHtml(unread):''}</div>
     </div>
     <nav class="tabs">${tabs.map(([k,l])=>`<button data-act="tab" data-v="${k}" aria-current="${ui.tab===k}">${t(l)}</button>`).join('')}</nav>
@@ -680,7 +688,6 @@ addEventListener('resize',()=>{if(ui.menu)placeMenu()});addEventListener('scroll
 
 function menuHtml(unread){const who=ui.role==='pm'?t('Project Manager'):supName(ui.role);
   return `<div class="menu" role="menu"><div class="who">${esc(who)}${LIVE?' · '+esc(Cloud.uname||userLabel(Cloud.email)):' · Demo'}</div>
-  <div class="langsw"><button data-act="lang-set" data-v="en" class="${ui.lang==='en'?'on':''}">English</button><i></i><button data-act="lang-set" data-v="ar" class="${ui.lang==='ar'?'on':''}">العربية</button></div>
   <button data-act="ann-list">${t('Announcements')}${unread?`<span class="badge" style="position:static">${unread}</span>`:''}</button>
   ${canInstall()?`<button data-act="install">${t('Install app')}</button>`:''}
   ${LIVE?'':`<button data-act="legend">${t('Live vs demo')}</button>`}
@@ -1152,12 +1159,12 @@ VIEWS.data=()=>{const p=ui.importPreview;return `<h2>${t('Data & import')}</h2>
    <div class="form"><label>${t('Grace period (min)')}<input type="text" inputmode="numeric" id="set-grace" value="${S.settings.grace}"></label>
      <label>${t('Hourly rate, Marshal (QAR)')}<input type="text" inputmode="decimal" id="set-rate-m" value="${esc(S.settings.rateM||'')}" placeholder="0"></label>
      <label>${t('Hourly rate, Supervisor (QAR)')}<input type="text" inputmode="decimal" id="set-rate-s" value="${esc(S.settings.rateS||'')}" placeholder="${ui.lang==='ar'?'نفس المارشال':'Same as Marshal'}"></label></div>
-   <div class="grid2"><div style="display:flex;flex-direction:column;gap:8px"><b>${t('Departments')}</b><div class="row">${S.departments.map(d=>`<span class="chip c-out" style="cursor:pointer" data-act="dept-del" data-v="${esc(d)}" title="Remove">${esc(d)} ×</span>`).join('')}</div>
-     <div class="row"><input type="text" id="new-dept" placeholder="${t('Department')}"><button class="btn sm" data-act="dept-add">${t('Add')}</button></div></div>
-    <div style="display:flex;flex-direction:column;gap:8px"><b>${t('Shifts')}</b>${S.shifts.map(x=>`<div class="row small"><span class="mono">${esc(x.id)}</span><input type="text" data-shift="${x.id}" data-k="name" value="${esc(x.name)}" style="width:120px"><input type="time" data-shift="${x.id}" data-k="start" value="${x.start}"><input type="time" data-shift="${x.id}" data-k="end" value="${x.end}"></div>`).join('')}
-     <div class="row"><button class="btn sm" data-act="shift-add">${t('Add')}</button></div></div></div>
    ${rcpEditor()}
-  </section>`:''}
+  </section>
+  <div class="grid2"><section class="panel" style="display:flex;flex-direction:column;gap:10px"><h3>${t('Departments')}</h3><div class="row">${S.departments.map(d=>`<span class="chip c-out" style="cursor:pointer" data-act="dept-del" data-v="${esc(d)}" title="Remove">${esc(d)} ×</span>`).join('')}</div>
+     <div class="row"><input type="text" id="new-dept" placeholder="${t('Department')}"><button class="btn sm" data-act="dept-add">${t('Add')}</button></div></section>
+    <section class="panel" style="display:flex;flex-direction:column;gap:10px"><h3>${t('Shifts')}</h3>${S.shifts.map(x=>`<div class="row small"><span class="mono">${esc(x.id)}</span><input type="text" data-shift="${x.id}" data-k="name" value="${esc(x.name)}" style="width:120px"><input type="time" data-shift="${x.id}" data-k="start" value="${x.start}"><input type="time" data-shift="${x.id}" data-k="end" value="${x.end}"></div>`).join('')}
+     <div class="row"><button class="btn sm" data-act="shift-add">${t('Add')}</button></div></section></div>`:''}
   ${LIVE&&can('accounts')?teamPanel()+accountsPanel():''}
   ${LIVE?'':`<section class="panel" style="display:flex;flex-direction:column;gap:12px"><div class="row between"><h3>${t('Team accounts')}</h3><span class="demo-tag">Demo</span></div><div class="small muted">${ui.lang==='ar'?'إضافة حسابات بصلاحيات تعمل في النسخة الفعلية فقط (ops.ghaitheissa.com).':'Adding accounts with permissions works on the live site only (ops.ghaitheissa.com).'}</div>${permToggles('demo',{all:true},true)}</section>
   <section class="panel" style="display:flex;flex-direction:column;gap:12px"><div class="row between"><h3>Demo tools</h3><span class="demo-tag">Demo</span></div>
@@ -1206,12 +1213,16 @@ function teamPanel(){ui.newPerms=ui.newPerms||{};const ar=ui.lang==='ar';
    <div class="panel" style="background:var(--sunk);display:flex;flex-direction:column;gap:10px"><b>${t('Create account')}</b>
     <div class="form"><label>${t('Username or email')}<input type="text" id="na-id" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="e.g. ops.lead"></label>
      <label>${t('Display name')}<input type="text" id="na-name" autocomplete="off"></label>
+     <label>${t('Position')}<input type="text" id="na-pos" autocomplete="off" placeholder="e.g. Operations Coordinator"></label>
      <label>${t('Password')}<input type="text" id="na-pw" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="min 6 characters"></label></div>
     ${permToggles('new',ui.newPerms)}
     <div class="row" style="justify-content:flex-end"><button class="btn pri" data-act="adm-new">${t('Create account')}</button></div></div>
-   ${admins().map(a=>`<div class="panel" style="display:flex;flex-direction:column;gap:8px"><div class="row between"><div><b>${esc(a.name||a.username)}</b> <span class="mono small muted">${esc(a.username)}</span></div><span class="chip c-on_time">${t('Active')}</span></div>
+   ${admins().length?`<div class="acc-cards">${admins().map(a=>{const o=ui.accOpen===a.adminId,np=a.perms?.all?null:PERMS.filter(x=>a.perms?.[x[0]]).length;return `<div class="acc-card${o?' open':''}"><div class="acc-head"><span class="av">${esc(String(a.name||a.username).trim().charAt(0).toUpperCase())}</span><div class="acc-t"><b>${esc(a.name||a.username)}</b><span>${esc(a.position||'—')}</span></div>
+     <label class="sw" title="${ar?'عرض الصلاحيات':'Show access'}"><input type="checkbox" data-acc-open="${esc(a.adminId)}" ${o?'checked':''}><span></span></label></div>
+     ${o?`<div class="acc-body"><div class="small muted"><span class="mono">${esc(a.username)}</span> · ${np===null?t('Full access'):`${np} ${ar?'صلاحيات':'permissions'}`}</div>
+     <label class="small muted" style="display:flex;flex-direction:column;gap:4px">${t('Position')}<input type="text" data-acc-pos="${esc(a.email)}" value="${esc(a.position||'')}" autocomplete="off"></label>
      ${permToggles(a.email,a.perms)}
-     <div class="row"><input type="text" id="apw-${esc(a.adminId)}" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="${t('New password')}" style="width:170px"><button class="btn sm" data-act="adm-pw" data-id="${esc(a.adminId)}">${t('Set password')}</button><button class="btn sm ghost" data-act="adm-del" data-id="${esc(a.adminId)}">${t('Remove')}</button></div></div>`).join('')}
+     <div class="row"><input type="text" id="apw-${esc(a.adminId)}" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="${t('New password')}" style="width:170px"><button class="btn sm" data-act="adm-pw" data-id="${esc(a.adminId)}">${t('Set password')}</button><button class="btn sm ghost" data-act="adm-del" data-id="${esc(a.adminId)}">${t('Remove')}</button></div></div>`:''}</div>`}).join('')}</div>`:''}
   </section>`}
 async function permChange(el){const key=el.dataset.acc,p=el.dataset.perm;
   if(key==='demo'){render();return}
@@ -1230,13 +1241,13 @@ function accReady(name,raw,pw,phone){const txt=credText(name,raw,pw);ui.credMsg=
   modal(`<h2>${t('Account ready')}</h2><div class="muted">${esc(name)}</div><div class="panel mono" style="background:var(--sunk)">${t('Username')}: ${esc(raw)}<br>Password: ${esc(pw)}</div>
   <div class="small muted">${ui.lang==='ar'?'اكبس واتساب لإرسال اسم المستخدم وكلمة السر والرابط مع تعليمات التثبيت. لن تظهر كلمة السر مرة أخرى.':'Tap WhatsApp to send the username, password and link with the install steps. The password is not shown again.'}</div>
   <div class="row" style="justify-content:flex-end"><button class="btn" data-act="close">${t('Close')}</button><button class="btn pri" data-act="cred-wa" style="background:#25d366;border-color:#25d366;box-shadow:none">${ICON.wa} WhatsApp${phone?' · '+esc(phone):''}</button></div>`)}
-async function createAdmin(){const raw=($('#na-id').value||'').trim().toLowerCase(),name=($('#na-name').value||'').trim()||raw,pw=$('#na-pw').value,perms={...(ui.newPerms||{})};
+async function createAdmin(){const raw=($('#na-id').value||'').trim().toLowerCase(),name=($('#na-name').value||'').trim()||raw,position=($('#na-pos').value||'').trim(),pw=$('#na-pw').value,perms={...(ui.newPerms||{})};
   if(!idOk(raw)){toast('Username: 3+ letters, numbers, dots or dashes. Or a full email address.');return}
   if(pw.length<6){toast('Password: at least 6 characters.');return}
   if(Cloud.logins.has(raw)||PM_EMAILS.includes(toEmail(raw))){toast('This username is already taken.');return}
   try{const email=await newAuthUser(raw,pw),adminId='adm'+Date.now().toString(36),b=Cloud.db.batch();
     b.set(Cloud.db.collection('logins').doc(raw),{email,adminId});
-    b.set(Cloud.db.collection('access').doc(email),{role:'admin',adminId,name,username:raw,perms});
+    b.set(Cloud.db.collection('access').doc(email),{role:'admin',adminId,name,position,username:raw,perms});
     await b.commit();log('Account',`Team account ${raw} (${name}) created: ${perms.all?'full access':PERMS.filter(x=>perms[x[0]]).map(x=>x[1]).join(', ')||'no permissions'}`);save();ui.newPerms={};render();accReady(name,raw,pw)
   }catch(e){toast('Not saved: '+(e.code||e.message))}}
 async function adminPassword(adminId){const old=admins().find(a=>a.adminId===adminId);if(!old)return;const pw=$('#apw-'+adminId).value;
@@ -1470,6 +1481,9 @@ document.addEventListener('change',e=>{const el=e.target;
   if(el.dataset.shift){const x=shiftById(el.dataset.shift);if(x&&el.value){x[el.dataset.k]=el.value;log('Settings',`Shift ${x.id} ${el.dataset.k}: ${el.value}`);save();toast(t('Saved'))}return}
   if(el.dataset.rcp!=null&&can('settings')){const l=recips().map(x=>({...x}));l[+el.dataset.rcp][el.dataset.k]=el.value.trim();S.settings.recipients=l;log('Settings','Timesheet recipient updated');save();toast(t('Saved'));return}
   if(el.dataset.perm){permChange(el);return}
+  if(el.dataset.accOpen){ui.accOpen=el.checked?el.dataset.accOpen:'';render();return}
+  if(el.dataset.accPos){const em=el.dataset.accPos,a=Cloud.access.get(em);if(a&&can('accounts'))Cloud.db.collection('access').doc(em).update({position:el.value.trim()}).then(()=>{log('Account',`${a.name||a.username}: position ${el.value.trim()}`);save();toast(t('Saved'))}).catch(e=>toast('Not saved: '+(e.code||e.message)));return}
+  if(el.id==='lang-pick'){ui.lang=el.value;Prefs.set('lang',ui.lang);render();return}
   if(el.id==='ts-to'){tsToInfo();return}
   if(el.id==='sc-staff'){ui.scStaff=el.value;const s=byId(el.value);$('#sc-cur').value=s?shLabel(shiftOf(s,$('#sc-eff').value||ui.day)):'';return}
   if(el.dataset.f&&el.tagName==='SELECT'||el.dataset.f&&(el.type==='date'||el.type==='time'))filterInput(el);
