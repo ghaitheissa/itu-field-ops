@@ -212,7 +212,7 @@ const AR={
 'Departments':'الأقسام','Shifts':'الورديات','Add':'إضافة','Grace period (min)':'فترة السماح (دقيقة)','Settings':'الإعدادات','Start':'البداية','End':'النهاية',
 'Live vs demo':'الفعلي مقابل التجريبي','Edit attendance':'تعديل الحضور','Clear record':'حذف السجل','Supervisors':'المشرفون','Marshals':'المارشال','No marshals are assigned to you yet.':'لا يوجد مارشال موزَّع عليك بعد.',
 'Sample staff list (68)':'قائمة موظفين نموذجية (68)','Import your Excel file in Data & import before go-live.':'استورد ملف Excel من صفحة البيانات قبل التشغيل الفعلي.','Demo scenario loaded':'تم تحميل سيناريو تجريبي','Generated attendance and incidents are fake. Reset before go-live.':'الحضور والحوادث المولّدة وهمية. أعد الضبط قبل التشغيل الفعلي.',
-'Language':'اللغة','Nationality':'الجنسية','Sign out':'تسجيل خروج','Supervisor accounts':'حسابات المشرفين','Email':'البريد الإلكتروني','Username':'اسم المستخدم','Password':'كلمة السر','Announcements':'الإعلانات','Announcement':'إعلان','Received':'تم الاستلام','received':'استلموا','Send to supervisors':'إرسال للمشرفين','Sent':'تم الإرسال','Install app':'تثبيت التطبيق','New password':'كلمة سر جديدة','Set password':'تعيين كلمة السر','Active':'مفعّل','Remove':'إزالة','Account ready':'الحساب جاهز','Present':'حاضر','Nothing matches these filters.':'لا توجد نتائج لهذه الفلاتر.','No incidents recorded.':'لا توجد حوادث مسجلة.','No shift changes recorded yet.':'لا توجد تغييرات ورديات بعد.',
+'Language':'اللغة','Nationality':'الجنسية','Sign out':'تسجيل خروج','Supervisor accounts':'حسابات المشرفين','Email':'البريد الإلكتروني','Username':'اسم المستخدم','Password':'كلمة السر','Operational summary':'الملخص التشغيلي','Announcements':'الإعلانات','Announcement':'إعلان','Received':'تم الاستلام','received':'استلموا','Send to supervisors':'إرسال للمشرفين','Sent':'تم الإرسال','Install app':'تثبيت التطبيق','New password':'كلمة سر جديدة','Set password':'تعيين كلمة السر','Active':'مفعّل','Remove':'إزالة','Account ready':'الحساب جاهز','Present':'حاضر','Nothing matches these filters.':'لا توجد نتائج لهذه الفلاتر.','No incidents recorded.':'لا توجد حوادث مسجلة.','No shift changes recorded yet.':'لا توجد تغييرات ورديات بعد.',
 'Only staff who already have a shift appear here. First-time shift assignment is done in Staff & assignment.':'يظهر هنا فقط من لديه وردية. التوزيع الأول للوردية يتم من صفحة الموظفين والتوزيع.',
 'I confirm Rabea approved this change by email.':'أؤكد أن ربيع وافق على هذا التغيير عبر البريد.','Staff member':'الموظف','Saved':'تم الحفظ','Day summary':'ملخص اليوم','Employees':'الموظفون','Rows shown':'الصفوف المعروضة',
 };
@@ -312,7 +312,7 @@ document.addEventListener('focusout',()=>setTimeout(()=>{if(deferRender&&$('#mod
 
 /* ---------- UI state ---------- */
 const ui={lang:Prefs.get('lang','en'),role:Prefs.get('role','pm'),tab:'',day:clampDay(doha().date),sel:new Set(),importPreview:null,
-  f:{staff:{q:'',role:'',sup:'',dept:'',shift:'',asg:''},att:{from:'',to:'',tf:'',tt:'',q:'',sup:'',dept:'',shift:'',status:''},inc:{from:'',to:'',q:'',dept:'',sev:'',cat:'',sup:''},audit:{q:'',type:''}}};
+  f:{staff:{q:'',role:'',sup:'',dept:'',shift:'',asg:''},att:{from:'',to:'',tf:'',tt:'',q:'',sup:'',dept:'',shift:'',status:''},inc:{from:'',to:'',q:'',dept:'',sev:'',cat:'',sup:''},audit:{q:'',type:''},scope:{from:'',to:'',dept:'',shift:'',sup:''}}};
 if(LIVE)ui.role='';else if(ui.role!=='pm'&&!S.staff.some(s=>s.id===ui.role))ui.role='pm';
 
 /* ---------- Domain helpers ---------- */
@@ -429,7 +429,11 @@ function render(){
     ${ui.day!==today&&today>=EVENT_START&&today<=EVENT_END?`<div class="small muted">Viewing ${fmtEn(ui.day)}. Today is ${fmtEn(today)}.</div>`:''}
     ${VIEWS[ui.tab]()}
   </main>`;
+  if(ui.menu)placeMenu();
 }
+function placeMenu(){const b=$('.burger'),m=$('.menu');if(!b||!m)return;const r=b.getBoundingClientRect(),w=m.offsetWidth;
+  m.style.position='fixed';m.style.top=(r.bottom+6)+'px';m.style.right='auto';m.style.insetInlineEnd='auto';m.style.left=Math.max(8,Math.min(r.right-w,innerWidth-w-8))+'px';m.style.maxHeight=(innerHeight-r.bottom-16)+'px';m.style.overflowY='auto'}
+addEventListener('resize',()=>{if(ui.menu)placeMenu()});addEventListener('scroll',()=>{if(ui.menu){ui.menu=false;render()}},{passive:true});
 
 function menuHtml(unread){const who=ui.role==='pm'?t('Project Manager'):supName(ui.role);
   return `<div class="menu" role="menu"><div class="who">${esc(who)}${LIVE?' · '+esc(Cloud.uname||userLabel(Cloud.email)):' · Demo'}</div>
@@ -459,40 +463,53 @@ function annList(){const pm=ui.role==='pm',list=annSorted(),sp=sups();
     ${pm?`<div class="reads">${reads.map(([s,r])=>`<span class="chip ${r?'c-on_time':'c-scheduled'}" title="${r?tsFmt(r.ts):''}">${r?'✓':'○'} ${esc(s.name)}${r?' · '+tsFmt(r.ts):''}</span>`).join('')}</div>`:''}</div>`}).join('<hr class="sep">'):`<div class="empty">${ui.lang==='ar'?'لا توجد إعلانات بعد.':'No announcements yet.'}</div>`}`)}
 
 /* ---------- KPI drill-down ---------- */
-function kpiList(k){const pm=ui.role==='pm',pool=pm?S.staff:S.staff.filter(m=>m.sup===ui.role),d=ui.day;
-  const rows=pool.map(s=>({s,st:statusOf(s,d)})).filter(({st})=>st.k!=='unassigned'&&(k==='total'||(k==='onduty'?st.r&&st.r.in&&!st.r.out:k==='out'?st.r&&st.r.out:st.k===k)));
+function kpiList(k){const pm=ui.role==='pm',rows=pm?scopeRows(S.staff,SC()):scopeRows(S.staff.filter(m=>m.sup===ui.role),{days:[ui.day]}),multi=pm&&SC().days.length>1;
+  const sel=rows.filter(({st})=>k==='total'||(k==='onduty'?st.r&&st.r.in&&!st.r.out:k==='out'?st.r&&st.r.out:st.k===k));
   const label={total:'Assigned',onduty:'On duty now',on_time:'On time',late:'Late',absent:'Absent',not_in:'Not checked in',out:'Checked out'}[k];
-  modal(`<div class="row between"><h2>${t(label)} · ${rows.length}</h2><button class="btn sm" data-act="close">${t('Close')}</button></div>
-  ${rows.length?`<div class="tbl-wrap"><table><thead><tr><th>${t('ID')}</th><th>${t('Name')}</th>${pm?`<th>${t('Supervisor')}</th>`:''}<th>${t('Shift')}</th><th>${t('In')}</th><th>${t('Out')}</th><th>${t('Status')}</th><th>${t('Phone')}</th></tr></thead><tbody>
-  ${rows.map(({s,st})=>`<tr><td class="mono">${esc(s.code)}</td><td>${esc(s.name)}</td>${pm?`<td>${esc(s.role==='Marshal'?supName(s.sup):'—')}</td>`:''}<td class="small">${esc(st.sh?.name||'')}</td><td class="mono">${esc(st.r?.in||'')}</td><td class="mono">${esc(st.r?.out||'')}</td><td>${chip(st.k)}</td><td class="mono small">${esc(s.phone)}${waLink(s.phone)}</td></tr>`).join('')}</tbody></table></div>`:`<div class="empty">${t('None')}</div>`}`)}
+  modal(`<div class="row between"><h2>${t(label)} · ${sel.length}</h2><button class="btn sm" data-act="close">${t('Close')}</button></div>
+  ${sel.length?`<div class="tbl-wrap"><table><thead><tr>${multi?`<th>${t('Date')}</th>`:''}<th>${t('ID')}</th><th>${t('Name')}</th>${pm?`<th>${t('Supervisor')}</th><th>${t('Department')}</th>`:''}<th>${t('Shift')}</th><th>${t('In')}</th><th>${t('Out')}</th><th>${t('Status')}</th><th>${t('Phone')}</th></tr></thead><tbody>
+  ${sel.map(({d,s,st})=>`<tr>${multi?`<td class="mono small">${d.slice(5)}</td>`:''}<td class="mono">${esc(s.code)}</td><td>${esc(s.name)}</td>${pm?`<td>${esc(s.role==='Marshal'?supName(s.sup):'—')}</td><td>${esc(s.dept)}</td>`:''}<td class="small">${esc(st.sh?.name||'')}</td><td class="mono">${esc(st.r?.in||'')}</td><td class="mono">${esc(st.r?.out||'')}</td><td>${chip(st.k)}${st.late?` <span class="small mono">+${st.late}</span>`:''}</td><td class="mono small">${esc(s.phone)}${waLink(s.phone)}</td></tr>`).join('')}</tbody></table></div>`:`<div class="empty">${t('None')}</div>`}`)}
+
+/* ---------- Scope filter (Dashboard + Reports) ---------- */
+function SC(){const f=ui.f.scope,from=f.from||ui.day,to=f.to&&f.to>=from?f.to:from;return{...f,from,to,days:DAYS.filter(d=>d>=from&&d<=to)}}
+const inScope=(s,sc)=>(!sc.dept||s.dept===sc.dept)&&(!sc.sup||s.sup===sc.sup||s.id===sc.sup);
+function scopeRows(list,sc){const out=[];for(const d of sc.days)for(const s of list){if(!inScope(s,sc))continue;const st=statusOf(s,d);if(st.k==='unassigned')continue;if(sc.shift&&st.sh?.id!==sc.shift)continue;out.push({d,s,st})}return out}
+function statsOf(rows){const c={total:0,on_time:0,late:0,absent:0,not_in:0,scheduled:0,onduty:0,out:0};for(const{st}of rows){c.total++;c[st.k]++;if(st.r&&st.r.in&&!st.r.out)c.onduty++;if(st.r&&st.r.out)c.out++}return c}
+const scopeIncidents=sc=>S.incidents.filter(i=>i.date>=sc.from&&i.date<=sc.to&&(!sc.dept||i.dept===sc.dept)&&(!sc.sup||i.byId===sc.sup||byId(i.staff)?.sup===sc.sup)).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+const scopeActive=sc=>!!(sc.dept||sc.sup||sc.shift);
+const scopeLabel=sc=>sc.from===sc.to?`${t('Day')} ${dayNo(sc.from)}, ${fmtD(sc.from)}`:`${fmtD(sc.from)} – ${fmtD(sc.to)} (${sc.days.length} ${ui.lang==='ar'?'أيام':'days'})`;
+const scopeLabelEn=sc=>sc.from===sc.to?`Day ${dayNo(sc.from)} · ${fmtEn(sc.from)}`:`${fmtEn(sc.from)} to ${fmtEn(sc.to)} (${sc.days.length} days)`;
+const scopeFiltersEn=sc=>[sc.dept&&'Department: '+sc.dept,sc.shift&&'Shift: '+(shiftById(sc.shift)?.name||sc.shift),sc.sup&&'Supervisor: '+supName(sc.sup)].filter(Boolean).join(' · ');
+function scopeBar(){const sc=SC(),f=ui.f.scope;return `<div class="panel filters">
+  <label>${t('Date from')}<input type="date" data-f="scope.from" min="${EVENT_START}" max="${EVENT_END}" value="${sc.from}"></label>
+  <label>${t('Date to')}<input type="date" data-f="scope.to" min="${EVENT_START}" max="${EVENT_END}" value="${sc.to}"></label>
+  ${fSel('scope','dept','Department',deptOptions(f.dept,t('All')))}${fSel('scope','shift','Shift',shiftOptions(f.shift,t('All')))}${fSel('scope','sup','Supervisor',supOptions(f.sup,t('All')))}
+  <button class="btn ghost" data-act="clear-f" data-v="scope">${t('Clear filters')}</button></div>`}
 
 /* ---------- Dashboard ---------- */
-function dayStats(date,list){
-  const c={total:0,on_time:0,late:0,absent:0,not_in:0,scheduled:0,onduty:0,out:0};
-  for(const s of list){const st=statusOf(s,date);if(st.k==='unassigned')continue;c.total++;c[st.k]++;if(st.r&&st.r.in&&!st.r.out)c.onduty++;if(st.r&&st.r.out)c.out++}
-  return c;
-}
+function dayStats(date,list){return statsOf(scopeRows(list,{days:[date]}))}
 function kpiTiles(c,inc){const k=(key,cls,v,l)=>`<button class="kpi ${cls}" data-act="kpi" data-v="${key}"><span class="v">${v}</span><span class="l">${t(l)}</span></button>`;
   return `<div class="kpis">${k('total','acc',c.total,'Assigned')}${k('onduty','',c.onduty,'On duty now')}${k('on_time','ok',c.on_time,'On time')}${k('late','warn',c.late,'Late')}${k('absent','bad',c.absent,'Absent')}${k('not_in','bad',c.not_in,'Not checked in')}${k('out','',c.out,'Checked out')}
-  ${inc!=null?`<button class="kpi" data-act="tab" data-v="inc"><span class="v">${inc}</span><span class="l">${t('Incidents today')}</span></button>`:''}</div>`}
-function breakdown(date,groups){
+  ${inc!=null?`<button class="kpi" data-act="tab" data-v="inc"><span class="v">${inc}</span><span class="l">${t('Incidents')}</span></button>`:''}</div>`}
+function breakdown(groups){
   return `<div class="tbl-wrap"><table><thead><tr><th></th><th class="num">${t('Team')}</th><th class="num">${t('On time')}</th><th class="num">${t('Late')}</th><th class="num">${t('Absent')}</th><th class="num">${t('Not checked in')}</th></tr></thead><tbody>
-  ${groups.map(([label,list])=>{const c=dayStats(date,list);return `<tr><td>${esc(label)}</td><td class="num">${c.total}</td><td class="num">${c.on_time}</td><td class="num">${c.late}</td><td class="num">${c.absent}</td><td class="num">${c.not_in}</td></tr>`}).join('')}
+  ${groups.map(([label,rows])=>{const c=statsOf(rows);return `<tr><td>${esc(label)}</td><td class="num">${c.total}</td><td class="num">${c.on_time}</td><td class="num">${c.late}</td><td class="num">${c.absent}</td><td class="num">${c.not_in}</td></tr>`}).join('')}
   </tbody></table></div>`;
 }
-function groupsBySup(){return [...sups().map(s=>[s.name,S.staff.filter(m=>m.sup===s.id)]),[t('Unassigned'),S.staff.filter(m=>m.role==='Marshal'&&!m.sup)]]}
-function groupsByDept(){return [...S.departments.map(d=>[d,S.staff.filter(m=>m.dept===d)]),[t('Unassigned'),S.staff.filter(m=>!m.dept)]]}
+function groupsBySup(rows,sc){const g=[...sups().map(s=>[s.name,rows.filter(r=>r.s.sup===s.id)]),[t('Unassigned'),rows.filter(r=>r.s.role==='Marshal'&&!r.s.sup)]];return scopeActive(sc)?g.filter(x=>x[1].length):g}
+function groupsByDept(rows,sc){const g=[...S.departments.map(d=>[d,rows.filter(r=>r.s.dept===d)]),[t('Unassigned'),rows.filter(r=>!r.s.dept)]];return scopeActive(sc)?g.filter(x=>x[1].length):g}
 const VIEWS={};
 VIEWS.dash=()=>{
-  const c=dayStats(ui.day,S.staff),inc=S.incidents.filter(i=>i.date===ui.day);
+  const sc=SC(),rows=scopeRows(S.staff,sc),c=statsOf(rows),inc=scopeIncidents(sc);
   const asg=S.staff.filter(s=>s.shifts.length&&(s.role==='Supervisor'||s.sup)&&s.dept).length;
-  return `<div class="row between"><h2>${t('Dashboard')} · ${t('Day')} ${dayNo(ui.day)}, ${esc(fmtD(ui.day))}</h2>
-    <div class="row"><button class="btn" data-act="sum-pdf">${t('Daily operational summary')} · PDF</button><button class="btn" data-act="sum-xlsx">Excel</button></div></div>
+  return `<div class="row between"><h2>${t('Dashboard')} · ${esc(scopeLabel(sc))}</h2>
+    <div class="row"><button class="btn" data-act="sum-pdf">${t('Operational summary')} · PDF</button><button class="btn" data-act="sum-xlsx">Excel</button></div></div>
+  ${scopeBar()}
   ${kpiTiles(c,inc.length)}
   ${asg<S.staff.length?`<div class="panel row between"><span><b>${S.staff.length-asg}</b> / ${S.staff.length} ${ui.lang==='ar'?'موظف بحاجة إلى توزيع كامل (مشرف، قسم، وردية).':'staff still need a full assignment (supervisor, department, shift).'}</span><button class="btn pri" data-act="tab" data-v="staff">${t('Staff & assignment')}</button></div>`:''}
-  <div class="grid2"><section class="panel" style="display:flex;flex-direction:column;gap:10px"><h3>${t('By supervisor')}</h3>${breakdown(ui.day,groupsBySup())}</section>
-  <section class="panel" style="display:flex;flex-direction:column;gap:10px"><h3>${t('By department')}</h3>${breakdown(ui.day,groupsByDept())}</section></div>
-  <section class="panel" style="display:flex;flex-direction:column;gap:10px"><div class="row between"><h3>${t('Incidents today')}</h3><button class="btn sm" data-act="inc-new">${t('Report incident')}</button></div>${incTable(inc)}</section>`;
+  <div class="grid2"><section class="panel" style="display:flex;flex-direction:column;gap:10px"><h3>${t('By supervisor')}</h3>${breakdown(groupsBySup(rows,sc))}</section>
+  <section class="panel" style="display:flex;flex-direction:column;gap:10px"><h3>${t('By department')}</h3>${breakdown(groupsByDept(rows,sc))}</section></div>
+  <section class="panel" style="display:flex;flex-direction:column;gap:10px"><div class="row between"><h3>${t('Incidents')} (${inc.length})</h3><button class="btn sm" data-act="inc-new">${t('Report incident')}</button></div>${incTable(inc)}</section>`;
 };
 
 /* ---------- Staff & assignment ---------- */
@@ -651,32 +668,35 @@ function submitShift(e){e.preventDefault();if(ui.role!=='pm')return;
 const scExportRows=()=>shiftLog().map(a=>({Recorded:tsFmt(a.ts),'Employee ID':a.staffCode,Name:a.staffName,'From shift':a.fromShift,'To shift':a.toShift,'Effective from':a.effective,'Approved by':a.approver,'Approval email date':a.emailDate,'Email subject / reference':a.emailRef,Notes:a.notes,'Entered by':a.by}));
 
 /* ---------- Reports: daily operational summary ---------- */
-function daySummary(d){
-  const c=dayStats(d,S.staff),inc=S.incidents.filter(i=>i.date===d).sort((a,b)=>a.time.localeCompare(b.time));
-  const list=k=>S.staff.map(s=>({s,st:statusOf(s,d)})).filter(x=>x.st.k===k);
-  return {c,inc,late:list('late').sort((a,b)=>b.st.late-a.st.late),absent:list('absent'),notin:list('not_in')};
+function daySummary(sc){
+  const rows=scopeRows(S.staff,sc),c=statsOf(rows),inc=scopeIncidents(sc),k=x=>rows.filter(r=>r.st.k===x);
+  return {sc,rows,c,inc,late:k('late').sort((a,b)=>a.d.localeCompare(b.d)||b.st.late-a.st.late),absent:k('absent'),notin:k('not_in')};
 }
-VIEWS.rep=()=>{const R=daySummary(ui.day),pp=(arr,cols)=>arr.length?`<div class="tbl-wrap"><table><tbody>${arr.map(cols).join('')}</tbody></table></div>`:`<div class="muted small">${t('None')}</div>`;
-  return `<div class="row between"><h2>${t('Daily operational summary')}</h2><div class="row"><select data-act-change="day" aria-label="${t('Day')}">${dayOptions(ui.day)}</select><button class="btn pri" data-act="sum-pdf">${t('Generate PDF')}</button><button class="btn" data-act="sum-xlsx">${t('Export Excel')}</button></div></div>
+VIEWS.rep=()=>{const R=daySummary(SC()),multi=R.sc.days.length>1,dt=d=>multi?`<td class="mono small">${d.slice(5)}</td>`:'',pp=(arr,cols)=>arr.length?`<div class="tbl-wrap"><table><tbody>${arr.map(cols).join('')}</tbody></table></div>`:`<div class="muted small">${t('None')}</div>`;
+  return `<div class="row between"><h2>${t('Operational summary')} · ${esc(scopeLabel(R.sc))}</h2><div class="row"><button class="btn pri" data-act="sum-pdf">${t('Generate PDF')}</button><button class="btn" data-act="sum-xlsx">${t('Export Excel')}</button></div></div>
+  ${scopeBar()}
   ${kpiTiles(R.c,R.inc.length)}
   <div class="grid2">
-   <section class="panel" style="display:flex;flex-direction:column;gap:10px"><h3>${t('Late arrivals')} (${R.late.length})</h3>${pp(R.late,({s,st})=>`<tr><td class="mono">${esc(s.code)}</td><td>${esc(s.name)}</td><td>${esc(supName(s.sup))}</td><td class="mono">${esc(st.r.in)}</td><td class="num mono">+${st.late}</td></tr>`)}</section>
-   <section class="panel" style="display:flex;flex-direction:column;gap:10px"><h3>${t('Absences')} (${R.absent.length}) · ${t('Not yet checked in')} (${R.notin.length})</h3>${pp([...R.absent,...R.notin],({s,st})=>`<tr><td class="mono">${esc(s.code)}</td><td>${esc(s.name)}</td><td>${esc(supName(s.sup))}</td><td>${chip(st.k)}</td></tr>`)}</section>
+   <section class="panel" style="display:flex;flex-direction:column;gap:10px"><h3>${t('Late arrivals')} (${R.late.length})</h3>${pp(R.late,({d,s,st})=>`<tr>${dt(d)}<td class="mono">${esc(s.code)}</td><td>${esc(s.name)}</td><td>${esc(supName(s.sup))}</td><td class="mono">${esc(st.r.in)}</td><td class="num mono">+${st.late}</td></tr>`)}</section>
+   <section class="panel" style="display:flex;flex-direction:column;gap:10px"><h3>${t('Absences')} (${R.absent.length}) · ${t('Not yet checked in')} (${R.notin.length})</h3>${pp([...R.absent,...R.notin],({d,s,st})=>`<tr>${dt(d)}<td class="mono">${esc(s.code)}</td><td>${esc(s.name)}</td><td>${esc(supName(s.sup))}</td><td>${chip(st.k)}</td><td>${waLink(s.phone)}</td></tr>`)}</section>
   </div>
-  <div class="grid2"><section class="panel" style="display:flex;flex-direction:column;gap:10px"><h3>${t('By supervisor')}</h3>${breakdown(ui.day,groupsBySup())}</section><section class="panel" style="display:flex;flex-direction:column;gap:10px"><h3>${t('By department')}</h3>${breakdown(ui.day,groupsByDept())}</section></div>
+  <div class="grid2"><section class="panel" style="display:flex;flex-direction:column;gap:10px"><h3>${t('By supervisor')}</h3>${breakdown(groupsBySup(R.rows,R.sc))}</section><section class="panel" style="display:flex;flex-direction:column;gap:10px"><h3>${t('By department')}</h3>${breakdown(groupsByDept(R.rows,R.sc))}</section></div>
   <section class="panel" style="display:flex;flex-direction:column;gap:10px"><h3>${t('Incidents')} (${R.inc.length})</h3>${incTable(R.inc)}</section>`};
-function sumPdf(){const d=ui.day,R=daySummary(d);const doc=pdfStart('Daily Operational Summary',`Day ${dayNo(d)} · ${fmtEn(d)} · DECC, Doha`);if(!doc)return;
-  pdfKpis(doc,[{v:R.c.total,l:'Assigned',c:PDF.acc},{v:R.c.on_time,l:'On time'},{v:R.c.late,l:'Late'},{v:R.c.absent,l:'Absent'},{v:R.c.not_in,l:'Not checked in'},{v:R.inc.length,l:'Incidents'}]);
-  const br=g=>g.map(([l,list])=>{const c=dayStats(d,list);return [l,c.total,c.on_time,c.late,c.absent,c.not_in]}).filter(r=>r[1]);
-  pdfSection(doc,'By supervisor');pdfTable(doc,['Supervisor','Team','On time','Late','Absent','Not in'],br(groupsBySup().map(([l,x])=>[l===t('Unassigned')?'Unassigned':l,x])));
-  pdfSection(doc,'By department');pdfTable(doc,['Department','Team','On time','Late','Absent','Not in'],br(groupsByDept().map(([l,x])=>[l===t('Unassigned')?'Unassigned':l,x])));
-  pdfSection(doc,`Late arrivals (${R.late.length})`);pdfTable(doc,['ID','Name','Supervisor','Shift','In','Late'],R.late.map(({s,st})=>[s.code,s.name,supName(s.sup),st.sh?.name||'',st.r.in,'+'+st.late+' min']));
-  pdfSection(doc,`Absent and not checked in (${R.absent.length+R.notin.length})`);pdfTable(doc,['ID','Name','Supervisor','Shift','Status'],[...R.absent,...R.notin].map(({s,st})=>[s.code,s.name,supName(s.sup),st.sh?.name||'',STATUS_LABEL[st.k]]));
-  pdfSection(doc,`Incidents (${R.inc.length})`);pdfTable(doc,['Time','Category','Severity','Department','Description','By'],R.inc.map(i=>[i.time,i.cat,i.sev,i.dept,i.desc,i.by]));
-  pdfFinish(doc,`ITU-FieldOps-Daily-Summary-${d}.pdf`)}
-function sumXlsx(){const d=ui.day,R=daySummary(d),br=g=>g.map(([l,list])=>{const c=dayStats(d,list);return {Group:l,Team:c.total,'On time':c.on_time,Late:c.late,Absent:c.absent,'Not checked in':c.not_in}});
-  xlsx(`ITU-FieldOps-Daily-Summary-${d}.xlsx`,{Summary:[{Date:d,Day:dayNo(d),Assigned:R.c.total,'On time':R.c.on_time,Late:R.c.late,Absent:R.c.absent,'Not checked in':R.c.not_in,'Checked out':R.c.out,Incidents:R.inc.length}],'By supervisor':br(groupsBySup()),'By department':br(groupsByDept()),
-    Attendance:attExportRows(S.staff.map(s=>({d,s,st:statusOf(s,d)})).filter(x=>x.st.k!=='unassigned')),Incidents:incExportRows(R.inc)})}
+function sumName(sc,ext){return `ITU-FieldOps-Summary-${sc.from}${sc.to!==sc.from?'_'+sc.to:''}.${ext}`}
+function sumPdf(){const R=daySummary(SC()),sc=R.sc,multi=sc.days.length>1,fl=scopeFiltersEn(sc);
+  const doc=pdfStart(multi?'Operational Summary':'Daily Operational Summary',`${scopeLabelEn(sc)} · DECC, Doha${fl?' · '+fl:''}`);if(!doc)return;
+  pdfKpis(doc,[{v:R.c.total,l:multi?'Assigned (person-days)':'Assigned',c:PDF.acc},{v:R.c.on_time,l:'On time'},{v:R.c.late,l:'Late'},{v:R.c.absent,l:'Absent'},{v:R.c.not_in,l:'Not checked in'},{v:R.inc.length,l:'Incidents'}]);
+  const br=g=>g.map(([l,rows])=>{const c=statsOf(rows);return [l===t('Unassigned')?'Unassigned':l,c.total,c.on_time,c.late,c.absent,c.not_in]}).filter(r=>r[1]);
+  const D=d=>multi?[d.slice(5)]:[],DH=multi?['Date']:[];
+  pdfSection(doc,'By supervisor');pdfTable(doc,['Supervisor','Team','On time','Late','Absent','Not in'],br(groupsBySup(R.rows,sc)));
+  pdfSection(doc,'By department');pdfTable(doc,['Department','Team','On time','Late','Absent','Not in'],br(groupsByDept(R.rows,sc)));
+  pdfSection(doc,`Late arrivals (${R.late.length})`);pdfTable(doc,[...DH,'ID','Name','Supervisor','Shift','In','Late'],R.late.map(({d,s,st})=>[...D(d),s.code,s.name,supName(s.sup),st.sh?.name||'',st.r.in,'+'+st.late+' min']));
+  pdfSection(doc,`Absent and not checked in (${R.absent.length+R.notin.length})`);pdfTable(doc,[...DH,'ID','Name','Supervisor','Shift','Status'],[...R.absent,...R.notin].map(({d,s,st})=>[...D(d),s.code,s.name,supName(s.sup),st.sh?.name||'',STATUS_LABEL[st.k]]));
+  pdfSection(doc,`Incidents (${R.inc.length})`);pdfTable(doc,[...(multi?['Date']:[]),'Time','Category','Severity','Department','Description','By'],R.inc.map(i=>[...(multi?[i.date.slice(5)]:[]),i.time,i.cat,i.sev,i.dept,i.desc,i.by]));
+  pdfFinish(doc,sumName(sc,'pdf'))}
+function sumXlsx(){const R=daySummary(SC()),sc=R.sc,br=g=>g.map(([l,rows])=>{const c=statsOf(rows);return {Group:l,Team:c.total,'On time':c.on_time,Late:c.late,Absent:c.absent,'Not checked in':c.not_in}});
+  xlsx(sumName(sc,'xlsx'),{Summary:[{From:sc.from,To:sc.to,Department:sc.dept||'All',Shift:sc.shift?shiftById(sc.shift)?.name:'All',Supervisor:sc.sup?supName(sc.sup):'All',Assigned:R.c.total,'On time':R.c.on_time,Late:R.c.late,Absent:R.c.absent,'Not checked in':R.c.not_in,'Checked out':R.c.out,Incidents:R.inc.length}],
+    'By supervisor':br(groupsBySup(R.rows,sc)),'By department':br(groupsByDept(R.rows,sc)),Attendance:attExportRows(R.rows),Incidents:incExportRows(R.inc)})}
 
 /* ---------- Data & import ---------- */
 VIEWS.data=()=>{const p=ui.importPreview;return `<h2>${t('Data & import')}</h2>
@@ -832,7 +852,7 @@ document.addEventListener('click',e=>{
   }
 });
 document.addEventListener('change',e=>{const el=e.target;
-  if(el.dataset.actChange==='day'){ui.day=el.value;render();return}
+  if(el.dataset.actChange==='day'){ui.day=el.value;ui.f.scope.from='';ui.f.scope.to='';render();return}
   if(el.dataset.actChange==='role'){ui.role=el.value;Prefs.set('role',el.value);ui.tab='';ui.annShown='';render();setTimeout(annPopup,200);return}
   if(el.dataset.assign&&ui.role==='pm'){const s=byId(el.dataset.id);if(assign(s,el.dataset.assign,el.value)){save();toast(t('Saved'));$('#res-staff').innerHTML=RES.staff()}return}
   if(el.id==='imp-file'&&el.files[0]){if(!window.XLSX){toast('Excel library failed to load.');return}readImport(el.files[0]);return}
@@ -845,7 +865,8 @@ document.addEventListener('input',e=>{const el=e.target;if(el.dataset.f&&(el.typ
 document.addEventListener('submit',e=>{if(e.target.id==='sc-form')submitShift(e)});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#modal').hidden)closeModal()});
 $('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal()});
-function filterInput(el){const [scope,key]=el.dataset.f.split('.');ui.f[scope][key]=el.value;const box=$('#res-'+scope);if(box)box.innerHTML=RES[scope]()}
+function filterInput(el){const [scope,key]=el.dataset.f.split('.');ui.f[scope][key]=el.value;
+  if(scope==='scope'){if(key==='from'&&ui.f.scope.to&&ui.f.scope.to<el.value)ui.f.scope.to='';render();return}const box=$('#res-'+scope);if(box)box.innerHTML=RES[scope]()}
 /* ---------- Live sign-in ---------- */
 function signInView(){return `<div class="auth">
   <div class="auth-side"><div class="tri" aria-hidden="true"></div><div class="meta">ITU 2026 · DECC Doha</div>
