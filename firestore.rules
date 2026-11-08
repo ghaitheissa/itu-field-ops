@@ -46,6 +46,16 @@ service cloud.firestore {
       allow create: if isPM() || (isSup() && request.resource.data.byId == me());
       allow update, delete: if isPM();
     }
+    // Announcements from the PM; each supervisor confirms with one read receipt.
+    match /announcements/{id} {
+      allow read: if isPM() || isSup();
+      allow write: if isPM();
+    }
+    match /annReads/{id} {
+      allow read: if isPM() || (isSup() && resource.data.staffId == me());
+      allow create: if isSup() && request.resource.data.staffId == me();
+      allow update, delete: if false;
+    }
     // Append-only audit trail. Only the PM can record shift changes.
     match /audit/{id} {
       allow read: if isPM();
