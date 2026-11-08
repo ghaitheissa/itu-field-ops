@@ -1,12 +1,12 @@
 rules_version = '2';
 // ITU FIELD OPS 2026 — Firestore security rules.
 // Paste into Firebase console > Firestore Database > Rules, then Publish.
-// PM_EMAIL_HERE = the PM username + '@itufieldops.local' (e.g. ghaith@itufieldops.local), lowercase.
+// Project Manager: g.z.eissa@gmail.com
 service cloud.firestore {
   match /databases/{db}/documents {
     function signedIn() { return request.auth != null && request.auth.token.email != null; }
     function em() { return request.auth.token.email.lower(); }
-    function isPM() { return signedIn() && em() in ['PM_EMAIL_HERE']; }
+    function isPM() { return signedIn() && em() in ['g.z.eissa@gmail.com']; }
     function accPath() { return /databases/$(db)/documents/access/$(em()); }
     function isSup() { return signedIn() && exists(accPath()) && get(accPath()).data.role == 'supervisor'; }
     function me() { return get(accPath()).data.staffId; }
