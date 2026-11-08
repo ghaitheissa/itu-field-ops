@@ -2,7 +2,7 @@
  "name": "ITU DOHA 2026",
  "short_name": "ITU DOHA 2026",
  "id": "./",
- "start_url": "./",
+ "start_url": "./?source=pwa",
  "scope": "./",
  "display": "standalone",
  "orientation": "portrait",
@@ -12,23 +12,15 @@
   {
    "src": "icon-192.png",
    "sizes": "192x192",
-   "type": "image/png",
-   "purpose": "any"
+   "type": "image/png"
   },
   {
    "src": "icon-512.png",
    "sizes": "512x512",
-   "type": "image/png",
-   "purpose": "any"
+   "type": "image/png"
   },
   {
-   "src": "icon-192.png",
-   "sizes": "192x192",
-   "type": "image/png",
-   "purpose": "maskable"
-  },
-  {
-   "src": "icon-512.png",
+   "src": "icon-maskable-512.png",
    "sizes": "512x512",
    "type": "image/png",
    "purpose": "maskable"
@@ -39,5 +31,6 @@
    "platform": "webapp",
    "url": "https://ops.ghaitheissa.com/manifest.webmanifest"
   }
- ]
+ ],
+ "description": "ITU Field Ops 2026 \u00b7 DECC Doha workforce app"
 }
