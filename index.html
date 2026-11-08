@@ -768,7 +768,7 @@ async function authAction(kind){const raw=($('#au-email').value||'').trim().toLo
     if(!raw.includes('@')&&!PM_EMAILS.includes(em)){const d=await Cloud.db.collection('logins').doc(raw).get();if(d.exists)em=d.data().email}
     Cloud.uname=raw;
     await Cloud.auth.signInWithEmailAndPassword(em,pw);
-  }catch(e){const c=e.code||'';ui.authMsg=c.includes('invalid-credential')||c.includes('wrong-password')||c.includes('user-not-found')?'Username or password is wrong.':c.includes('email-already-in-use')?'This username already has a password. Sign in, or ask the Project Manager to reset it.':c.includes('invalid-email')?'Use letters, numbers, dots or dashes in the username.':c.includes('too-many-requests')?'Too many attempts. Wait a few minutes.':(e.message||'Sign-in failed.');render()}}
+  }catch(e){const c=e.code||'';ui.authMsg=c.includes('invalid-credential')||c.includes('wrong-password')||c.includes('user-not-found')?(PM_EMAILS.includes(em)?'Username or password is wrong. First time here? Tap "Project Manager: first sign-in" to create your password.':'Username or password is wrong.'):c.includes('operation-not-allowed')?'Email/Password sign-in is not enabled in Firebase Authentication.':c.includes('email-already-in-use')?'This username already has a password. Sign in, or ask the Project Manager to reset it.':c.includes('invalid-email')?'Use letters, numbers, dots or dashes in the username.':c.includes('too-many-requests')?'Too many attempts. Wait a few minutes.':(e.message||'Sign-in failed.');render()}}
 document.addEventListener('submit',e=>{if(e.target.id==='auth-form'){e.preventDefault();authAction('auth-in')}});
 async function bootLive(){
   firebase.initializeApp(FIREBASE_CONFIG);Cloud.auth=firebase.auth();Cloud.db=firebase.firestore();
