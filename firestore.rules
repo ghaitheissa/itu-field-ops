@@ -1,65 +1,69 @@
 rules_version = '2';
 // ITU FIELD OPS 2026 — Firestore security rules.
 // Paste into Firebase console > Firestore Database > Rules, then Publish.
-// Project Manager: g.z.eissa@gmail.com
+// Owner (full control): g.z.eissa@gmail.com
 service cloud.firestore {
   match /databases/{db}/documents {
     function signedIn() { return request.auth != null && request.auth.token.email != null; }
     function em() { return request.auth.token.email.lower(); }
     function isPM() { return signedIn() && em() in ['g.z.eissa@gmail.com']; }
     function accPath() { return /databases/$(db)/documents/access/$(em()); }
-    function isSup() { return signedIn() && exists(accPath()) && get(accPath()).data.role == 'supervisor'; }
-    function me() { return get(accPath()).data.staffId; }
+    function acc() { return get(accPath()).data; }
+    function hasAcc() { return signedIn() && exists(accPath()); }
+    function isSup() { return hasAcc() && acc().role == 'supervisor'; }
+    function isAdm() { return hasAcc() && acc().role == 'admin'; }
+    // Team account permission switch (set by the owner in Data & import > Team accounts)
+    function canP(p) { return isPM() || (isAdm() && (acc().get('perms', {}).get('all', false) == true || acc().get('perms', {}).get(p, false) == true)); }
+    function office() { return isPM() || isAdm(); }
+    function me() { return acc().staffId; }
     function staffSup(id) { return get(/databases/$(db)/documents/staff/$(id)).data.sup; }
 
-    // Who may sign in as a supervisor (doc id = email)
     match /access/{email} {
-      allow read: if isPM() || (signedIn() && email == em());
-      allow write: if isPM();
+      allow read: if canP('accounts') || (signedIn() && email == em());
+      allow write: if canP('accounts');
     }
     // username -> internal sign-in id. Readable before sign-in so usernames work.
     match /logins/{username} {
       allow read: if true;
-      allow write: if isPM();
+      allow write: if canP('accounts');
     }
     match /config/{doc} {
-      allow read: if isPM() || isSup();
-      allow write: if isPM();
+      allow read: if office() || isSup();
+      allow write: if canP('settings');
     }
     match /staff/{id} {
-      allow read: if isPM() || isSup();
-      allow write: if isPM();
+      allow read: if office() || isSup();
+      allow write: if canP('staff') || canP('settings');
     }
-    // QID numbers: Project Manager only
+    // QID numbers: owner, or team accounts with staff/settings permission
     match /staffPrivate/{id} {
-      allow read, write: if isPM();
+      allow read, write: if canP('staff') || canP('settings');
     }
     // One doc per person per day: {date}_{staffId}
     match /attendance/{id} {
-      allow read: if isPM() || (isSup() && resource.data.sup == me());
-      allow create: if isPM() || (isSup() && request.resource.data.sup == me() && staffSup(request.resource.data.staffId) == me());
-      allow update: if isPM() || (isSup() && resource.data.sup == me() && request.resource.data.sup == me() && staffSup(request.resource.data.staffId) == me());
-      allow delete: if isPM() || (isSup() && resource.data.sup == me());
+      allow read: if office() || (isSup() && resource.data.sup == me());
+      allow create: if canP('attendance') || canP('staff') || canP('settings') || (isSup() && request.resource.data.sup == me() && staffSup(request.resource.data.staffId) == me());
+      allow update: if canP('attendance') || canP('staff') || canP('settings') || (isSup() && resource.data.sup == me() && request.resource.data.sup == me() && staffSup(request.resource.data.staffId) == me());
+      allow delete: if canP('attendance') || canP('staff') || canP('settings') || (isSup() && resource.data.sup == me());
     }
     match /incidents/{id} {
-      allow read: if isPM() || (isSup() && resource.data.byId == me());
-      allow create: if isPM() || (isSup() && request.resource.data.byId == me());
-      allow update, delete: if isPM();
+      allow read: if office() || (isSup() && resource.data.byId == me());
+      allow create: if office() || (isSup() && request.resource.data.byId == me());
+      allow update, delete: if canP('incidents');
     }
-    // Announcements from the PM; each supervisor confirms with one read receipt.
     match /announcements/{id} {
-      allow read: if isPM() || isSup();
-      allow write: if isPM();
+      allow read: if office() || isSup();
+      allow write: if canP('announcements');
     }
     match /annReads/{id} {
-      allow read: if isPM() || (isSup() && resource.data.staffId == me());
+      allow read: if office() || (isSup() && resource.data.staffId == me());
       allow create: if isSup() && request.resource.data.staffId == me();
       allow update, delete: if false;
     }
-    // Append-only audit trail. Only the PM can record shift changes.
+    // Append-only audit trail. Shift changes need the shifts permission.
     match /audit/{id} {
-      allow read: if isPM();
-      allow create: if isPM() || (isSup() && request.resource.data.type != 'Shift change');
+      allow read: if office();
+      allow create: if isPM() || (isAdm() && (request.resource.data.type != 'Shift change' || canP('shifts'))) || (isSup() && request.resource.data.type != 'Shift change');
       allow update, delete: if false;
     }
   }
