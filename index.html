@@ -337,6 +337,12 @@ nav.tabs button{border-radius:10px 10px 0 0}
 .ig__x{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;cursor:pointer;color:var(--fg)}.ig__x svg{width:18px;height:18px}
 .ig__os,.install-banner .ib{cursor:pointer;font:inherit;color:inherit}
 .ig__card h3,.inst-modal__card h3{text-transform:none;letter-spacing:0;color:var(--fg);font-size:18px;font-weight:700}.ig__end .btn{justify-content:center}
+.rangebtn{display:flex;align-items:center;gap:8px;min-height:40px;padding:8px 12px;border:1px solid var(--line);border-radius:11px;background:var(--surface);cursor:pointer;font:inherit;color:var(--muted);width:100%;text-align:start}.rangebtn svg{width:18px;height:18px;flex:none;color:var(--accent)}.rangebtn.on{color:var(--fg);border-color:var(--accent);font-weight:600}
+.rc-m{text-align:center;font-weight:700;font-family:var(--f-display)}
+.rc{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}.rc b{font-size:11px;color:var(--muted);font-weight:600;padding:4px 0}
+.rc-d{height:40px;border-radius:10px;border:0;background:var(--sunk);font:inherit;font-weight:600;color:var(--fg);cursor:pointer;display:grid;place-items:center}.rc-d.off{background:none;color:var(--muted);opacity:.35;cursor:default;font-weight:400}
+.rc-d.in{background:var(--accent-soft);color:var(--accent)}.rc-d.end{background:var(--accent);color:#ffffff}
+.rc-msg{text-align:center;font-weight:600;min-height:22px}
 </style>
 
 <div id="app"></div>
@@ -364,6 +370,7 @@ const logoImg=h=>`<img class="logo-l" src="${LOGO}" alt="Elegancia Resources" st
 const ICON={menu:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>',
  tel:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1z"/></svg>',
  dl:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg>',
+ cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>',
  mail:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6l8.5 7 8.5-7"/></svg>',
  share:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7.5 7.5L12 3l4.5 4.5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>',
  eye:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',
@@ -387,6 +394,18 @@ const toMin=t=>{if(!t)return null;const[h,m]=t.split(':').map(Number);return h*6
 const fmtEn=d=>new Date(d+'T00:00:00Z').toLocaleDateString('en-GB',{timeZone:'UTC',weekday:'short',day:'numeric',month:'short',year:'numeric'});
 const fmtD=d=>new Date(d+'T00:00:00Z').toLocaleDateString(ui.lang==='ar'?'ar-QA-u-nu-latn':'en-GB',{timeZone:'UTC',weekday:'short',day:'numeric',month:'short'});
 const dayNo=d=>DAYS.indexOf(d)+1;
+const fmtShort=d=>new Date(d+'T00:00:00Z').toLocaleDateString(ui.lang==='ar'?'ar-QA-u-nu-latn':'en-GB',{timeZone:'UTC',day:'numeric',month:'short'});
+/* Range calendar: first tap = start, second tap = end */
+function rangeCal(){const sc=SC();ui.rg={a:sc.from!==sc.to?sc.from:'',b:sc.from!==sc.to?sc.to:''};drawRange()}
+function drawRange(){const r=ui.rg,ar=ui.lang==='ar',wd=ar?['أحد','إثن','ثلا','أرب','خمي','جمع','سبت']:['Su','Mo','Tu','We','Th','Fr','Sa'];
+  const first=new Date(Date.UTC(2026,10,1)).getUTCDay(),cells=[];for(let i=0;i<first;i++)cells.push('<i></i>');
+  for(let n=1;n<=30;n++){const d=`2026-11-${String(n).padStart(2,'0')}`,inEv=d>=EVENT_START&&d<=EVENT_END,hi=r.a&&(d===r.a||d===r.b||(r.b&&d>r.a&&d<r.b));
+    cells.push(inEv?`<button class="rc-d${hi?' in':''}${d===r.a||d===r.b?' end':''}" data-act="rc-pick" data-v="${d}">${n}</button>`:`<span class="rc-d off">${n}</span>`)}
+  const msg=!r.a?(ar?'اكبس تاريخ البداية':'Tap the start date'):!r.b?(ar?'اكبس تاريخ النهاية':'Now tap the end date'):`${fmtShort(r.a)} – ${fmtShort(r.b)}`;
+  modal(`<div class="row between"><h2>${t('Custom range')}</h2><button class="btn sm" data-act="close">${t('Close')}</button></div>
+   <div class="rc-m">${ar?'نوفمبر 2026':'November 2026'}</div><div class="rc">${wd.map(x=>`<b>${x}</b>`).join('')}${cells.join('')}</div>
+   <div class="rc-msg">${msg}</div><div class="row" style="justify-content:space-between"><button class="btn ghost" data-act="rc-all">${ar?'كل الإيفنت (9–27)':'Whole event (9–27)'}</button></div>`)}
+
 const tsFmt=iso=>{const d=new Date(iso);return d.toLocaleString('en-GB',{timeZone:'Asia/Qatar',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:false})};
 
 /* ---------- i18n (UI in English, Arabic optional) ---------- */
@@ -409,7 +428,7 @@ const AR={
 'Language':'اللغة','Nationality':'الجنسية','Sign out':'تسجيل خروج','Supervisor accounts':'حسابات المشرفين','Email':'البريد الإلكتروني','Username':'اسم المستخدم','Password':'كلمة السر','Operational summary':'الملخص التشغيلي','Announcements':'الإعلانات','Announcement':'إعلان','Received':'تم الاستلام','received':'استلموا','Send to supervisors':'إرسال للمشرفين','Sent':'تم الإرسال','Install app':'تثبيت التطبيق','New password':'كلمة سر جديدة','Set password':'تعيين كلمة السر','Active':'مفعّل','Remove':'إزالة','Account ready':'الحساب جاهز','Present':'حاضر','Nothing matches these filters.':'لا توجد نتائج لهذه الفلاتر.','No incidents recorded.':'لا توجد حوادث مسجلة.','No shift changes recorded yet.':'لا توجد تغييرات ورديات بعد.',
 'Only staff who already have a shift appear here. First-time shift assignment is done in Staff & assignment.':'يظهر هنا فقط من لديه وردية. التوزيع الأول للوردية يتم من صفحة الموظفين والتوزيع.',
 'I confirm Rabea approved this change by email.':'أؤكد أن ربيع وافق على هذا التغيير عبر البريد.','Staff member':'الموظف','Saved':'تم الحفظ','Day summary':'ملخص اليوم','Employees':'الموظفون','Rows shown':'الصفوف المعروضة',
-'Timesheet':'كشف الدوام','Your name':'اسمك','Position':'المنصب','Withdrawn':'منسحبون','Replacements & added':'بدلاء ومضافون','Add staff':'إضافة موظف','Withdraw / replace':'انسحاب / بديل','Reinstate':'إرجاع','Withdrew':'انسحب','Replaces':'بديل عن','From':'من','No show':'لم يحضر','Dismissed':'تم الاستغناء','Not working from':'لا يعمل اعتباراً من','Reason':'السبب','Add a replacement':'إضافة بديل','Employee ID':'الرقم الوظيفي','Start date':'تاريخ البدء','This ID is already used.':'هذا الرقم مستخدم.','Days worked':'أيام العمل','Replaced by':'البديل','Withdrawals & replacements':'الانسحابات والبدلاء','Pay (QAR)':'الأجر (ريال)','Total':'المجموع','Hourly rate, Marshal (QAR)':'أجر الساعة للمارشال (ريال)','Hourly rate, Supervisor (QAR)':'أجر الساعة للمشرف (ريال)','By person':'حسب الشخص','Days':'الأيام','Late, absent or not in':'متأخر أو غائب أو لم يسجّل','Signature':'التوقيع','Sign with your finger':'وقّع بإصبعك','Clear':'مسح','Send to':'إرسال إلى','Share PDF':'مشاركة PDF','Hours':'الساعات','Total hours':'مجموع الساعات','Timesheet recipients':'مستلمو كشف الدوام','Title':'المسمى','Team accounts':'حسابات الفريق','Full access':'صلاحيات كاملة','Create account':'إنشاء حساب','Display name':'الاسم الظاهر','Username or email':'اسم المستخدم أو الإيميل','Attendance corrections':'تعديل الحضور','Shift changes':'تغيير الورديات','Reports, timesheets & exports':'التقارير وكشوف الدوام والتصدير','Announcements':'الإعلانات','Import & settings':'الاستيراد والإعدادات','Accounts & permissions':'الحسابات والصلاحيات','Permissions':'الصلاحيات',
+'Timesheet':'كشف الدوام','Custom range':'مدة مخصصة','Your name':'اسمك','Position':'المنصب','Withdrawn':'منسحبون','Replacements & added':'بدلاء ومضافون','Add staff':'إضافة موظف','Withdraw / replace':'انسحاب / بديل','Reinstate':'إرجاع','Withdrew':'انسحب','Replaces':'بديل عن','From':'من','No show':'لم يحضر','Dismissed':'تم الاستغناء','Not working from':'لا يعمل اعتباراً من','Reason':'السبب','Add a replacement':'إضافة بديل','Employee ID':'الرقم الوظيفي','Start date':'تاريخ البدء','This ID is already used.':'هذا الرقم مستخدم.','Days worked':'أيام العمل','Replaced by':'البديل','Withdrawals & replacements':'الانسحابات والبدلاء','Pay (QAR)':'الأجر (ريال)','Total':'المجموع','Hourly rate, Marshal (QAR)':'أجر الساعة للمارشال (ريال)','Hourly rate, Supervisor (QAR)':'أجر الساعة للمشرف (ريال)','By person':'حسب الشخص','Days':'الأيام','Late, absent or not in':'متأخر أو غائب أو لم يسجّل','Signature':'التوقيع','Sign with your finger':'وقّع بإصبعك','Clear':'مسح','Send to':'إرسال إلى','Share PDF':'مشاركة PDF','Hours':'الساعات','Total hours':'مجموع الساعات','Timesheet recipients':'مستلمو كشف الدوام','Title':'المسمى','Team accounts':'حسابات الفريق','Full access':'صلاحيات كاملة','Create account':'إنشاء حساب','Display name':'الاسم الظاهر','Username or email':'اسم المستخدم أو الإيميل','Attendance corrections':'تعديل الحضور','Shift changes':'تغيير الورديات','Reports, timesheets & exports':'التقارير وكشوف الدوام والتصدير','Announcements':'الإعلانات','Import & settings':'الاستيراد والإعدادات','Accounts & permissions':'الحسابات والصلاحيات','Permissions':'الصلاحيات',
 };
 const t=s=>ui.lang==='ar'&&AR[s]?AR[s]:s;
 const STATUS_LABEL={on_time:'On time',late:'Late',absent:'Absent',not_in:'Not checked in',scheduled:'Scheduled',unassigned:'Unassigned'};
@@ -568,11 +587,13 @@ function xlsx(filename,sheets){
 const PDF={L:18,R:192,ink:[20,20,20],mut:[102,100,98],acc:[227,23,29],dot:[170,168,165]};
 const pdfSafe=v=>String(v??'').replace(/[–—]/g,'-').replace(/[^\x00-\xFF]/g,'?');
 function pdfDot(doc,y){doc.setLineDashPattern([0.25,1.1],0);doc.setDrawColor(...PDF.dot);doc.setLineWidth(0.3);doc.line(PDF.L,y,PDF.R,y);doc.setLineDashPattern([],0)}
+function toJpeg(src,w,h){const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');x.fillStyle='#ffffff';x.fillRect(0,0,w,h);x.drawImage(src,0,0,w,h);return c.toDataURL('image/jpeg',.88)}
+let _pdfLogo='';function pdfLogo(){if(_pdfLogo)return _pdfLogo;try{const im=$('img.logo-l')||Object.assign(new Image(),{src:LOGO});if(!im.complete||!im.naturalWidth)return LOGO;_pdfLogo=toJpeg(im,480,105);return _pdfLogo}catch(e){return LOGO}}
 function pdfStart(title,sub,land){
   if(!window.jspdf){toast('PDF library failed to load. Check the connection.');return null}
   const doc=new window.jspdf.jsPDF({unit:'mm',format:'a4',orientation:land?'landscape':'portrait'});
   PDF.W=doc.internal.pageSize.getWidth();PDF.H=doc.internal.pageSize.getHeight();PDF.R=PDF.W-18;
-  try{doc.addImage(LOGO,'PNG',PDF.L,13,36,36*140/640)}catch(e){}
+  try{doc.addImage(pdfLogo(),'JPEG',PDF.L,13,36,36*140/640)}catch(e){}
   doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(...PDF.acc);doc.setCharSpace(0.8);doc.text('ITU FIELD OPS 2026',PDF.R,19,{align:'right'});doc.setCharSpace(0);
   doc.setFont('helvetica','normal');doc.setFontSize(19);doc.setTextColor(...PDF.ink);doc.text(pdfSafe(title),PDF.L,31);
   doc.setFontSize(9);doc.setTextColor(...PDF.mut);doc.text(pdfSafe(sub),PDF.L,38);
@@ -605,6 +626,7 @@ const PM_TABS=[['dash','Dashboard'],['staff','Staff & assignment'],['att','Atten
 const SUP_TABS=[['team','My team'],['inc','Incidents']];
 function render(){
   document.documentElement.lang=ui.lang;document.documentElement.dir='ltr';
+  if(ui.sharedId)return;
   if(LIVE&&!ui.authReady){$('#app').innerHTML=`<div class="wrap" style="padding-block:80px"><div class="empty">Loading…</div></div>`;return}
   if(LIVE&&!ui.role){$('#app').innerHTML=signInView();return}
   if(LIVE&&!(Cloud.loaded.has('staff')&&Cloud.loaded.has('config'))){$('#app').innerHTML=`<div class="wrap" style="padding-block:60px"><div class="empty">Loading…</div></div>`;return}
@@ -791,8 +813,8 @@ const scopeLabel=sc=>sc.from===sc.to?`${t('Day')} ${dayNo(sc.from)}, ${fmtD(sc.f
 const scopeLabelEn=sc=>sc.from===sc.to?`Day ${dayNo(sc.from)} · ${fmtEn(sc.from)}`:`${fmtEn(sc.from)} to ${fmtEn(sc.to)} (${sc.days.length} days)`;
 const scopeFiltersEn=sc=>[sc.dept&&'Department: '+sc.dept,sc.shift&&'Shift: '+(shiftById(sc.shift)?.name||sc.shift),sc.sup&&'Supervisor: '+supName(sc.sup),sc.status&&'Status: '+(ST_OPTS.find(x=>x[0]===sc.status)||[,sc.status])[1]].filter(Boolean).join(' · ');
 function scopeBar(){const sc=SC(),f=ui.f.scope;return `<div class="panel filters">
-  <label>${t('Date from')}<input type="date" data-f="scope.from" min="${EVENT_START}" max="${EVENT_END}" value="${sc.from}"></label>
-  <label>${t('Date to')}<input type="date" data-f="scope.to" min="${EVENT_START}" max="${EVENT_END}" value="${sc.to}"></label>
+  <label>${t('Day')}<select data-act-change="scope-day">${sc.from!==sc.to?opt('',t('Custom range'),''):''}${DAYS.map(d=>opt(d,`${t('Day')} ${dayNo(d)} · ${fmtD(d)}`,sc.from===sc.to?sc.from:'')).join('')}</select></label>
+  <label>${t('Custom range')}<button type="button" class="rangebtn${sc.from!==sc.to?' on':''}" data-act="range-open">${ICON.cal}<span>${sc.from!==sc.to?esc(fmtShort(sc.from)+' – '+fmtShort(sc.to)):(ui.lang==='ar'?'اختر من … إلى':'Pick from … to')}</span></button></label>
   ${fSel('scope','dept','Department',deptOptions(f.dept,t('All')))}${fSel('scope','shift','Shift',shiftOptions(f.shift,t('All')))}${fSel('scope','sup','Supervisor',supOptions(f.sup,t('All')))}${fSel('scope','status','Status',opt('',t('All'),f.status)+ST_OPTS.map(([k,l])=>opt(k,t(l),f.status)).join(''))}
   <button class="btn ghost" data-act="clear-f" data-v="scope">${t('Clear filters')}</button></div>`}
 
@@ -1191,7 +1213,7 @@ const Sig={c:null,dirty:false,
     c.onpointermove=e=>{if(!down)return;const[a,b]=pt(e);x.lineTo(a,b);x.stroke()};
     c.onpointerup=c.onpointercancel=()=>{if(!down)return;down=false;try{Prefs.set('sig',c.toDataURL('image/png'))}catch(e){}}},
   clear(){if(!this.c)return;const x=this.c.getContext('2d');x.save();x.setTransform(1,0,0,1,0,0);x.clearRect(0,0,this.c.width,this.c.height);x.restore();this.dirty=false;Prefs.set('sig','')},
-  data(){return this.c&&this.dirty?this.c.toDataURL('image/png'):''}};
+  data(){if(!this.c||!this.dirty)return '';const w=560,h=Math.round(w*this.c.height/this.c.width);return toJpeg(this.c,w,h)}};
 function tsOpen(){const sc=SC(),rows=tsRows(sc),tot=rows.reduce((n,r)=>n+(minsWorked(r.st.r)||0),0),ar=ui.lang==='ar';
   const canFile=!!(navigator.canShare&&window.File&&(()=>{try{return navigator.canShare({files:[new File(['x'],'t.pdf',{type:'application/pdf'})]})}catch(e){return false}})());
   modal(`<h2>${t('Timesheet')}</h2><div class="muted small">${esc(scopeLabel(sc))} · ${rows.length} ${t('results')} · ${t('Total hours')} ${hm(tot)}</div>
@@ -1199,8 +1221,8 @@ function tsOpen(){const sc=SC(),rows=tsRows(sc),tot=rows.reduce((n,r)=>n+(minsWo
    <div class="form"><label>${t('Your name')}<input type="text" id="ts-sname" autocomplete="name" value="${esc(Prefs.get('signer',ui.adminName||''))}" placeholder="${ar?'مثال: غيث عيسى':'e.g. Ghaith Eissa'}"></label><label>${t('Position')}<input type="text" id="ts-spos" value="${esc(Prefs.get('signerPos',ui.role==='pm'?'Project Manager':'Supervisor'))}"></label></div>
    <label style="display:flex;flex-direction:column;gap:4px"><b>${t('Send to')}</b><select id="ts-to">${recips().map((r,i)=>opt(String(i),[r.name,r.title].filter(Boolean).join(' - '),'0')).join('')}</select></label>
    <div class="small muted mono" id="ts-to-info"></div>
-   <div class="send">${DL('ts-pdf','pdf')}<button class="mail" data-act="ts-mail">${ICON.mail}${t('Email')}</button><button class="wab" data-act="ts-wa">${ICON.wa}WhatsApp</button></div>
-   <div class="small muted">${canFile?(ar?'على التلفون: اختر Gmail أو WhatsApp والملف يكون مرفقاً مع النص. إيميل ربيع ينسخ تلقائياً، الصقه في خانة To.':'On the phone: pick Gmail or WhatsApp and the PDF is attached with the text. The email address is copied, paste it in To.'):(ar?'على الكمبيوتر: تنفتح الرسالة جاهزة وينزل ملف PDF، اسحبه إلى الرسالة.':'On a computer: the message opens ready and the PDF downloads; drag it into the message.')}</div>
+   <div class="send">${DL('ts-pdf','pdf')}<button class="mail" data-act="ts-mail">${ICON.mail}${t('Email')}</button><button class="wab" data-act="ts-wa">${ICON.wa}WhatsApp</button>${canFile?`<button data-act="ts-share">${ICON.share}${t('Share PDF')}</button>`:''}</div>
+   <div class="small muted">${ar?'الإيميل والواتساب يفتحان مباشرة إلى المستلم والنص جاهز، ومعه رابط ملف PDF الموقّع. اكبس إرسال فقط. «مشاركة PDF» ترسل الملف نفسه كمرفق.':'Email and WhatsApp open straight to the recipient with the text ready and a link to the signed PDF; just press send. Share PDF sends the file itself as an attachment.'}</div>
    <div class="row" style="justify-content:flex-end"><button class="btn" data-act="close">${t('Close')}</button></div>`);
   tsToInfo();requestAnimationFrame(()=>Sig.init())}
 function tsToInfo(){const r=recips()[+($('#ts-to')?.value||0)]||{};const el=$('#ts-to-info');if(el)el.textContent=[r.email,r.phone].filter(Boolean).join(' · ')}
@@ -1215,23 +1237,39 @@ function tsPdf(sc,rcp,sig){const rows=tsRows(sc),multi=sc.days.length>1,fl=scope
   if(doc._y>PDF.H-58){doc.addPage();doc._y=24}
   const y=doc._y,half=(PDF.R-PDF.L)/2;
   doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(...PDF.mut);doc.setCharSpace(0.6);doc.text('PREPARED AND SIGNED BY',PDF.L,y);if(rcp&&rcp.name)doc.text('SUBMITTED TO',PDF.L+half,y);doc.setCharSpace(0);
-  if(sig)try{doc.addImage(sig,'PNG',PDF.L,y+2,62,22)}catch(e){}
+  if(sig)try{doc.addImage(sig,sig.startsWith('data:image/jpeg')?'JPEG':'PNG',PDF.L,y+2,62,22)}catch(e){}
   pdfDot(doc,y+26);
   const sg=signer();doc.setFont('helvetica','bold');doc.setFontSize(10.5);doc.setTextColor(...PDF.ink);doc.text(pdfSafe(sg.name),PDF.L,y+32);doc.setFont('helvetica','normal');
   doc.setFontSize(8.5);doc.setTextColor(...PDF.mut);doc.text(pdfSafe([sg.pos,'Elegancia Resources'].filter(Boolean).join(' · ')),PDF.L,y+37);doc.text(pdfSafe('Signed '+tsFmt(new Date().toISOString())+' (Doha)'),PDF.L,y+42);
   if(rcp&&rcp.name){doc.setFontSize(9.5);doc.setTextColor(...PDF.ink);doc.text(pdfSafe(rcp.name),PDF.L+half,y+8);doc.setFontSize(8);doc.setTextColor(...PDF.mut);doc.text(pdfSafe([rcp.title,rcp.email,rcp.phone].filter(Boolean).join(' · ')),PDF.L+half,y+13)}
   doc._y=y+48;return pdfFinish(doc,tsName(sc),true)}
 function tsText(sc,rcp){const rows=tsRows(sc),c=statsOf(rows),tot=rows.reduce((n,r)=>n+(minsWorked(r.st.r)||0),0),first=(rcp.name||'').split(/\s+/)[0];
-  return `Dear ${first||'Sir/Madam'},\n\nPlease find attached the ITU Field Ops 2026 timesheet for ${scopeLabelEn(sc)}${scopeFiltersEn(sc)?' ('+scopeFiltersEn(sc)+')':''}.\n\nStaff: ${c.total} · On time: ${c.on_time} · Late: ${c.late} · Absent: ${c.absent} · Not checked in: ${c.not_in} · Total hours: ${hm(tot)}\n\nBest regards,\n${signer().name}\n${signer().pos?signer().pos+', ':''}Elegancia Resources · ITU Field Ops 2026`}
+  return `Dear ${first||'Sir/Madam'},\n\nPlease find the signed ITU Field Ops 2026 timesheet for ${scopeLabelEn(sc)}${scopeFiltersEn(sc)?' ('+scopeFiltersEn(sc)+')':''}.\n\nStaff: ${c.total} · On time: ${c.on_time} · Late: ${c.late} · Absent: ${c.absent} · Not checked in: ${c.not_in} · Total hours: ${hm(tot)}\n\nBest regards,\n${signer().name}\n${signer().pos?signer().pos+', ':''}Elegancia Resources · ITU Field Ops 2026`}
+/* A signed timesheet is stored as a private link (shared/{random id}), so email and WhatsApp open straight to Rabea with the link ready */
+const b64=blob=>new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(String(r.result).split(',')[1]);r.onerror=no;r.readAsDataURL(blob)});
+async function shareLink(blob,name,title){if(!LIVE||!Cloud.db)return '';const id=Array.from(crypto.getRandomValues(new Uint8Array(15)),x=>x.toString(36).padStart(2,'0')).join('').slice(0,24);
+  const data=await b64(blob),CH=700000,parts=Math.ceil(data.length/CH),b=Cloud.db.batch();
+  for(let i=0;i<parts;i++)b.set(Cloud.db.collection('shared').doc(id+'_'+i),{data:data.slice(i*CH,(i+1)*CH)});
+  b.set(Cloud.db.collection('shared').doc(id),{name,title,parts,mime:'application/pdf',ts:new Date().toISOString(),by:signer().name});await b.commit();
+  return location.origin+location.pathname+'?ts='+id}
+async function sharedView(id){ui.sharedId=id;const ar=ui.lang==='ar';$('#app').innerHTML=`<div class="wrap" style="padding-block:80px"><div class="empty">Loading…</div></div>`;
+  try{const m=await Cloud.db.collection('shared').doc(id).get();if(!m.exists)throw 0;const d=m.data();let data='';
+    for(let i=0;i<d.parts;i++){const p=await Cloud.db.collection('shared').doc(id+'_'+i).get();data+=p.data().data}
+    const bin=atob(data),u8=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);const blob=new Blob([u8],{type:d.mime}),url=URL.createObjectURL(blob);
+    $('#app').innerHTML=`<div class="wrap" style="padding-block:60px;max-width:520px;display:flex;flex-direction:column;gap:18px;align-items:flex-start">${logoImg(40)}<h2>${esc(d.title||'Timesheet')}</h2>
+      <div class="muted">Signed by ${esc(d.by||'')} · ${esc(tsFmt(d.ts))} (Doha)</div><div class="row"><a class="btn pri" href="${url}" download="${esc(d.name)}">⬇ Download PDF</a><a class="btn" href="${url}" target="_blank" rel="noopener">Open</a></div></div>`;
+  }catch(e){$('#app').innerHTML=`<div class="wrap" style="padding-block:80px"><div class="empty">This link is not valid or has expired.</div></div>`}}
 async function tsSend(how){const sc=SC(),rcp=recips()[+($('#ts-to')?.value||0)]||{},sig=Sig.data();
   if(!sig){toast(ui.lang==='ar'?'وقّع في المربع أولاً.':'Sign in the box first.');return}
   const blob=tsPdf(sc,rcp,sig);if(!blob)return;const name=tsName(sc),subject=`ITU Field Ops 2026 · Timesheet · ${scopeLabelEn(sc)}`,text=tsText(sc,rcp);
   const file=new File([blob],name,{type:'application/pdf'}),canFile=(()=>{try{return !!(navigator.canShare&&navigator.canShare({files:[file]}))}catch(e){return false}})();
   log('Timesheet',`Timesheet ${scopeLabelEn(sc)} signed by ${signer().name}${how==='pdf'?' and downloaded':' and sent to '+(rcp.name||'')+' by '+({mail:'email',wa:'WhatsApp',share:'share'}[how])}`);save();
-  if(how!=='pdf'&&canFile){if(how==='mail'&&rcp.email){try{navigator.clipboard&&navigator.clipboard.writeText(rcp.email)}catch(e){}toast((ui.lang==='ar'?'تم نسخ الإيميل: ':'Email copied: ')+rcp.email)}
-    try{await navigator.share({files:[file],title:subject,text:how==='mail'?text:text})}catch(e){if(e&&e.name!=='AbortError')toast('Could not share: '+e.message)}return}
-  if(how==='wa'){let d=String(rcp.phone||'').replace(/\D/g,'');if(d.startsWith('00'))d=d.slice(2);if(d.length===8)d='974'+d;window.open(`https://wa.me/${d}?text=${encodeURIComponent(text)}`,'_blank','noopener')}
-  if(how==='mail')location.href=`mailto:${encodeURIComponent(rcp.email||'')}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`;
+  if(how==='share'){try{await navigator.share({files:[file],title:subject,text})}catch(e){if(e&&e.name!=='AbortError')toast('Could not share: '+e.message)}return}
+  if(how==='mail'||how==='wa'){let link='';if(LIVE){toast(ui.lang==='ar'?'جاري التجهيز…':'Preparing…');try{link=await shareLink(blob,name,subject)}catch(e){console.error(e);toast('Link not created: '+(e.code||e.message))}}
+    const body=text+(link?`\n\nSigned timesheet (PDF): ${link}`:'');
+    if(how==='wa'){let d=String(rcp.phone||'').replace(/\D/g,'');if(d.startsWith('00'))d=d.slice(2);if(d.length===8)d='974'+d;location.href=`https://wa.me/${d}?text=${encodeURIComponent(body)}`}
+    else location.href=`mailto:${encodeURIComponent(rcp.email||'').replace(/%40/g,'@')}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    if(!link)saveFile(name,blob);return}
   saveFile(name,blob)}
 const auditList=()=>{const f=ui.f.audit,q=f.q.trim().toLowerCase();return S.audit.filter(a=>(!f.type||a.type===f.type)&&(!q||(a.detail+' '+a.by).toLowerCase().includes(q)))};
 RES.audit=()=>{const l=auditList();return `<div class="tbl-wrap"><table><thead><tr><th>${t('Recorded')}</th><th>${t('Type')}</th><th>${t('Detail')}</th><th>${t('By')}</th></tr></thead><tbody>${l.slice(0,200).map(a=>`<tr><td class="mono small">${tsFmt(a.ts)}</td><td>${esc(a.type)}</td><td style="white-space:normal">${esc(a.detail)}</td><td class="small">${esc(a.by)}</td></tr>`).join('')}</tbody></table></div><div class="small muted">${l.length} ${t('results')}${l.length>200?' · 200 shown, export includes all':''}</div>`};
@@ -1279,6 +1317,10 @@ document.addEventListener('click',e=>{
   const pm=ui.role==='pm';
   switch(a){
     case 'tab':closeModal();ui.tab=v;ui.sel.clear();render();window.scrollTo(0,0);break;
+    case 'range-open':rangeCal();break;
+    case 'rc-all':ui.f.scope.from=EVENT_START;ui.f.scope.to=EVENT_END;closeModal();render();break;
+    case 'rc-pick':{const r=ui.rg;if(!r.a||r.b){r.a=v;r.b=''}else{if(v<r.a){r.b=r.a;r.a=v}else r.b=v;
+      if(r.b===r.a){r.b=''}else{ui.f.scope.from=r.a;ui.f.scope.to=r.b;drawRange();setTimeout(()=>{closeModal();render()},450);break}}drawRange();break}
     case 'lang-set':if(ui.lang!==v){ui.lang=v;Prefs.set('lang',v);render()}break;
     case 'lang':ui.lang=ui.lang==='ar'?'en':'ar';Prefs.set('lang',ui.lang);ui.menu=false;render();break;
     case 'menu':ui.menu=!ui.menu;render();break;
@@ -1349,6 +1391,7 @@ document.addEventListener('click',e=>{
   }
 });
 document.addEventListener('change',e=>{const el=e.target;
+  if(el.dataset.actChange==='scope-day'){if(el.value){ui.f.scope.from=el.value;ui.f.scope.to=el.value;render()}return}
   if(el.dataset.actChange==='day'){ui.day=el.value;ui.f.scope.from='';ui.f.scope.to='';render();return}
   if(el.dataset.actChange==='role'){ui.role=el.value;Prefs.set('role',el.value);ui.tab='';ui.annShown='';render();setTimeout(annPopup,200);return}
   if(el.dataset.assign&&can('staff')){const s=byId(el.dataset.id);if(assign(s,el.dataset.assign,el.value)){save();toast(t('Saved'));$('#res-staff').innerHTML=RES.staff()}return}
@@ -1392,6 +1435,7 @@ async function authAction(kind){const raw=($('#au-email').value||'').trim().toLo
 document.addEventListener('submit',e=>{if(e.target.id==='auth-form'){e.preventDefault();authAction('auth-in')}});
 async function bootLive(){
   firebase.initializeApp(FIREBASE_CONFIG);Cloud.auth=firebase.auth();Cloud.db=firebase.firestore();
+  const sid=new URLSearchParams(location.search).get('ts');if(sid){sharedView(sid);return}
   try{await Cloud.db.enablePersistence({synchronizeTabs:true})}catch(e){}
   Cloud.auth.onAuthStateChanged(async u=>{Cloud.unsubs.forEach(f=>f());Cloud.unsubs=[];Cloud.loaded.clear();Cloud.synced={};Cloud.priv=new Map();Cloud.access=new Map();Cloud.initDone=false;S={...freshState([],'live'),audit:[]};
     ui.authReady=true;if(!u){ui.role='';render();return}

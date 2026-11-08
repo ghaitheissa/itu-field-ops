@@ -60,6 +60,13 @@ service cloud.firestore {
       allow create: if isSup() && request.resource.data.staffId == me();
       allow update, delete: if false;
     }
+    // Signed timesheets sent by link: random unguessable id, readable by whoever has the link, never listed.
+    match /shared/{id} {
+      allow get: if true;
+      allow list: if false;
+      allow create: if office();
+      allow update, delete: if isPM();
+    }
     // Append-only audit trail. Shift changes need the shifts permission.
     match /audit/{id} {
       allow read: if office();
