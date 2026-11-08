@@ -1,0 +1,51 @@
+rules_version = '2';
+// ITU FIELD OPS 2026 — Firestore security rules.
+// Paste into Firebase console > Firestore Database > Rules, then Publish.
+// Replace PM_EMAIL_HERE with the Project Manager's sign-in email (lowercase).
+service cloud.firestore {
+  match /databases/{db}/documents {
+    function signedIn() { return request.auth != null && request.auth.token.email != null; }
+    function em() { return request.auth.token.email.lower(); }
+    function isPM() { return signedIn() && em() in ['PM_EMAIL_HERE']; }
+    function accPath() { return /databases/$(db)/documents/access/$(em()); }
+    function isSup() { return signedIn() && exists(accPath()) && get(accPath()).data.role == 'supervisor'; }
+    function me() { return get(accPath()).data.staffId; }
+    function staffSup(id) { return get(/databases/$(db)/documents/staff/$(id)).data.sup; }
+
+    // Who may sign in as a supervisor (doc id = email)
+    match /access/{email} {
+      allow read: if isPM() || (signedIn() && email == em());
+      allow write: if isPM();
+    }
+    match /config/{doc} {
+      allow read: if isPM() || isSup();
+      allow write: if isPM();
+    }
+    match /staff/{id} {
+      allow read: if isPM() || isSup();
+      allow write: if isPM();
+    }
+    // QID numbers: Project Manager only
+    match /staffPrivate/{id} {
+      allow read, write: if isPM();
+    }
+    // One doc per person per day: {date}_{staffId}
+    match /attendance/{id} {
+      allow read: if isPM() || (isSup() && resource.data.sup == me());
+      allow create: if isPM() || (isSup() && request.resource.data.sup == me() && staffSup(request.resource.data.staffId) == me());
+      allow update: if isPM() || (isSup() && resource.data.sup == me() && request.resource.data.sup == me() && staffSup(request.resource.data.staffId) == me());
+      allow delete: if isPM() || (isSup() && resource.data.sup == me());
+    }
+    match /incidents/{id} {
+      allow read: if isPM() || (isSup() && resource.data.byId == me());
+      allow create: if isPM() || (isSup() && request.resource.data.byId == me());
+      allow update, delete: if isPM();
+    }
+    // Append-only audit trail. Only the PM can record shift changes.
+    match /audit/{id} {
+      allow read: if isPM();
+      allow create: if isPM() || (isSup() && request.resource.data.type != 'Shift change');
+      allow update, delete: if false;
+    }
+  }
+}

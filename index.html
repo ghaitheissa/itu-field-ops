@@ -1,0 +1,763 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<title>ITU Field Ops 2026</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: an operations console. Sticky header with the operating day, tab rail, then dense tables and cards. One column on phones. */
+:root{
+  --bg:#f7f5f5; --surface:#ffffff; --sunk:#f0ecec; --fg:#1e1a1c; --muted:#6c6266; --line:#e6dfe1;
+  --accent:#8a1538; --accent-ink:#ffffff; --accent-soft:#f6e7ec;
+  --ok:#1d7447; --ok-soft:#e3f2ea; --warn:#9a5b00; --warn-soft:#fbf0dc; --bad:#b42318; --bad-soft:#fbe6e4; --idle:#5d6470; --idle-soft:#eceef1;
+  --demo:#5b3fa8; --demo-soft:#eee9fa;
+  --f-display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --f-body:"IBM Plex Sans","IBM Plex Sans Arabic",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,monospace;
+  --r:8px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#131012; --surface:#1c181a; --sunk:#252022; --fg:#f0eaec; --muted:#a69a9f; --line:#342d30;
+  --accent:#e7829d; --accent-ink:#1c0910; --accent-soft:#3a1a25;
+  --ok:#62c48f; --ok-soft:#173226; --warn:#e5ab52; --warn-soft:#382a12; --bad:#f2877c; --bad-soft:#3d1c19; --idle:#a3aab5; --idle-soft:#262a30;
+  --demo:#b7a2f2; --demo-soft:#2a2240; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#131012; --surface:#1c181a; --sunk:#252022; --fg:#f0eaec; --muted:#a69a9f; --line:#342d30;
+  --accent:#e7829d; --accent-ink:#1c0910; --accent-soft:#3a1a25;
+  --ok:#62c48f; --ok-soft:#173226; --warn:#e5ab52; --warn-soft:#382a12; --bad:#f2877c; --bad-soft:#3d1c19; --idle:#a3aab5; --idle-soft:#262a30;
+  --demo:#b7a2f2; --demo-soft:#2a2240; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:14px;line-height:1.45}
+html[lang="ar"] body{font-family:"IBM Plex Sans Arabic","IBM Plex Sans",system-ui,sans-serif}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:1280px;margin:0 auto}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;padding-block:10px}
+.brand{display:flex;flex-direction:column;line-height:1.05;margin-inline-end:auto}
+.brand b{font-family:var(--f-display);font-size:22px;font-weight:700;letter-spacing:.04em;color:var(--accent)}
+.brand span{font-size:11px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.ctrls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+select,input,textarea,button{font:inherit;color:inherit}
+select,input[type=text],input[type=date],input[type=time],input[type=search],textarea{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 8px;min-height:34px;max-width:100%}
+textarea{width:100%;min-height:80px}
+select:focus-visible,input:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:6px 12px;min-height:34px;cursor:pointer;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.btn.ok{background:var(--ok);border-color:var(--ok);color:var(--surface);font-weight:600}
+.btn.bad{color:var(--bad);border-color:var(--bad)}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn.sm{min-height:28px;padding:3px 9px;font-size:13px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.demo-tag{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--demo);background:var(--demo-soft);border:1px solid transparent;border-radius:99px;padding:3px 9px;cursor:pointer}
+.live-tag{display:inline-flex;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ok);background:var(--ok-soft);border-radius:99px;padding:3px 9px}
+nav.tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+nav.tabs button{border:0;background:none;padding:10px 12px;border-bottom:2px solid transparent;color:var(--muted);cursor:pointer;white-space:nowrap;font-weight:500}
+nav.tabs button[aria-current="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+main{padding-block:18px 60px;display:flex;flex-direction:column;gap:18px}
+h1,h2,h3{text-wrap:balance;margin:0}
+h2{font-family:var(--f-display);font-size:24px;font-weight:600;letter-spacing:.02em}
+h3{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.between{justify-content:space-between}
+.muted{color:var(--muted)}
+.small{font-size:12.5px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.banner{display:flex;gap:10px;flex-wrap:wrap;align-items:center;border:1px dashed var(--demo);background:var(--demo-soft);color:var(--fg);border-radius:var(--r);padding:10px 12px}
+.banner b{color:var(--demo)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;min-width:0}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:18px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.kpi{box-shadow:1px 0 0 var(--line),0 1px 0 var(--line);padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.kpi .v{font-family:var(--f-display);font-size:34px;font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
+.kpi .l{font-size:12px;color:var(--muted)}
+.kpi.ok .v{color:var(--ok)} .kpi.warn .v{color:var(--warn)} .kpi.bad .v{color:var(--bad)} .kpi.acc .v{color:var(--accent)}
+.filters{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;align-items:end}
+.filters label,.form label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted);min-width:0}
+.filters select,.filters input{width:100%}
+.form{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.form .full{grid-column:1/-1}
+.form label > *{color:var(--fg);font-size:14px}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{text-align:start;padding:8px 10px;border-bottom:1px dotted var(--line);vertical-align:middle;white-space:nowrap}
+th{font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);background:var(--sunk);border-bottom:1px solid var(--line)}
+tbody tr:last-child td{border-bottom:0}
+tr.click{cursor:pointer} tr.click:hover td{background:var(--sunk)}
+td select{min-height:30px;padding:3px 6px;font-size:13px;max-width:170px}
+td.num,th.num{text-align:end;font-variant-numeric:tabular-nums}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;border-radius:99px;padding:2px 9px;white-space:nowrap}
+.chip::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.c-on_time,.c-present{color:var(--ok);background:var(--ok-soft)}
+.c-late{color:var(--warn);background:var(--warn-soft)}
+.c-absent,.c-not_in,.c-High{color:var(--bad);background:var(--bad-soft)}
+.c-scheduled,.c-unassigned,.c-Low{color:var(--idle);background:var(--idle-soft)}
+.c-Medium{color:var(--warn);background:var(--warn-soft)}
+.c-out{color:var(--muted);background:var(--sunk)}
+.empty{padding:28px 14px;text-align:center;color:var(--muted)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:10px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.card .nm{font-weight:600}
+.card .acts{display:flex;flex-wrap:wrap;gap:6px}
+.sep{border:0;border-top:1px dotted var(--muted);opacity:.5;margin:4px 0}
+.bulk{position:sticky;bottom:calc(env(safe-area-inset-bottom,0px) + 10px);z-index:4;background:var(--fg);color:var(--bg);border-radius:var(--r);padding:10px 12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;box-shadow:0 6px 24px rgb(0 0 0 / .2)}
+.bulk select{background:var(--bg);color:var(--fg);border-color:transparent}
+#modal{position:fixed;inset:0;z-index:20;background:rgb(10 6 8 / .45);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:max(24px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 24px max(16px,env(safe-area-inset-left,0px))}
+.dlg{background:var(--surface);border-radius:12px;border:1px solid var(--line);width:min(620px,100%);padding:18px;display:flex;flex-direction:column;gap:14px}
+#toast{position:fixed;z-index:30;inset-inline-start:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 18px);background:var(--fg);color:var(--bg);padding:9px 16px;border-radius:99px;font-size:13.5px;max-width:calc(100% - 32px)}
+html[dir="rtl"] #toast{transform:translateX(50%)}
+.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:14px}
+.legend ul{margin:6px 0 0;padding-inline-start:18px;display:flex;flex-direction:column;gap:4px}
+.drop{border:1.5px dashed var(--line);border-radius:var(--r);padding:22px;text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center}
+@media (prefers-reduced-motion:no-preference){.btn,.chip{transition:background .15s,border-color .15s}}
+@media (max-width:560px){header.top{position:static} .kpi .v{font-size:28px} h2{font-size:21px}}
+</style>
+
+<div id="app"></div>
+<div id="modal" hidden></div>
+<div id="toast" hidden></div>
+
+<script src="config.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script>
+'use strict';
+/* ============================================================
+   ITU FIELD OPS 2026 · DECC, Doha · 9–27 November 2026
+   Data layer: LocalStore (demo, this device only).
+   To go live, replace Store with a Firebase adapter exposing the
+   same load()/save() calls (see README.md / firebase-adapter.js).
+   ============================================================ */
+const EVENT_START='2026-11-09', EVENT_END='2026-11-27', APPROVER='Rabea';
+const $=s=>document.querySelector(s);
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const addDays=(d,n)=>{const x=new Date(d+'T00:00:00Z');x.setUTCDate(x.getUTCDate()+n);return x.toISOString().slice(0,10)};
+const DAYS=[];for(let d=EVENT_START;d<=EVENT_END;d=addDays(d,1))DAYS.push(d);
+const uid=()=>Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4);
+function doha(){
+  const p=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Qatar',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(new Date()).map(x=>[x.type,x.value]));
+  return {date:`${p.year}-${p.month}-${p.day}`,time:`${p.hour==='24'?'00':p.hour}:${p.minute}`};
+}
+const clampDay=d=>d<EVENT_START?EVENT_START:d>EVENT_END?EVENT_END:d;
+const toMin=t=>{if(!t)return null;const[h,m]=t.split(':').map(Number);return h*60+m};
+const fmtEn=d=>new Date(d+'T00:00:00Z').toLocaleDateString('en-GB',{timeZone:'UTC',weekday:'short',day:'numeric',month:'short',year:'numeric'});
+const fmtD=d=>new Date(d+'T00:00:00Z').toLocaleDateString(ui.lang==='ar'?'ar-QA-u-nu-latn':'en-GB',{timeZone:'UTC',weekday:'short',day:'numeric',month:'short'});
+const dayNo=d=>DAYS.indexOf(d)+1;
+const tsFmt=iso=>{const d=new Date(iso);return d.toLocaleString('en-GB',{timeZone:'Asia/Qatar',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:false})};
+
+/* ---------- i18n (UI in English, Arabic optional) ---------- */
+const AR={
+'Project Manager':'مدير المشروع','Supervisor':'مشرف','Marshal':'مارشال','Signed in as':'الدخول باسم','Operating day':'يوم التشغيل','Day':'اليوم',
+'Dashboard':'لوحة التحكم','Staff & assignment':'الموظفون والتوزيع','Attendance':'الحضور','Incidents':'الحوادث','Shift changes':'تغيير الورديات','Reports':'التقارير','Data & import':'البيانات والاستيراد','My team':'فريقي',
+'Demo mode':'وضع تجريبي','Assigned':'موزَّع','On duty now':'على رأس العمل','On time':'في الموعد','Late':'متأخر','Absent':'غائب','Not checked in':'لم يسجّل','Scheduled':'مجدول','Unassigned':'غير موزَّع','Checked out':'سجّل خروج',
+'Incidents today':'حوادث اليوم','Total staff':'إجمالي الموظفين','By supervisor':'حسب المشرف','By department':'حسب القسم','Team':'الفريق','In':'دخول','Out':'خروج','Late (min)':'التأخير (د)',
+'Search name or ID':'ابحث بالاسم أو الرقم','Role':'الدور','All':'الكل','Department':'القسم','Shift':'الوردية','Status':'الحالة','Date from':'من تاريخ','Date to':'إلى تاريخ','Check-in from':'دخول من','Check-in to':'دخول إلى','Assignment':'التوزيع','Not assigned':'غير موزَّع','Fully assigned':'موزَّع بالكامل',
+'ID':'الرقم','Name':'الاسم','Phone':'الهاتف','Date':'التاريخ','Time':'الوقت','None':'بدون','Change':'تغيير','Clear filters':'مسح الفلاتر','results':'نتيجة','selected':'محدد',
+'Assign selected':'توزيع المحدد','Apply':'تطبيق','Export PDF':'تصدير PDF','Export Excel':'تصدير Excel','Check in':'تسجيل دخول','Check out':'تسجيل خروج','Mark absent':'تسجيل غياب','Undo':'تراجع','Record time':'وقت التسجيل','Leave empty to use current Doha time':'اتركه فارغاً لاستخدام توقيت الدوحة الحالي',
+'Report incident':'الإبلاغ عن حادثة','Category':'الفئة','Severity':'الخطورة','Staff involved':'الموظف المعني','Description':'الوصف','Reported by':'أبلغ عنه','Save':'حفظ','Cancel':'إلغاء','Close':'إغلاق','Confirm':'تأكيد',
+'Low':'منخفضة','Medium':'متوسطة','High':'عالية','Medical':'طبية','Security':'أمنية','Lost & found':'مفقودات','Crowd / queue':'ازدحام / طوابير','Staff conduct':'سلوك الموظفين','Equipment / facility':'معدات / مرافق','Other':'أخرى',
+'Current shift':'الوردية الحالية','New shift':'الوردية الجديدة','Effective from':'تسري من','Approved by':'تمت الموافقة من','Approval email date':'تاريخ بريد الموافقة','Email subject / reference':'موضوع / مرجع البريد','Notes':'ملاحظات','Record shift change':'تسجيل تغيير الوردية','Shift change log':'سجل تغيير الورديات','Entered by':'أدخله','Recorded':'وقت التسجيل',
+'Daily operational summary':'الملخص التشغيلي اليومي','Generate PDF':'إنشاء PDF','Late arrivals':'المتأخرون','Absences':'الغياب','Not yet checked in':'لم يسجلوا بعد',
+'Import staff from Excel':'استيراد الموظفين من Excel','Choose Excel file':'اختر ملف Excel','Download template':'تنزيل النموذج','Load demo scenario':'تحميل سيناريو تجريبي','Reset to clean sample':'إعادة البيانات النموذجية','Audit log':'سجل التدقيق','Type':'النوع','Detail':'التفاصيل','By':'بواسطة',
+'Departments':'الأقسام','Shifts':'الورديات','Add':'إضافة','Grace period (min)':'فترة السماح (دقيقة)','Settings':'الإعدادات','Start':'البداية','End':'النهاية',
+'Live vs demo':'الفعلي مقابل التجريبي','Edit attendance':'تعديل الحضور','Clear record':'حذف السجل','Supervisors':'المشرفون','Marshals':'المارشال','No marshals are assigned to you yet.':'لا يوجد مارشال موزَّع عليك بعد.',
+'Sample staff list (68)':'قائمة موظفين نموذجية (68)','Import your Excel file in Data & import before go-live.':'استورد ملف Excel من صفحة البيانات قبل التشغيل الفعلي.','Demo scenario loaded':'تم تحميل سيناريو تجريبي','Generated attendance and incidents are fake. Reset before go-live.':'الحضور والحوادث المولّدة وهمية. أعد الضبط قبل التشغيل الفعلي.',
+'Language':'اللغة','Nationality':'الجنسية','Sign out':'تسجيل خروج','Supervisor accounts':'حسابات المشرفين','Email':'البريد الإلكتروني','Present':'حاضر','Nothing matches these filters.':'لا توجد نتائج لهذه الفلاتر.','No incidents recorded.':'لا توجد حوادث مسجلة.','No shift changes recorded yet.':'لا توجد تغييرات ورديات بعد.',
+'Only staff who already have a shift appear here. First-time shift assignment is done in Staff & assignment.':'يظهر هنا فقط من لديه وردية. التوزيع الأول للوردية يتم من صفحة الموظفين والتوزيع.',
+'I confirm Rabea approved this change by email.':'أؤكد أن ربيع وافق على هذا التغيير عبر البريد.','Staff member':'الموظف','Saved':'تم الحفظ','Day summary':'ملخص اليوم','Employees':'الموظفون','Rows shown':'الصفوف المعروضة',
+};
+const t=s=>ui.lang==='ar'&&AR[s]?AR[s]:s;
+const STATUS_LABEL={on_time:'On time',late:'Late',absent:'Absent',not_in:'Not checked in',scheduled:'Scheduled',unassigned:'Unassigned'};
+const CATS=['Medical','Security','Lost & found','Crowd / queue','Staff conduct','Equipment / facility','Other'];
+const SEVS=['Low','Medium','High'];
+
+/* ---------- Store (swap for Firebase later) ---------- */
+const Store={
+  key:'itu-fieldops-2026-v1',
+  load(){try{const s=localStorage.getItem(this.key);return s?JSON.parse(s):null}catch(e){return null}},
+  save(state){try{localStorage.setItem(this.key,JSON.stringify(state))}catch(e){}}
+};
+const Prefs={get(k,d){try{return localStorage.getItem('itu-pref-'+k)??d}catch(e){return d}},set(k,v){try{localStorage.setItem('itu-pref-'+k,v)}catch(e){}}};
+
+/* ---------- Sample data ---------- */
+function rng(seed){return()=>{seed=(seed*1664525+1013904223)%4294967296;return seed/4294967296}}
+function sampleStaff(){
+  const F=['Ahmed','Mohammed','Omar','Khalid','Yousef','Hassan','Ali','Ibrahim','Tariq','Faisal','Saeed','Hamad','Rashid','Nasser','Salem','Karim','Bilal','Ziad','Majid','Adel','Sara','Mariam','Fatima','Noura','Aisha','Layla','Huda','Reem','Dana','Lina','Joseph','Daniel','Arjun','Rahul','Imran','Kevin','Samuel','Peter','Amal','Hind'];
+  const L=['Al-Kuwari','Al-Mannai','Haddad','Khan','Nair','Mensah','Santos','Reyes','Farouk','Mansour','Saleh','Qureshi','Fernandes','Al-Sulaiti','Nasr','Hamdan','Okafor','Pillai','Darwish','Aziz'];
+  const r=rng(2026),out=[];const used=new Set();
+  for(let i=0;i<68;i++){
+    let n;do{n=F[Math.floor(r()*F.length)]+' '+L[Math.floor(r()*L.length)]}while(used.has(n));used.add(n);
+    const sup=i<8;
+    out.push({id:uid(),code:sup?`SUP-${String(i+1).padStart(2,'0')}`:`MAR-${String(i-7).padStart(3,'0')}`,name:n,role:sup?'Supervisor':'Marshal',phone:'+974 '+(5+Math.floor(r()*3))+String(Math.floor(r()*1e7)).padStart(7,'0').replace(/(\d{3})(\d{4})/,'$1 $2'),sup:'',dept:'',shifts:[]});
+  }
+  return out;
+}
+function freshState(staff,source){
+  return {v:1,source,demoScenario:false,staff,
+    departments:['Registration','Plenary Hall','Exhibition','VIP & Protocol','Media Centre','Gates & Access','Car Park'],
+    shifts:[{id:'A',name:'Morning',start:'07:00',end:'15:00'},{id:'B',name:'Afternoon',start:'14:00',end:'22:00'},{id:'C',name:'Night',start:'22:00',end:'06:00'}],
+    att:{},incidents:[],audit:[{id:uid(),ts:new Date().toISOString(),by:'System',type:'Setup',detail:source==='sample'?'Sample staff list created (60 Marshals, 8 Supervisors), all unassigned':'Staff imported'}],
+    settings:{grace:10}};
+}
+/* LIVE mode: config.js defines FIREBASE_CONFIG + PM_EMAILS and the Firebase SDK is loaded. Otherwise DEMO (this device only). */
+const LIVE=!!(window.FIREBASE_CONFIG&&window.firebase&&FIREBASE_CONFIG.apiKey&&!/^PASTE/.test(FIREBASE_CONFIG.apiKey));
+const PM_EMAILS=(window.PM_EMAILS||[]).map(e=>String(e).trim().toLowerCase());
+let S=LIVE?{...freshState([],'live'),audit:[]}:(Store.load()||freshState(sampleStaff(),'sample'));
+const save=()=>LIVE?Cloud.sync():Store.save(S);
+/* Stable stringify so local state and Firestore docs compare equal regardless of key order */
+const stable=v=>JSON.stringify(v,(k,x)=>x&&typeof x==='object'&&!Array.isArray(x)?Object.keys(x).sort().reduce((o,kk)=>(x[kk]!==undefined&&(o[kk]=x[kk]),o),{}):x);
+const Cloud={db:null,auth:null,user:null,email:'',synced:{},unsubs:[],loaded:new Set(),access:new Map(),priv:new Map(),
+  docs(){return{
+    config:new Map([['main',{departments:S.departments,shifts:S.shifts,settings:S.settings,source:S.source}]]),
+    staff:new Map(S.staff.map(({qid,...s})=>[s.id,s])),
+    staffPrivate:new Map(ui.role==='pm'?S.staff.map(s=>[s.id,{qid:s.qid||''}]):[]),
+    attendance:new Map(Object.entries(S.att).map(([k,r])=>{const[date,staffId]=k.split('|');return[date+'_'+staffId,{...r,date,staffId,sup:byId(staffId)?.sup||''}]})),
+    incidents:new Map(S.incidents.map(i=>[i.id,i])),
+    audit:new Map(S.audit.map(a=>[a.id,a]))}},
+  async sync(){
+    if(!this.db)return;const pm=ui.role==='pm',cur=this.docs(),ops=[];
+    for(const[col,map]of Object.entries(cur)){
+      if(!pm&&(col==='config'||col==='staff'||col==='staffPrivate'))continue;
+      const old=this.synced[col]||(this.synced[col]=new Map());
+      for(const[id,doc]of map){const s=stable(doc);if(old.get(id)!==s){if(col==='audit'&&old.has(id))continue;ops.push(['set',col,id,JSON.parse(s)]);old.set(id,s)}}
+      if(col!=='audit'&&(pm||col==='attendance'))for(const id of[...old.keys()])if(!map.has(id)){ops.push(['del',col,id]);old.delete(id)}
+    }
+    for(let i=0;i<ops.length;i+=400){const b=this.db.batch();
+      for(const[op,col,id,data]of ops.slice(i,i+400)){const ref=this.db.collection(col).doc(id);op==='set'?b.set(ref,data):b.delete(ref)}
+      try{await b.commit()}catch(e){toast('Not saved: '+(e.code||e.message)+'. Check your connection or permissions.');console.error(e)}}
+  },
+  watch(q,col,apply){this.unsubs.push(q.onSnapshot(snap=>{const m=new Map();snap.forEach(d=>m.set(d.id,d.data()));
+    this.synced[col]=new Map([...m].map(([k,v])=>[k,stable(v)]));apply(m);this.loaded.add(col);this.afterLoad();scheduleRender()},
+    e=>{console.error(col,e);toast('Sync error ('+col+'): '+e.code)}))},
+  start(){const db=this.db,pm=ui.role==='pm',me=ui.role;
+    this.watch(db.collection('config'),'config',m=>{const c=m.get('main');if(c){S.departments=c.departments||[];S.shifts=c.shifts||[];S.settings=c.settings||{grace:10};S.source=c.source||'live'}});
+    this.watch(db.collection('staff'),'staff',m=>{S.staff=[...m.values()].map(x=>({...x,qid:this.priv.get(x.id)?.qid||''})).sort((a,b)=>a.code.localeCompare(b.code))});
+    if(pm)this.watch(db.collection('staffPrivate'),'staffPrivate',m=>{this.priv=m;S.staff.forEach(x=>x.qid=m.get(x.id)?.qid||'')});
+    this.watch(pm?db.collection('attendance'):db.collection('attendance').where('sup','==',me),'attendance',m=>{S.att={};for(const v of m.values()){const{date,staffId,sup,...r}=v;S.att[date+'|'+staffId]=r}});
+    this.watch(pm?db.collection('incidents'):db.collection('incidents').where('byId','==',me),'incidents',m=>{S.incidents=[...m.values()]});
+    if(pm){this.watch(db.collection('audit').orderBy('ts','desc').limit(3000),'audit',m=>{S.audit=[...m.values()]});
+      this.unsubs.push(db.collection('access').onSnapshot(s=>{this.access=new Map();s.forEach(d=>this.access.set(d.id,d.data()));scheduleRender()}))}
+  },
+  afterLoad(){ /* first PM sign-in on an empty database: create settings */
+    if(ui.role==='pm'&&this.loaded.has('config')&&this.loaded.has('staff')&&!this.synced.config.has('main')&&!this.initDone){this.initDone=true;
+      const f=freshState([],'live');Object.assign(S,{departments:f.departments,shifts:f.shifts,settings:f.settings,source:'live'});log('Setup','System initialised');save()}}
+};
+let renderPending=false;
+function scheduleRender(){if(renderPending)return;renderPending=true;requestAnimationFrame(()=>{renderPending=false;
+  const a=document.activeElement;if(a&&a.matches('input,select,textarea')&&a.closest('main,#modal')){deferRender=true;return}
+  if(!$('#modal').hidden){deferRender=true;return}render()})}
+let deferRender=false;
+document.addEventListener('focusout',()=>setTimeout(()=>{if(deferRender&&$('#modal').hidden&&!document.activeElement?.matches('input,select,textarea')){deferRender=false;render()}},50));
+
+/* ---------- UI state ---------- */
+const ui={lang:Prefs.get('lang','en'),role:Prefs.get('role','pm'),tab:'',day:clampDay(doha().date),sel:new Set(),importPreview:null,
+  f:{staff:{q:'',role:'',sup:'',dept:'',shift:'',asg:''},att:{from:'',to:'',tf:'',tt:'',q:'',sup:'',dept:'',shift:'',status:''},inc:{from:'',to:'',q:'',dept:'',sev:'',cat:'',sup:''},audit:{q:'',type:''}}};
+if(LIVE)ui.role='';else if(ui.role!=='pm'&&!S.staff.some(s=>s.id===ui.role))ui.role='pm';
+
+/* ---------- Domain helpers ---------- */
+const byId=id=>S.staff.find(s=>s.id===id);
+const sups=()=>S.staff.filter(s=>s.role==='Supervisor');
+const shiftById=id=>S.shifts.find(x=>x.id===id);
+function shiftOf(s,date){let cur=null;for(const h of s.shifts)if(h.from<=date)cur=h.id;return cur?shiftById(cur):null}
+const shLabel=sh=>sh?`${sh.name} ${sh.start}–${sh.end}`:'';
+function lateMin(sh,tm){let a=toMin(tm);const st=toMin(sh.start),en=toMin(sh.end);if(en<=st&&a<st-240)a+=1440;const d=a-st;return d>S.settings.grace?d:0}
+function statusOf(s,date){
+  const sh=shiftOf(s,date),r=S.att[date+'|'+s.id];
+  if(r&&r.absent)return{k:'absent',r,sh,late:0};
+  if(r&&r.in){const late=sh?lateMin(sh,r.in):0;return{k:late?'late':'on_time',late,r,sh}}
+  if(!sh)return{k:'unassigned',sh,late:0};
+  const n=doha();
+  if(date>n.date||(date===n.date&&toMin(n.time)<toMin(sh.start)+S.settings.grace))return{k:'scheduled',sh,late:0};
+  return{k:'not_in',sh,late:0};
+}
+const actor=()=>ui.role==='pm'?'Project Manager':(byId(ui.role)?.name||'Supervisor');
+function log(type,detail,extra){S.audit.unshift({id:uid(),ts:new Date().toISOString(),by:actor(),type,detail,...(extra||{})})}
+const supName=id=>byId(id)?.name||'';
+
+/* ---------- Generic UI helpers ---------- */
+function toast(msg){const el=$('#toast');el.textContent=msg;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,2600)}
+function modal(html){const m=$('#modal');m.innerHTML=`<div class="dlg" role="dialog" aria-modal="true">${html}</div>`;m.hidden=false;const f=m.querySelector('input,select,textarea,button');f&&f.focus()}
+function closeModal(){$('#modal').hidden=true;$('#modal').innerHTML=''}
+function confirmBox(msg,yes,label){modal(`<h2>${t('Confirm')}</h2><p>${msg}</p><div class="row" style="justify-content:flex-end"><button class="btn" data-act="close">${t('Cancel')}</button><button class="btn pri" id="cfm-yes">${esc(label||t('Confirm'))}</button></div>`);$('#cfm-yes').onclick=()=>{closeModal();yes()}}
+const chip=k=>`<span class="chip c-${k}">${t(STATUS_LABEL[k]||k)}</span>`;
+const opt=(v,l,cur)=>`<option value="${esc(v)}"${String(v)===String(cur)?' selected':''}>${esc(l)}</option>`;
+const supOptions=(cur,blank)=>opt('',blank,cur)+sups().map(s=>opt(s.id,s.name,cur)).join('');
+const deptOptions=(cur,blank)=>opt('',blank,cur)+S.departments.map(d=>opt(d,d,cur)).join('');
+const shiftOptions=(cur,blank)=>opt('',blank,cur)+S.shifts.map(x=>opt(x.id,shLabel(x),cur)).join('');
+const fSel=(scope,key,label,opts)=>`<label>${t(label)}<select data-f="${scope}.${key}">${opts}</select></label>`;
+const fInp=(scope,key,label,type,extra='')=>`<label>${t(label)}<input type="${type}" data-f="${scope}.${key}" value="${esc(ui.f[scope][key])}" ${extra}></label>`;
+const dayOptions=cur=>DAYS.map(d=>opt(d,`${t('Day')} ${dayNo(d)} · ${fmtD(d)}`,cur)).join('');
+
+/* ---------- File output (PDF / Excel) ---------- */
+async function saveFile(filename,blob){
+  const dl=window.claude&&window.claude.use?await window.claude.use('downloads').catch(()=>null):null;
+  if(dl){try{await dl.save({filename,data:blob});toast(t('Saved')+': '+filename)}catch(e){if(e&&e.code!=='declined')toast('Could not save the file here ('+(e.code||'error')+').')}return}
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);
+}
+function xlsx(filename,sheets){
+  if(!window.XLSX){toast('Excel library failed to load. Check the connection.');return}
+  const wb=XLSX.utils.book_new();
+  for(const [name,rows] of Object.entries(sheets)){const ws=XLSX.utils.json_to_sheet(rows.length?rows:[{Note:'No rows'}]);
+    const keys=Object.keys(rows[0]||{Note:1});ws['!cols']=keys.map(k=>({wch:Math.min(42,Math.max(k.length,...rows.map(r=>String(r[k]??'').length))+2)}));
+    XLSX.utils.book_append_sheet(wb,ws,name.slice(0,31));}
+  saveFile(filename,new Blob([XLSX.write(wb,{type:'array',bookType:'xlsx'})]));
+}
+/* Minimal PDF style: one accent, generous margins, dotted separators */
+const PDF={L:18,R:192,ink:[30,26,28],mut:[112,102,106],acc:[138,21,56],dot:[176,166,170]};
+const pdfSafe=v=>String(v??'').replace(/[–—]/g,'-').replace(/[^\x00-\xFF]/g,'?');
+function pdfDot(doc,y){doc.setLineDashPattern([0.25,1.1],0);doc.setDrawColor(...PDF.dot);doc.setLineWidth(0.3);doc.line(PDF.L,y,PDF.R,y);doc.setLineDashPattern([],0)}
+function pdfStart(title,sub){
+  if(!window.jspdf){toast('PDF library failed to load. Check the connection.');return null}
+  const doc=new window.jspdf.jsPDF({unit:'mm',format:'a4'});
+  doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(...PDF.acc);doc.setCharSpace(0.8);doc.text('ITU FIELD OPS 2026',PDF.L,20);doc.setCharSpace(0);
+  doc.setFont('helvetica','normal');doc.setFontSize(19);doc.setTextColor(...PDF.ink);doc.text(pdfSafe(title),PDF.L,31);
+  doc.setFontSize(9);doc.setTextColor(...PDF.mut);doc.text(pdfSafe(sub),PDF.L,38);
+  pdfDot(doc,45);doc._y=55;return doc;
+}
+function pdfSection(doc,label){if(doc._y>262){doc.addPage();doc._y=22}doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(...PDF.mut);doc.setCharSpace(0.6);doc.text(pdfSafe(label.toUpperCase()),PDF.L,doc._y);doc.setCharSpace(0);doc._y+=4}
+function pdfKpis(doc,items){
+  const w=(PDF.R-PDF.L)/Math.min(items.length,6);items.forEach((it,i)=>{const row=Math.floor(i/6),x=PDF.L+(i%6)*w,y=doc._y+row*17;
+    doc.setFont('helvetica','normal');doc.setFontSize(18);doc.setTextColor(...(it.c||PDF.ink));doc.text(String(it.v),x,y+7);
+    doc.setFontSize(7.5);doc.setTextColor(...PDF.mut);doc.text(pdfSafe(it.l),x,y+12)});
+  doc._y+=Math.ceil(items.length/6)*17+2;pdfDot(doc,doc._y);doc._y+=9;
+}
+function pdfTable(doc,head,body){
+  if(!body.length){doc.setFont('helvetica','italic');doc.setFontSize(9);doc.setTextColor(...PDF.mut);doc.text('None',PDF.L,doc._y+4);doc._y+=14;return}
+  doc.autoTable({startY:doc._y,head:[head.map(pdfSafe)],body:body.map(r=>r.map(pdfSafe)),theme:'plain',margin:{left:PDF.L,right:210-PDF.R,top:20,bottom:22},
+    styles:{font:'helvetica',fontSize:8.5,textColor:PDF.ink,cellPadding:{top:2.4,bottom:2.4,left:1.2,right:2}},
+    headStyles:{fontStyle:'bold',fontSize:7,textColor:PDF.mut},
+    didDrawCell:d=>{if(d.column.index===0){const y=d.cell.y+d.cell.height;d.doc.setLineDashPattern([0.25,1.1],0);d.doc.setDrawColor(...(d.section==='head'?PDF.mut:PDF.dot));d.doc.setLineWidth(d.section==='head'?0.35:0.25);d.doc.line(PDF.L,y,PDF.R,y);d.doc.setLineDashPattern([],0)}}});
+  doc._y=doc.lastAutoTable.finalY+11;
+}
+function pdfFinish(doc,filename){
+  const n=doc.getNumberOfPages(),stamp='Generated '+tsFmt(new Date().toISOString())+' (Doha) by '+actor();
+  for(let i=1;i<=n;i++){doc.setPage(i);pdfDot(doc,282);doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(...PDF.mut);
+    doc.text(pdfSafe('DECC, Doha · 9-27 November 2026 · '+stamp+(S.source==='sample'||S.demoScenario?' · DEMO DATA':'')),PDF.L,287);doc.text(`${i} / ${n}`,PDF.R,287,{align:'right'})}
+  saveFile(filename,doc.output('blob'));
+}
+
+/* ---------- Header & shell ---------- */
+const PM_TABS=[['dash','Dashboard'],['staff','Staff & assignment'],['att','Attendance'],['inc','Incidents'],['shift','Shift changes'],['rep','Reports'],['data','Data & import']];
+const SUP_TABS=[['team','My team'],['inc','Incidents']];
+function render(){
+  document.documentElement.lang=ui.lang;document.documentElement.dir=ui.lang==='ar'?'rtl':'ltr';
+  if(LIVE&&!ui.role){$('#app').innerHTML=signInView();return}
+  if(LIVE&&!(Cloud.loaded.has('staff')&&Cloud.loaded.has('config'))){$('#app').innerHTML=`<div class="wrap" style="padding-block:60px"><div class="empty">Loading…</div></div>`;return}
+  const tabs=ui.role==='pm'?PM_TABS:SUP_TABS;if(!tabs.some(x=>x[0]===ui.tab))ui.tab=tabs[0][0];
+  const today=doha().date;
+  $('#app').innerHTML=`
+  <header class="top"><div class="wrap">
+    <div class="bar">
+      <div class="brand"><b>ITU FIELD OPS 2026</b><span>DECC · Doha · 9–27 Nov</span></div>
+      <div class="ctrls">
+        ${LIVE?`<span class="live-tag">● Live</span>`:`<button class="demo-tag" data-act="legend" title="${t('Live vs demo')}">● ${t('Demo mode')}</button>`}
+        <label class="small muted" style="display:flex;gap:6px;align-items:center">${t('Operating day')}<select id="day-sel" data-act-change="day">${dayOptions(ui.day)}</select></label>
+        ${LIVE?`<span class="small muted">${esc(ui.role==='pm'?t('Project Manager'):supName(ui.role))} · ${esc(Cloud.email)}</span><button class="btn sm" data-act="signout">${t('Sign out')}</button>`
+        :`<label class="small muted" style="display:flex;gap:6px;align-items:center">${t('Signed in as')}<select id="role-sel" data-act-change="role" aria-label="Demo sign-in">
+          ${opt('pm',t('Project Manager'),ui.role)}<optgroup label="${t('Supervisors')}">${sups().map(s=>opt(s.id,s.name+' ('+t('Supervisor')+')',ui.role)).join('')}</optgroup></select></label>`}
+        <button class="btn sm" data-act="lang" aria-label="${t('Language')}">${ui.lang==='ar'?'English':'العربية'}</button>
+      </div>
+    </div>
+    <nav class="tabs">${tabs.map(([k,l])=>`<button data-act="tab" data-v="${k}" aria-current="${ui.tab===k}">${t(l)}</button>`).join('')}</nav>
+  </div></header>
+  <main class="wrap">
+    ${S.source==='sample'?`<div class="banner"><b>${t('Sample staff list (68)')}</b><span>${t('Import your Excel file in Data & import before go-live.')}</span></div>`:''}
+    ${S.demoScenario?`<div class="banner"><b>${t('Demo scenario loaded')}</b><span>${t('Generated attendance and incidents are fake. Reset before go-live.')}</span>${ui.role==='pm'?`<button class="btn sm" data-act="reset-sample">${t('Reset to clean sample')}</button>`:''}</div>`:''}
+    ${ui.day!==today&&today>=EVENT_START&&today<=EVENT_END?`<div class="small muted">Viewing ${fmtEn(ui.day)}. Today is ${fmtEn(today)}.</div>`:''}
+    ${VIEWS[ui.tab]()}
+  </main>`;
+}
+
+/* ---------- Dashboard ---------- */
+function dayStats(date,list){
+  const c={total:0,on_time:0,late:0,absent:0,not_in:0,scheduled:0,onduty:0,out:0};
+  for(const s of list){const st=statusOf(s,date);if(st.k==='unassigned')continue;c.total++;c[st.k]++;if(st.r&&st.r.in&&!st.r.out)c.onduty++;if(st.r&&st.r.out)c.out++}
+  return c;
+}
+function kpiTiles(c,inc){return `<div class="kpis">
+  <div class="kpi acc"><span class="v">${c.total}</span><span class="l">${t('Assigned')}</span></div>
+  <div class="kpi"><span class="v">${c.onduty}</span><span class="l">${t('On duty now')}</span></div>
+  <div class="kpi ok"><span class="v">${c.on_time}</span><span class="l">${t('On time')}</span></div>
+  <div class="kpi warn"><span class="v">${c.late}</span><span class="l">${t('Late')}</span></div>
+  <div class="kpi bad"><span class="v">${c.absent}</span><span class="l">${t('Absent')}</span></div>
+  <div class="kpi bad"><span class="v">${c.not_in}</span><span class="l">${t('Not checked in')}</span></div>
+  <div class="kpi"><span class="v">${c.out}</span><span class="l">${t('Checked out')}</span></div>
+  ${inc!=null?`<div class="kpi"><span class="v">${inc}</span><span class="l">${t('Incidents today')}</span></div>`:''}</div>`}
+function breakdown(date,groups){
+  return `<div class="tbl-wrap"><table><thead><tr><th></th><th class="num">${t('Team')}</th><th class="num">${t('On time')}</th><th class="num">${t('Late')}</th><th class="num">${t('Absent')}</th><th class="num">${t('Not checked in')}</th></tr></thead><tbody>
+  ${groups.map(([label,list])=>{const c=dayStats(date,list);return `<tr><td>${esc(label)}</td><td class="num">${c.total}</td><td class="num">${c.on_time}</td><td class="num">${c.late}</td><td class="num">${c.absent}</td><td class="num">${c.not_in}</td></tr>`}).join('')}
+  </tbody></table></div>`;
+}
+function groupsBySup(){return [...sups().map(s=>[s.name,S.staff.filter(m=>m.sup===s.id)]),[t('Unassigned'),S.staff.filter(m=>m.role==='Marshal'&&!m.sup)]]}
+function groupsByDept(){return [...S.departments.map(d=>[d,S.staff.filter(m=>m.dept===d)]),[t('Unassigned'),S.staff.filter(m=>!m.dept)]]}
+const VIEWS={};
+VIEWS.dash=()=>{
+  const c=dayStats(ui.day,S.staff),inc=S.incidents.filter(i=>i.date===ui.day);
+  const asg=S.staff.filter(s=>s.shifts.length&&(s.role==='Supervisor'||s.sup)&&s.dept).length;
+  return `<div class="row between"><h2>${t('Dashboard')} · ${t('Day')} ${dayNo(ui.day)}, ${esc(fmtD(ui.day))}</h2>
+    <div class="row"><button class="btn" data-act="sum-pdf">${t('Daily operational summary')} · PDF</button><button class="btn" data-act="sum-xlsx">Excel</button></div></div>
+  ${kpiTiles(c,inc.length)}
+  ${asg<S.staff.length?`<div class="panel row between"><span><b>${S.staff.length-asg}</b> / ${S.staff.length} ${ui.lang==='ar'?'موظف بحاجة إلى توزيع كامل (مشرف، قسم، وردية).':'staff still need a full assignment (supervisor, department, shift).'}</span><button class="btn pri" data-act="tab" data-v="staff">${t('Staff & assignment')}</button></div>`:''}
+  <div class="grid2"><section class="panel" style="display:flex;flex-direction:column;gap:10px"><h3>${t('By supervisor')}</h3>${breakdown(ui.day,groupsBySup())}</section>
+  <section class="panel" style="display:flex;flex-direction:column;gap:10px"><h3>${t('By department')}</h3>${breakdown(ui.day,groupsByDept())}</section></div>
+  <section class="panel" style="display:flex;flex-direction:column;gap:10px"><div class="row between"><h3>${t('Incidents today')}</h3><button class="btn sm" data-act="inc-new">${t('Report incident')}</button></div>${incTable(inc)}</section>`;
+};
+
+/* ---------- Staff & assignment ---------- */
+function staffRows(){const f=ui.f.staff,q=f.q.trim().toLowerCase();
+  return S.staff.filter(s=>(!q||s.name.toLowerCase().includes(q)||s.code.toLowerCase().includes(q)||String(s.qid||'').includes(q)||String(s.phone||'').includes(q))&&(!f.role||s.role===f.role)&&(!f.sup||(f.sup==='none'?!s.sup&&s.role==='Marshal':s.sup===f.sup||s.id===f.sup))&&(!f.dept||(f.dept==='none'?!s.dept:s.dept===f.dept))&&(!f.shift||(f.shift==='none'?!s.shifts.length:shiftOf(s,ui.day)?.id===f.shift))
+    &&(!f.asg||(f.asg==='no')===!(s.shifts.length&&s.dept&&(s.role==='Supervisor'||s.sup))))}
+VIEWS.staff=()=>`<div class="row between"><h2>${t('Staff & assignment')}</h2><div class="row"><button class="btn" data-act="staff-xlsx">${t('Export Excel')}</button><button class="btn" data-act="staff-pdf">${t('Export PDF')}</button></div></div>
+  <div class="panel filters">${fInp('staff','q','Search name or ID','search')}
+  ${fSel('staff','role','Role',opt('',t('All'),ui.f.staff.role)+opt('Marshal',t('Marshal'),ui.f.staff.role)+opt('Supervisor',t('Supervisor'),ui.f.staff.role))}
+  ${fSel('staff','sup','Supervisor',supOptions(ui.f.staff.sup,t('All'))+opt('none',t('Unassigned'),ui.f.staff.sup))}
+  ${fSel('staff','dept','Department',deptOptions(ui.f.staff.dept,t('All'))+opt('none',t('Unassigned'),ui.f.staff.dept))}
+  ${fSel('staff','shift','Shift',shiftOptions(ui.f.staff.shift,t('All'))+opt('none',t('Unassigned'),ui.f.staff.shift))}
+  ${fSel('staff','asg','Assignment',opt('',t('All'),ui.f.staff.asg)+opt('no',t('Not assigned'),ui.f.staff.asg)+opt('yes',t('Fully assigned'),ui.f.staff.asg))}
+  <button class="btn ghost" data-act="clear-f" data-v="staff">${t('Clear filters')}</button></div>
+  <div id="res-staff">${RES.staff()}</div>`;
+const RES={};
+RES.staff=()=>{const rows=staffRows();
+  return `<div class="small muted" style="margin-bottom:8px">${rows.length} ${t('results')} · ${ui.lang==='ar'?'التوزيع الأول للوردية لا يحتاج موافقة؛ أي تغيير لاحق يتم من صفحة تغيير الورديات.':'First shift assignment needs no approval. Any later change goes through Shift changes.'}</div>
+  ${rows.length?`<div class="tbl-wrap"><table><thead><tr><th><input type="checkbox" data-act="sel-all" aria-label="Select all" ${rows.length&&rows.every(r=>ui.sel.has(r.id))?'checked':''}></th><th>${t('ID')}</th><th>${t('Name')}</th><th>${t('Role')}</th><th>${t('Supervisor')}</th><th>${t('Department')}</th><th>${t('Shift')}</th><th>${t('Phone')}</th><th>QID</th><th>${t('Nationality')}</th></tr></thead><tbody>
+  ${rows.map(s=>{const sh=shiftOf(s,ui.day)||(s.shifts.length?shiftById(s.shifts[0].id):null);return `<tr><td><input type="checkbox" data-act="sel" data-id="${s.id}" ${ui.sel.has(s.id)?'checked':''} aria-label="Select ${esc(s.name)}"></td>
+    <td class="mono">${esc(s.code)}</td><td>${esc(s.name)}</td><td>${t(s.role)}</td>
+    <td>${s.role==='Marshal'?`<select data-assign="sup" data-id="${s.id}">${supOptions(s.sup,'—')}</select>`:'<span class="muted">—</span>'}</td>
+    <td><select data-assign="dept" data-id="${s.id}">${deptOptions(s.dept,'—')}</select></td>
+    <td>${s.shifts.length?`<span>${esc(shLabel(sh))}</span> <button class="btn sm ghost" data-act="shift-change" data-id="${s.id}">${t('Change')}</button>`:`<select data-assign="shift" data-id="${s.id}">${shiftOptions('','—')}</select>`}</td>
+    <td class="mono small">${esc(s.phone)}</td><td class="mono small">${esc(s.qid||'')}</td><td class="small">${esc(s.nat||'')}</td></tr>`}).join('')}</tbody></table></div>`:`<div class="panel empty">${t('Nothing matches these filters.')}</div>`}
+  ${ui.sel.size?`<div class="bulk" style="margin-top:10px"><b>${ui.sel.size} ${t('selected')}</b>
+    <select id="b-sup" aria-label="${t('Supervisor')}">${supOptions('',t('Supervisor')+'…')}</select><select id="b-dept" aria-label="${t('Department')}">${deptOptions('',t('Department')+'…')}</select><select id="b-shift" aria-label="${t('Shift')}">${shiftOptions('',t('Shift')+'…')}</select>
+    <button class="btn pri sm" data-act="bulk">${t('Apply')}</button><button class="btn sm" data-act="sel-none">${t('Cancel')}</button></div>`:''}`;
+};
+function assign(s,field,val,quiet){
+  if(field==='sup'){if(s.role!=='Marshal')return false;s.sup=val;log('Assignment',`${s.code} ${s.name} → supervisor: ${supName(val)||'none'}`)}
+  if(field==='dept'){s.dept=val;log('Assignment',`${s.code} ${s.name} → department: ${val||'none'}`)}
+  if(field==='shift'){if(s.shifts.length||!val)return false;s.shifts=[{id:val,from:EVENT_START}];log('Assignment',`${s.code} ${s.name} → initial shift: ${shLabel(shiftById(val))}`)}
+  return true;
+}
+
+/* ---------- Attendance ---------- */
+function attRows(){const f=ui.f.att,q=f.q.trim().toLowerCase(),from=f.from||ui.day,to=f.to||from,out=[];
+  for(const d of DAYS){if(d<from||d>to)continue;
+    for(const s of S.staff){const st=statusOf(s,d);if(st.k==='unassigned')continue;
+      if(q&&!s.name.toLowerCase().includes(q)&&!s.code.toLowerCase().includes(q))continue;
+      if(f.sup&&s.sup!==f.sup&&s.id!==f.sup)continue;if(f.dept&&s.dept!==f.dept)continue;if(f.shift&&st.sh?.id!==f.shift)continue;
+      if(f.status&&(f.status==='out'?!(st.r&&st.r.out):f.status==='onduty'?!(st.r&&st.r.in&&!st.r.out):st.k!==f.status))continue;
+      const tin=st.r?.in||'';if((f.tf||f.tt)&&(!tin||(f.tf&&tin<f.tf)||(f.tt&&tin>f.tt)))continue;
+      out.push({d,s,st});}}
+  return out;
+}
+const attExportRows=rows=>rows.map(({d,s,st})=>({Date:d,'Employee ID':s.code,Name:s.name,Role:s.role,Supervisor:s.role==='Marshal'?supName(s.sup):'',Department:s.dept,Shift:shLabel(st.sh),'Check in':st.r?.in||'','Check out':st.r?.out||'','Late (min)':st.late||'',Status:STATUS_LABEL[st.k],'Recorded by':st.r?.by||'',Note:st.r?.note||''}));
+VIEWS.att=()=>{const f=ui.f.att;return `<div class="row between"><h2>${t('Attendance')}</h2><div class="row"><button class="btn" data-act="att-xlsx">${t('Export Excel')}</button><button class="btn" data-act="att-pdf">${t('Export PDF')}</button></div></div>
+  <div class="panel filters">
+  <label>${t('Date from')}<input type="date" data-f="att.from" min="${EVENT_START}" max="${EVENT_END}" value="${esc(f.from||ui.day)}"></label>
+  <label>${t('Date to')}<input type="date" data-f="att.to" min="${EVENT_START}" max="${EVENT_END}" value="${esc(f.to||f.from||ui.day)}"></label>
+  ${fInp('att','tf','Check-in from','time')}${fInp('att','tt','Check-in to','time')}${fInp('att','q','Search name or ID','search')}
+  ${fSel('att','sup','Supervisor',supOptions(f.sup,t('All')))}${fSel('att','dept','Department',deptOptions(f.dept,t('All')))}${fSel('att','shift','Shift',shiftOptions(f.shift,t('All')))}
+  ${fSel('att','status','Status',opt('',t('All'),f.status)+['on_time','late','absent','not_in','scheduled'].map(k=>opt(k,t(STATUS_LABEL[k]),f.status)).join('')+opt('onduty',t('On duty now'),f.status)+opt('out',t('Checked out'),f.status))}
+  <button class="btn ghost" data-act="clear-f" data-v="att">${t('Clear filters')}</button></div>
+  <div id="res-att">${RES.att()}</div>`};
+RES.att=()=>{const rows=attRows(),shown=rows.slice(0,400);
+  if(!rows.length)return `<div class="panel empty">${S.staff.some(s=>s.shifts.length)?t('Nothing matches these filters.'):(ui.lang==='ar'?'لا أحد لديه وردية بعد. وزّع الورديات أولاً.':'Nobody has a shift yet. Assign shifts in Staff & assignment first.')}</div>`;
+  return `<div class="small muted" style="margin-bottom:8px">${rows.length} ${t('results')}${rows.length>400?` · ${t('Rows shown')}: 400 (export includes all)`:''} · ${ui.lang==='ar'?'اضغط على صف لتعديله.':'Tap a row to correct it.'}</div>
+  <div class="tbl-wrap"><table><thead><tr><th>${t('Date')}</th><th>${t('ID')}</th><th>${t('Name')}</th><th>${t('Supervisor')}</th><th>${t('Department')}</th><th>${t('Shift')}</th><th>${t('In')}</th><th>${t('Out')}</th><th class="num">${t('Late (min)')}</th><th>${t('Status')}</th></tr></thead><tbody>
+  ${shown.map(({d,s,st})=>`<tr class="click" data-act="att-edit" data-id="${s.id}" data-d="${d}"><td class="mono small">${d.slice(5)}</td><td class="mono">${esc(s.code)}</td><td>${esc(s.name)}</td><td>${esc(s.role==='Marshal'?supName(s.sup):'—')}</td><td>${esc(s.dept)}</td><td class="small">${esc(st.sh?.name||'')}</td><td class="mono">${esc(st.r?.in||'')}</td><td class="mono">${esc(st.r?.out||'')}</td><td class="num mono">${st.late||''}</td><td>${chip(st.k)}</td></tr>`).join('')}
+  </tbody></table></div>`};
+function attEdit(id,d){const s=byId(id),r=S.att[d+'|'+id]||{};
+  modal(`<h2>${t('Edit attendance')}</h2><div class="muted">${esc(s.code)} · ${esc(s.name)} · ${esc(fmtEn(d))}</div>
+  <div class="form"><label>${t('In')}<input type="time" id="e-in" value="${esc(r.in||'')}"></label><label>${t('Out')}<input type="time" id="e-out" value="${esc(r.out||'')}"></label>
+  <label>${t('Status')}<select id="e-abs">${opt('0',t('Present')||'Present',r.absent?'1':'0')}${opt('1',t('Absent'),r.absent?'1':'0')}</select></label>
+  <label class="full">${t('Notes')}<input type="text" id="e-note" value="${esc(r.note||'')}" placeholder="Reason for correction"></label></div>
+  <div class="row between"><button class="btn bad" id="e-clear">${t('Clear record')}</button><div class="row"><button class="btn" data-act="close">${t('Cancel')}</button><button class="btn pri" id="e-save">${t('Save')}</button></div></div>`);
+  $('#e-save').onclick=()=>{const abs=$('#e-abs').value==='1',inn=$('#e-in').value,out=$('#e-out').value;
+    if(!abs&&!inn){toast('Enter a check-in time or mark absent.');return}
+    S.att[d+'|'+id]={in:abs?'':inn,out:abs?'':out,absent:abs,note:$('#e-note').value.trim(),by:actor(),at:new Date().toISOString()};
+    log('Attendance correction',`${s.code} ${s.name} ${d}: ${abs?'absent':`in ${inn}${out?' out '+out:''}`}${$('#e-note').value.trim()?' · '+$('#e-note').value.trim():''}`);save();closeModal();render();toast(t('Saved'))};
+  $('#e-clear').onclick=()=>{delete S.att[d+'|'+id];log('Attendance correction',`${s.code} ${s.name} ${d}: record cleared`);save();closeModal();render()};
+}
+
+/* ---------- Supervisor board ---------- */
+VIEWS.team=()=>{const me=byId(ui.role),team=S.staff.filter(m=>m.sup===ui.role).sort((a,b)=>a.code.localeCompare(b.code)),c=dayStats(ui.day,team);
+  return `<div class="row between"><h2>${t('My team')} · ${t('Day')} ${dayNo(ui.day)}, ${esc(fmtD(ui.day))}</h2><span class="muted small">${esc(me.name)}${me.dept?' · '+esc(me.dept):''}</span></div>
+  ${kpiTiles(c)}
+  <div class="panel row"><label class="small muted" style="display:flex;gap:8px;align-items:center">${t('Record time')}<input type="time" id="rec-time"></label><span class="small muted">${t('Leave empty to use current Doha time')} (${doha().time})</span></div>
+  ${team.length?`<div class="cards">${team.map(m=>{const st=statusOf(m,ui.day),r=st.r;
+    return `<div class="card"><div class="row between"><div style="min-width:0"><div class="nm">${esc(m.name)}</div><div class="small muted"><span class="mono">${esc(m.code)}</span> · ${esc(st.sh?shLabel(st.sh):t('Unassigned'))}${m.dept?' · '+esc(m.dept):''}</div></div>${chip(st.k)}</div>
+      ${r&&(r.in||r.out)?`<div class="small mono">${t('In')} ${esc(r.in||'—')} · ${t('Out')} ${esc(r.out||'—')}${st.late?` · +${st.late} min`:''}</div>`:''}
+      <div class="acts">${!st.sh?'':!r?`<button class="btn ok sm" data-act="ci" data-id="${m.id}">${t('Check in')}</button><button class="btn bad sm" data-act="abs" data-id="${m.id}">${t('Mark absent')}</button>`
+        :r.absent?`<button class="btn sm" data-act="undo" data-id="${m.id}">${t('Undo')}</button>`
+        :!r.out?`<button class="btn pri sm" data-act="co" data-id="${m.id}">${t('Check out')}</button><button class="btn sm ghost" data-act="undo" data-id="${m.id}">${t('Undo')}</button>`
+        :`<button class="btn sm ghost" data-act="undo-out" data-id="${m.id}">${t('Undo')}</button>`}</div></div>`}).join('')}</div>`:`<div class="panel empty">${t('No marshals are assigned to you yet.')}</div>`}`};
+function recTime(){return ($('#rec-time')&&$('#rec-time').value)||doha().time}
+function mark(id,kind){const s=byId(id),k=ui.day+'|'+id,tm=recTime();const r=S.att[k];
+  if(LIVE&&ui.role!=='pm'&&ui.day!==doha().date){toast(ui.lang==='ar'?'يمكنك تسجيل الحضور لليوم الحالي فقط.':'You can record attendance for today only.');return}
+  if(kind==='ci'){S.att[k]={in:tm,out:'',absent:false,by:actor(),at:new Date().toISOString()};log('Check in',`${s.code} ${s.name} ${ui.day} ${tm}`)}
+  if(kind==='co'&&r){if(tm<r.in&&!(shiftOf(s,ui.day)&&toMin(shiftOf(s,ui.day).end)<=toMin(shiftOf(s,ui.day).start))){toast('Check-out time is before check-in.');return}r.out=tm;log('Check out',`${s.code} ${s.name} ${ui.day} ${tm}`)}
+  if(kind==='abs'){S.att[k]={in:'',out:'',absent:true,by:actor(),at:new Date().toISOString()};log('Absent',`${s.code} ${s.name} ${ui.day}`)}
+  if(kind==='undo'){delete S.att[k];log('Undo',`${s.code} ${s.name} ${ui.day}: record removed`)}
+  if(kind==='undo-out'&&r){r.out='';log('Undo',`${s.code} ${s.name} ${ui.day}: check-out removed`)}
+  save();const keep=$('#rec-time')?.value;render();if(keep&&$('#rec-time'))$('#rec-time').value=keep;
+}
+
+/* ---------- Incidents ---------- */
+function incList(){const f=ui.f.inc,q=f.q.trim().toLowerCase();
+  return S.incidents.filter(i=>(ui.role==='pm'||i.byId===ui.role)&&(!f.from||i.date>=f.from)&&(!f.to||i.date<=f.to)&&(!f.dept||i.dept===f.dept)&&(!f.sev||i.sev===f.sev)&&(!f.cat||i.cat===f.cat)&&(!f.sup||i.byId===f.sup)
+    &&(!q||(i.desc+' '+(byId(i.staff)?.name||'')+' '+i.by).toLowerCase().includes(q))).sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time))}
+function incTable(list){return list.length?`<div class="tbl-wrap"><table><thead><tr><th>${t('Date')}</th><th>${t('Time')}</th><th>${t('Category')}</th><th>${t('Severity')}</th><th>${t('Department')}</th><th>${t('Staff involved')}</th><th>${t('Description')}</th><th>${t('Reported by')}</th></tr></thead><tbody>
+  ${list.map(i=>`<tr><td class="mono small">${i.date.slice(5)}</td><td class="mono">${esc(i.time)}</td><td>${t(i.cat)}</td><td><span class="chip c-${i.sev}">${t(i.sev)}</span></td><td>${esc(i.dept)}</td><td>${esc(byId(i.staff)?.name||'')}</td><td style="white-space:normal;min-width:220px">${esc(i.desc)}</td><td class="small">${esc(i.by)}</td></tr>`).join('')}</tbody></table></div>`:`<div class="empty">${t('No incidents recorded.')}</div>`}
+VIEWS.inc=()=>{const f=ui.f.inc;return `<div class="row between"><h2>${t('Incidents')}</h2><div class="row"><button class="btn pri" data-act="inc-new">${t('Report incident')}</button>${ui.role==='pm'?`<button class="btn" data-act="inc-xlsx">${t('Export Excel')}</button><button class="btn" data-act="inc-pdf">${t('Export PDF')}</button>`:''}</div></div>
+  <div class="panel filters">${fInp('inc','from','Date from','date',`min="${EVENT_START}" max="${EVENT_END}"`)}${fInp('inc','to','Date to','date',`min="${EVENT_START}" max="${EVENT_END}"`)}${fInp('inc','q','Search name or ID','search')}
+  ${fSel('inc','cat','Category',opt('',t('All'),f.cat)+CATS.map(c=>opt(c,t(c),f.cat)).join(''))}${fSel('inc','sev','Severity',opt('',t('All'),f.sev)+SEVS.map(c=>opt(c,t(c),f.sev)).join(''))}
+  ${fSel('inc','dept','Department',deptOptions(f.dept,t('All')))}${ui.role==='pm'?fSel('inc','sup','Reported by',opt('',t('All'),f.sup)+opt('pm',t('Project Manager'),f.sup)+sups().map(s=>opt(s.id,s.name,f.sup)).join('')):''}
+  <button class="btn ghost" data-act="clear-f" data-v="inc">${t('Clear filters')}</button></div>
+  <div id="res-inc">${RES.inc()}</div>`};
+RES.inc=()=>`<div class="small muted" style="margin-bottom:8px">${incList().length} ${t('results')}</div><div class="panel" style="padding:0">${incTable(incList())}</div>`;
+function incNew(){const n=doha(),pool=ui.role==='pm'?S.staff:S.staff.filter(m=>m.sup===ui.role||m.id===ui.role),me=byId(ui.role);
+  modal(`<h2>${t('Report incident')}</h2><div class="form">
+  <label>${t('Date')}<input type="date" id="i-date" min="${EVENT_START}" max="${EVENT_END}" value="${ui.day}"></label><label>${t('Time')}<input type="time" id="i-time" value="${n.time}"></label>
+  <label>${t('Category')}<select id="i-cat">${CATS.map(c=>opt(c,t(c),'')).join('')}</select></label><label>${t('Severity')}<select id="i-sev">${SEVS.map(c=>opt(c,t(c),'Low')).join('')}</select></label>
+  <label>${t('Department')}<select id="i-dept">${deptOptions(me?.dept||'','—')}</select></label><label>${t('Staff involved')}<select id="i-staff">${opt('','—','')}${pool.map(s=>opt(s.id,s.code+' · '+s.name,'')).join('')}</select></label>
+  <label class="full">${t('Description')}<textarea id="i-desc" required placeholder="What happened, where, and what action was taken"></textarea></label></div>
+  <div class="row" style="justify-content:flex-end"><button class="btn" data-act="close">${t('Cancel')}</button><button class="btn pri" id="i-save">${t('Save')}</button></div>`);
+  $('#i-save').onclick=()=>{const desc=$('#i-desc').value.trim();if(!desc){toast('Describe the incident first.');return}
+    const i={id:uid(),date:$('#i-date').value||ui.day,time:$('#i-time').value||n.time,cat:$('#i-cat').value,sev:$('#i-sev').value,dept:$('#i-dept').value,staff:$('#i-staff').value,desc,by:actor(),byId:ui.role};
+    S.incidents.push(i);log('Incident',`${i.date} ${i.time} ${i.cat} (${i.sev}): ${desc.slice(0,80)}`);save();closeModal();render();toast(t('Saved'))};
+}
+const incExportRows=l=>l.map(i=>({Date:i.date,Time:i.time,Category:i.cat,Severity:i.sev,Department:i.dept,'Staff involved':byId(i.staff)?.name||'','Employee ID':byId(i.staff)?.code||'',Description:i.desc,'Reported by':i.by}));
+
+/* ---------- Shift changes (PM only, Rabea approval) ---------- */
+const shiftLog=()=>S.audit.filter(a=>a.type==='Shift change');
+VIEWS.shift=()=>{const eligible=S.staff.filter(s=>s.shifts.length);
+  return `<div class="row between"><h2>${t('Shift changes')}</h2></div>
+  <section class="panel" style="display:flex;flex-direction:column;gap:12px">
+    <div class="small muted">${ui.lang==='ar'?'يُدخل مدير المشروع تغييرات الورديات فقط بعد موافقة ربيع عبر البريد الإلكتروني. كل تغيير يُحفظ في سجل التدقيق ولا يمكن حذفه.':'Shift changes are entered by the Project Manager only, after Rabea approves by email. Every change is stored in the audit record and cannot be deleted.'}</div>
+    ${eligible.length?`<form class="form" id="sc-form">
+      <label>${t('Staff member')}<select id="sc-staff" required>${opt('','—','')}${eligible.map(s=>opt(s.id,`${s.code} · ${s.name}`,ui.scStaff||'')).join('')}</select></label>
+      <label>${t('Current shift')}<input type="text" id="sc-cur" readonly value="${esc(ui.scStaff?shLabel(shiftOf(byId(ui.scStaff),ui.day)):'')}"></label>
+      <label>${t('New shift')}<select id="sc-new" required>${shiftOptions('','—')}</select></label>
+      <label>${t('Effective from')}<input type="date" id="sc-eff" min="${EVENT_START}" max="${EVENT_END}" value="${ui.day}" required></label>
+      <label>${t('Approved by')}<input type="text" value="${APPROVER} (email)" readonly></label>
+      <label>${t('Approval email date')}<input type="date" id="sc-edate" value="${doha().date}" required></label>
+      <label class="full">${t('Email subject / reference')}<input type="text" id="sc-ref" required placeholder="e.g. RE: Shift swap MAR-014, 12 Nov"></label>
+      <label class="full">${t('Notes')}<input type="text" id="sc-notes" placeholder="Reason for the change"></label>
+      <label class="full" style="flex-direction:row;align-items:center;gap:8px;color:var(--fg)"><input type="checkbox" id="sc-ok" required> ${t('I confirm Rabea approved this change by email.')}</label>
+      <div class="full row"><button class="btn pri" type="submit">${t('Record shift change')}</button></div></form>`
+    :`<div class="empty">${t('Only staff who already have a shift appear here. First-time shift assignment is done in Staff & assignment.')}</div>`}
+  </section>
+  <section class="panel" style="display:flex;flex-direction:column;gap:10px"><div class="row between"><h3>${t('Shift change log')}</h3><div class="row"><button class="btn sm" data-act="sc-xlsx">${t('Export Excel')}</button><button class="btn sm" data-act="sc-pdf">${t('Export PDF')}</button></div></div>
+  ${shiftLog().length?`<div class="tbl-wrap"><table><thead><tr><th>${t('Recorded')}</th><th>${t('Staff member')}</th><th>From → To</th><th>${t('Effective from')}</th><th>${t('Approved by')}</th><th>${t('Email subject / reference')}</th><th>${t('Notes')}</th><th>${t('Entered by')}</th></tr></thead><tbody>
+  ${shiftLog().map(a=>`<tr><td class="mono small">${tsFmt(a.ts)}</td><td>${esc(a.staffCode)} · ${esc(a.staffName)}</td><td>${esc(a.fromShift)} → ${esc(a.toShift)}</td><td class="mono">${esc(a.effective)}</td><td>${esc(a.approver)} · ${esc(a.emailDate)}</td><td style="white-space:normal">${esc(a.emailRef)}</td><td style="white-space:normal">${esc(a.notes)}</td><td>${esc(a.by)}</td></tr>`).join('')}</tbody></table></div>`:`<div class="empty">${t('No shift changes recorded yet.')}</div>`}</section>`};
+function submitShift(e){e.preventDefault();if(ui.role!=='pm')return;
+  const s=byId($('#sc-staff').value),to=$('#sc-new').value,eff=$('#sc-eff').value,ref=$('#sc-ref').value.trim();
+  if(!s||!to||!eff||!ref||!$('#sc-ok').checked){toast('Fill in every required field and confirm the approval.');return}
+  const from=shiftOf(s,eff);if(from&&from.id===to){toast('The new shift is the same as the current one.');return}
+  s.shifts=s.shifts.filter(h=>h.from!==eff);s.shifts.push({id:to,from:eff});s.shifts.sort((a,b)=>a.from.localeCompare(b.from));
+  log('Shift change',`${s.code} ${s.name}: ${shLabel(from)} → ${shLabel(shiftById(to))} from ${eff} · approved by ${APPROVER} (${ref})`,{staffCode:s.code,staffName:s.name,fromShift:shLabel(from),toShift:shLabel(shiftById(to)),effective:eff,approver:APPROVER,emailDate:$('#sc-edate').value,emailRef:ref,notes:$('#sc-notes').value.trim()});
+  ui.scStaff='';save();render();toast(t('Saved'));
+}
+const scExportRows=()=>shiftLog().map(a=>({Recorded:tsFmt(a.ts),'Employee ID':a.staffCode,Name:a.staffName,'From shift':a.fromShift,'To shift':a.toShift,'Effective from':a.effective,'Approved by':a.approver,'Approval email date':a.emailDate,'Email subject / reference':a.emailRef,Notes:a.notes,'Entered by':a.by}));
+
+/* ---------- Reports: daily operational summary ---------- */
+function daySummary(d){
+  const c=dayStats(d,S.staff),inc=S.incidents.filter(i=>i.date===d).sort((a,b)=>a.time.localeCompare(b.time));
+  const list=k=>S.staff.map(s=>({s,st:statusOf(s,d)})).filter(x=>x.st.k===k);
+  return {c,inc,late:list('late').sort((a,b)=>b.st.late-a.st.late),absent:list('absent'),notin:list('not_in')};
+}
+VIEWS.rep=()=>{const R=daySummary(ui.day),pp=(arr,cols)=>arr.length?`<div class="tbl-wrap"><table><tbody>${arr.map(cols).join('')}</tbody></table></div>`:`<div class="muted small">${t('None')}</div>`;
+  return `<div class="row between"><h2>${t('Daily operational summary')}</h2><div class="row"><select data-act-change="day" aria-label="${t('Day')}">${dayOptions(ui.day)}</select><button class="btn pri" data-act="sum-pdf">${t('Generate PDF')}</button><button class="btn" data-act="sum-xlsx">${t('Export Excel')}</button></div></div>
+  ${kpiTiles(R.c,R.inc.length)}
+  <div class="grid2">
+   <section class="panel" style="display:flex;flex-direction:column;gap:10px"><h3>${t('Late arrivals')} (${R.late.length})</h3>${pp(R.late,({s,st})=>`<tr><td class="mono">${esc(s.code)}</td><td>${esc(s.name)}</td><td>${esc(supName(s.sup))}</td><td class="mono">${esc(st.r.in)}</td><td class="num mono">+${st.late}</td></tr>`)}</section>
+   <section class="panel" style="display:flex;flex-direction:column;gap:10px"><h3>${t('Absences')} (${R.absent.length}) · ${t('Not yet checked in')} (${R.notin.length})</h3>${pp([...R.absent,...R.notin],({s,st})=>`<tr><td class="mono">${esc(s.code)}</td><td>${esc(s.name)}</td><td>${esc(supName(s.sup))}</td><td>${chip(st.k)}</td></tr>`)}</section>
+  </div>
+  <div class="grid2"><section class="panel" style="display:flex;flex-direction:column;gap:10px"><h3>${t('By supervisor')}</h3>${breakdown(ui.day,groupsBySup())}</section><section class="panel" style="display:flex;flex-direction:column;gap:10px"><h3>${t('By department')}</h3>${breakdown(ui.day,groupsByDept())}</section></div>
+  <section class="panel" style="display:flex;flex-direction:column;gap:10px"><h3>${t('Incidents')} (${R.inc.length})</h3>${incTable(R.inc)}</section>`};
+function sumPdf(){const d=ui.day,R=daySummary(d);const doc=pdfStart('Daily Operational Summary',`Day ${dayNo(d)} · ${fmtEn(d)} · DECC, Doha`);if(!doc)return;
+  pdfKpis(doc,[{v:R.c.total,l:'Assigned',c:PDF.acc},{v:R.c.on_time,l:'On time'},{v:R.c.late,l:'Late'},{v:R.c.absent,l:'Absent'},{v:R.c.not_in,l:'Not checked in'},{v:R.inc.length,l:'Incidents'}]);
+  const br=g=>g.map(([l,list])=>{const c=dayStats(d,list);return [l,c.total,c.on_time,c.late,c.absent,c.not_in]}).filter(r=>r[1]);
+  pdfSection(doc,'By supervisor');pdfTable(doc,['Supervisor','Team','On time','Late','Absent','Not in'],br(groupsBySup().map(([l,x])=>[l===t('Unassigned')?'Unassigned':l,x])));
+  pdfSection(doc,'By department');pdfTable(doc,['Department','Team','On time','Late','Absent','Not in'],br(groupsByDept().map(([l,x])=>[l===t('Unassigned')?'Unassigned':l,x])));
+  pdfSection(doc,`Late arrivals (${R.late.length})`);pdfTable(doc,['ID','Name','Supervisor','Shift','In','Late'],R.late.map(({s,st})=>[s.code,s.name,supName(s.sup),st.sh?.name||'',st.r.in,'+'+st.late+' min']));
+  pdfSection(doc,`Absent and not checked in (${R.absent.length+R.notin.length})`);pdfTable(doc,['ID','Name','Supervisor','Shift','Status'],[...R.absent,...R.notin].map(({s,st})=>[s.code,s.name,supName(s.sup),st.sh?.name||'',STATUS_LABEL[st.k]]));
+  pdfSection(doc,`Incidents (${R.inc.length})`);pdfTable(doc,['Time','Category','Severity','Department','Description','By'],R.inc.map(i=>[i.time,i.cat,i.sev,i.dept,i.desc,i.by]));
+  pdfFinish(doc,`ITU-FieldOps-Daily-Summary-${d}.pdf`)}
+function sumXlsx(){const d=ui.day,R=daySummary(d),br=g=>g.map(([l,list])=>{const c=dayStats(d,list);return {Group:l,Team:c.total,'On time':c.on_time,Late:c.late,Absent:c.absent,'Not checked in':c.not_in}});
+  xlsx(`ITU-FieldOps-Daily-Summary-${d}.xlsx`,{Summary:[{Date:d,Day:dayNo(d),Assigned:R.c.total,'On time':R.c.on_time,Late:R.c.late,Absent:R.c.absent,'Not checked in':R.c.not_in,'Checked out':R.c.out,Incidents:R.inc.length}],'By supervisor':br(groupsBySup()),'By department':br(groupsByDept()),
+    Attendance:attExportRows(S.staff.map(s=>({d,s,st:statusOf(s,d)})).filter(x=>x.st.k!=='unassigned')),Incidents:incExportRows(R.inc)})}
+
+/* ---------- Data & import ---------- */
+VIEWS.data=()=>{const p=ui.importPreview;return `<h2>${t('Data & import')}</h2>
+  <section class="panel" style="display:flex;flex-direction:column;gap:12px"><div class="row between"><h3>${t('Import staff from Excel')}</h3><span class="live-tag">Live</span></div>
+   <div class="small muted">${ui.lang==='ar'?'الأعمدة المقبولة: Employee ID، Full Name، Role (Marshal / Supervisor)، Phone. الاستيراد يستبدل قائمة الموظفين ويُبقي الجميع غير موزَّعين.':'Columns: Employee ID, Full Name, Role (Marshal or Supervisor), Phone. Importing replaces the staff list and keeps everyone unassigned.'}</div>
+   <div class="drop"><input type="file" id="imp-file" accept=".xlsx,.xls,.csv"><button class="btn sm ghost" data-act="tpl">${t('Download template')}</button></div>
+   ${p?`<div class="panel" style="background:var(--sunk)"><div class="row between"><b>${p.rows.length} ${t('Employees')} · ${p.rows.filter(r=>r.role==='Marshal').length} ${t('Marshals')} · ${p.rows.filter(r=>r.role==='Supervisor').length} ${t('Supervisors')}</b>
+     <div class="row"><button class="btn" data-act="imp-cancel">${t('Cancel')}</button><button class="btn pri" data-act="imp-go">${t('Confirm')}</button></div></div>
+     ${p.warn.map(w=>`<div class="small" style="color:var(--warn)">${esc(w)}</div>`).join('')}
+     <div class="tbl-wrap" style="margin-top:8px"><table><thead><tr><th>${t('ID')}</th><th>${t('Name')}</th><th>${t('Role')}</th><th>${t('Phone')}</th></tr></thead><tbody>${p.rows.slice(0,8).map(r=>`<tr><td class="mono">${esc(r.code)}</td><td>${esc(r.name)}</td><td>${t(r.role)}</td><td class="mono">${esc(r.phone)}</td></tr>`).join('')}</tbody></table></div></div>`:''}
+  </section>
+  <section class="panel" style="display:flex;flex-direction:column;gap:12px"><h3>${t('Settings')}</h3>
+   <div class="form"><label>${t('Grace period (min)')}<input type="text" inputmode="numeric" id="set-grace" value="${S.settings.grace}"></label></div>
+   <div class="grid2"><div style="display:flex;flex-direction:column;gap:8px"><b>${t('Departments')}</b><div class="row">${S.departments.map(d=>`<span class="chip c-out" style="cursor:pointer" data-act="dept-del" data-v="${esc(d)}" title="Remove">${esc(d)} ×</span>`).join('')}</div>
+     <div class="row"><input type="text" id="new-dept" placeholder="${t('Department')}"><button class="btn sm" data-act="dept-add">${t('Add')}</button></div></div>
+    <div style="display:flex;flex-direction:column;gap:8px"><b>${t('Shifts')}</b>${S.shifts.map(x=>`<div class="row small"><span class="mono">${esc(x.id)}</span><input type="text" data-shift="${x.id}" data-k="name" value="${esc(x.name)}" style="width:120px"><input type="time" data-shift="${x.id}" data-k="start" value="${x.start}"><input type="time" data-shift="${x.id}" data-k="end" value="${x.end}"></div>`).join('')}
+     <div class="row"><button class="btn sm" data-act="shift-add">${t('Add')}</button></div></div></div>
+  </section>
+  ${LIVE?accountsPanel():''}
+  ${LIVE?'':`<section class="panel" style="display:flex;flex-direction:column;gap:12px"><div class="row between"><h3>Demo tools</h3><span class="demo-tag">Demo</span></div>
+   <div class="small muted">${ui.lang==='ar'?'السيناريو التجريبي يوزّع الموظفين عشوائياً ويولّد حضوراً وحوادث وهمية لتجربة النظام. أعد الضبط قبل التشغيل الفعلي.':'The demo scenario assigns staff at random and generates fake attendance and incidents so you can try every screen. Reset before go-live.'}</div>
+   <div class="row"><button class="btn" data-act="demo">${t('Load demo scenario')}</button><button class="btn bad" data-act="reset-sample">${t('Reset to clean sample')}</button></div></section>`}
+  <section class="panel" style="display:flex;flex-direction:column;gap:10px"><div class="row between"><h3>${t('Audit log')}</h3><div class="row"><button class="btn sm" data-act="audit-xlsx">${t('Export Excel')}</button><button class="btn sm" data-act="audit-pdf">${t('Export PDF')}</button></div></div>
+   <div class="filters">${fInp('audit','q','Search name or ID','search')}${fSel('audit','type','Type',opt('',t('All'),ui.f.audit.type)+[...new Set(S.audit.map(a=>a.type))].map(x=>opt(x,x,ui.f.audit.type)).join(''))}</div>
+   <div id="res-audit">${RES.audit()}</div></section>`};
+function accountsPanel(){const byStaff=new Map([...Cloud.access].map(([em,a])=>[a.staffId,em]));
+  return `<section class="panel" style="display:flex;flex-direction:column;gap:12px"><div class="row between"><h3>${t('Supervisor accounts')}</h3><span class="live-tag">Live</span></div>
+   <div class="small muted">${ui.lang==='ar'?'أدخل إيميل كل مشرف. المشرف يفتح الموقع ويختار "First time? Create password" بنفس الإيميل، وبعدها يرى فريقه فقط.':'Enter each supervisor\'s email. The supervisor opens the site, taps "First time? Create password" with that email, and then sees only their own team.'} Project Manager: ${esc(PM_EMAILS.join(', '))}</div>
+   ${sups().length?`<div class="tbl-wrap"><table><thead><tr><th>${t('ID')}</th><th>${t('Name')}</th><th>${t('Email')}</th><th></th></tr></thead><tbody>${sups().map(s=>`<tr><td class="mono">${esc(s.code)}</td><td>${esc(s.name)}</td><td><input type="text" inputmode="email" autocomplete="off" id="acc-${s.id}" value="${esc(byStaff.get(s.id)||'')}" placeholder="name@example.com" style="min-width:220px"></td><td><button class="btn sm" data-act="acc-save" data-id="${s.id}">${t('Save')}</button></td></tr>`).join('')}</tbody></table></div>`:`<div class="empty">${ui.lang==='ar'?'استورد ملف الموظفين أولاً.':'Import the staff file first.'}</div>`}
+  </section>`}
+const auditList=()=>{const f=ui.f.audit,q=f.q.trim().toLowerCase();return S.audit.filter(a=>(!f.type||a.type===f.type)&&(!q||(a.detail+' '+a.by).toLowerCase().includes(q)))};
+RES.audit=()=>{const l=auditList();return `<div class="tbl-wrap"><table><thead><tr><th>${t('Recorded')}</th><th>${t('Type')}</th><th>${t('Detail')}</th><th>${t('By')}</th></tr></thead><tbody>${l.slice(0,200).map(a=>`<tr><td class="mono small">${tsFmt(a.ts)}</td><td>${esc(a.type)}</td><td style="white-space:normal">${esc(a.detail)}</td><td class="small">${esc(a.by)}</td></tr>`).join('')}</tbody></table></div><div class="small muted">${l.length} ${t('results')}${l.length>200?' · 200 shown, export includes all':''}</div>`};
+function readImport(file){const rd=new FileReader();rd.onload=()=>{try{
+  const wb=XLSX.read(new Uint8Array(rd.result),{type:'array'}),json=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
+  if(!json.length){toast('The sheet is empty.');return}
+  const keys=Object.keys(json[0]),find=re=>keys.find(k=>re.test(k.trim()));
+  const kName=find(/name|الاسم/i),kId=find(/employee\s*(id|no|code)|staff\s*(id|no|code)|^code$|^id$/i),kQid=find(/q\.?\s*id|qid|id\s*number|رقم الهوية|البطاقة/i),kNat=find(/nationality|الجنسية/i),kRole=find(/role|position|title|job|designation|الوظيفة|المسمى|الدور/i),kPhone=find(/phone|mobile|tel|جوال|هاتف/i);
+  if(!kName){toast('No name column found. Use the template headings.');return}
+  const warn=[],cnt={Supervisor:0,Marshal:0},rows=json.filter(r=>String(r[kName]).trim()).map(r=>{const role=/super|مشرف/i.test(String(kRole?r[kRole]:''))?'Supervisor':'Marshal';cnt[role]++;
+    return {code:String(kId?r[kId]:'').trim()||(role==='Supervisor'?'SUP-'+String(cnt[role]).padStart(2,'0'):'MAR-'+String(cnt[role]).padStart(3,'0')),name:String(r[kName]).replace(/\s+/g,' ').trim(),role,phone:String(kPhone?r[kPhone]:'').trim(),qid:String(kQid?r[kQid]:'').trim(),nat:String(kNat?r[kNat]:'').trim()}});
+  const nm=rows.filter(r=>r.role==='Marshal').length,ns=rows.length-nm;
+  if(!kRole)warn.push('No role column found: everyone was read as Marshal.');
+  if(nm!==60||ns!==8)warn.push(`Expected 60 Marshals and 8 Supervisors; the file has ${nm} and ${ns}.`);
+  const dup=rows.map(r=>r.code).filter((c,i,a)=>a.indexOf(c)!==i);if(dup.length)warn.push('Duplicate IDs: '+[...new Set(dup)].join(', '));
+  ui.importPreview={rows,warn,file:file.name};render();}catch(e){toast('Could not read this file. Save it as .xlsx and try again.')}};rd.readAsArrayBuffer(file)}
+function loadDemo(){const r=rng(9),sp=sups(),mar=S.staff.filter(s=>s.role==='Marshal'),n=doha();
+  S.staff.forEach(s=>{s.sup='';s.dept='';s.shifts=[]});S.att={};S.incidents=[];
+  sp.forEach((s,i)=>{s.dept=S.departments[i%S.departments.length];s.shifts=[{id:S.shifts[i<3?0:i<6?1:2]?.id||S.shifts[0].id,from:EVENT_START}]});
+  mar.forEach((m,i)=>{const s=sp[i%sp.length];m.sup=s.id;m.dept=s.dept;m.shifts=[{id:s.shifts[0].id,from:EVENT_START}]});
+  const until=clampDay(n.date)>ui.day?clampDay(n.date):ui.day;
+  for(const d of DAYS){if(d>until)break;for(const s of S.staff){const sh=shiftOf(s,d),x=r(),st=toMin(sh.start);
+    const hm=m=>{m=((m%1440)+1440)%1440;return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0')};
+    if(x<0.05)S.att[d+'|'+s.id]={in:'',out:'',absent:true,by:'Demo',at:''};
+    else if(x<0.97){const late=x>0.85?12+Math.floor(r()*35):-Math.floor(r()*14);S.att[d+'|'+s.id]={in:hm(st+late),out:d<until?hm(toMin(sh.end)+Math.floor(r()*10)):'',absent:false,by:'Demo',at:''}}}}
+  const sample=[['Medical','Medium','Visitor felt faint at the queue; first aid given and visitor recovered.'],['Lost & found','Low','Delegate badge found near Gate 3 and handed to Registration.'],['Crowd / queue','High','Queue at security screening exceeded 20 minutes; two extra marshals redeployed.'],['Equipment / facility','Low','Barrier stand broken near the Car Park entrance; facility team informed.']];
+  sample.forEach(([cat,sev,desc],i)=>{const s=sp[i%sp.length];S.incidents.push({id:uid(),date:ui.day,time:['08:20','09:45','11:10','13:30'][i],cat,sev,dept:s.dept,staff:'',desc,by:s.name,byId:s.id})});
+  S.demoScenario=true;log('Demo','Demo scenario loaded (random assignment, fake attendance and incidents)');save();render();toast(t('Demo scenario loaded'))}
+
+/* ---------- Live vs demo legend ---------- */
+function legend(){modal(`<h2>${t('Live vs demo')}</h2>
+  <div class="legend"><div><span class="live-tag">Works now</span><ul class="small">
+   <li>Excel import of the 68 staff</li><li>Assigning Marshals to Supervisors, departments and shifts</li><li>Check in, check out, absences and lateness (grace ${S.settings.grace} min)</li><li>Incident log</li><li>Shift changes with Rabea's email approval and audit record</li><li>Combined filters, PDF reports and Excel exports</li></ul></div>
+  <div><span class="demo-tag">Demo only</span><ul class="small">
+   <li>Sign-in is a role picker with no password</li><li>Data is saved in this browser on this device only. Supervisors on other phones will not see it.</li><li>Sample staff names until you import your Excel file</li><li>"Load demo scenario" creates fake attendance and incidents</li></ul></div>
+  <div><span class="chip c-scheduled">After Firebase</span><ul class="small">
+   <li>Real accounts for the Project Manager and 8 Supervisors</li><li>One shared database, updated live on every device</li><li>Server-side rules: supervisors see only their marshals; only the PM changes shifts</li></ul></div></div>
+  <div class="row" style="justify-content:flex-end"><button class="btn pri" data-act="close">${t('Close')}</button></div>`)}
+
+/* ---------- Events ---------- */
+document.addEventListener('click',e=>{
+  const el=e.target.closest('[data-act]');if(!el)return;const a=el.dataset.act,id=el.dataset.id,v=el.dataset.v;
+  if(el.tagName==='SELECT')return;
+  const pm=ui.role==='pm';
+  switch(a){
+    case 'tab':ui.tab=v;ui.sel.clear();render();window.scrollTo(0,0);break;
+    case 'lang':ui.lang=ui.lang==='ar'?'en':'ar';Prefs.set('lang',ui.lang);render();break;
+    case 'legend':legend();break;
+    case 'close':closeModal();break;
+    case 'clear-f':for(const k in ui.f[v])ui.f[v][k]='';render();break;
+    case 'sel':if(el.checked)ui.sel.add(id);else ui.sel.delete(id);$('#res-staff').innerHTML=RES.staff();break;
+    case 'sel-all':staffRows().forEach(s=>el.checked?ui.sel.add(s.id):ui.sel.delete(s.id));$('#res-staff').innerHTML=RES.staff();break;
+    case 'sel-none':ui.sel.clear();$('#res-staff').innerHTML=RES.staff();break;
+    case 'bulk':{if(!pm)return;const bs=$('#b-sup').value,bd=$('#b-dept').value,bh=$('#b-shift').value;let skipped=0,n=0;
+      for(const sid of ui.sel){const s=byId(sid);if(!s)continue;if(bs&&assign(s,'sup',bs))n++;if(bd)assign(s,'dept',bd);if(bh&&!assign(s,'shift',bh))skipped++}
+      save();ui.sel.clear();render();toast(skipped?`${t('Saved')}. ${skipped} already had a shift: use Shift changes for them.`:t('Saved'));break}
+    case 'shift-change':ui.scStaff=id;ui.tab='shift';render();break;
+    case 'att-edit':if(pm)attEdit(id,el.dataset.d);break;
+    case 'ci':case 'co':case 'abs':case 'undo':case 'undo-out':mark(id,a);break;
+    case 'inc-new':incNew();break;
+    case 'sum-pdf':sumPdf();break;case 'sum-xlsx':sumXlsx();break;
+    case 'att-xlsx':xlsx(`ITU-FieldOps-Attendance-${ui.f.att.from||ui.day}.xlsx`,{Attendance:attExportRows(attRows())});break;
+    case 'att-pdf':{const rows=attRows(),f=ui.f.att,from=f.from||ui.day,to=f.to||from;const doc=pdfStart('Attendance Report',(from===to?fmtEn(from):fmtEn(from)+' to '+fmtEn(to))+' · '+rows.length+' records');if(!doc)break;
+      const cnt=k=>rows.filter(r=>r.st.k===k).length;pdfKpis(doc,[{v:rows.length,l:'Records',c:PDF.acc},{v:cnt('on_time'),l:'On time'},{v:cnt('late'),l:'Late'},{v:cnt('absent'),l:'Absent'},{v:cnt('not_in'),l:'Not checked in'},{v:cnt('scheduled'),l:'Scheduled'}]);
+      const fl=[f.sup&&'Supervisor: '+supName(f.sup),f.dept&&'Department: '+f.dept,f.shift&&'Shift: '+shiftById(f.shift)?.name,f.status&&'Status: '+(STATUS_LABEL[f.status]||f.status),(f.tf||f.tt)&&`Check-in ${f.tf||'..'}-${f.tt||'..'}`,f.q&&'Search: '+f.q].filter(Boolean);
+      if(fl.length){doc.setFontSize(8);doc.setTextColor(...PDF.mut);doc.text(pdfSafe('Filters: '+fl.join(' · ')),PDF.L,doc._y-3);doc._y+=4}
+      pdfTable(doc,['Date','ID','Name','Supervisor','Dept','Shift','In','Out','Late','Status'],rows.map(({d,s,st})=>[d.slice(5),s.code,s.name,s.role==='Marshal'?supName(s.sup):'-',s.dept,st.sh?.name||'',st.r?.in||'',st.r?.out||'',st.late?'+'+st.late:'',STATUS_LABEL[st.k]]));
+      pdfFinish(doc,`ITU-FieldOps-Attendance-${from}${to!==from?'_'+to:''}.pdf`);break}
+    case 'staff-xlsx':xlsx('ITU-FieldOps-Staff.xlsx',{Staff:staffRows().map(s=>({'Employee ID':s.code,Name:s.name,Role:s.role,Supervisor:supName(s.sup),Department:s.dept,Shift:shLabel(shiftOf(s,ui.day)),Phone:s.phone,QID:s.qid||'',Nationality:s.nat||''}))});break;
+    case 'staff-pdf':{const rows=staffRows(),doc=pdfStart('Staff & Assignments',`${rows.length} staff · as of ${fmtEn(ui.day)}`);if(!doc)break;
+      pdfTable(doc,['ID','Name','Role','Supervisor','Department','Shift'],rows.map(s=>[s.code,s.name,s.role,supName(s.sup)||'-',s.dept||'-',shLabel(shiftOf(s,ui.day))||'-']));pdfFinish(doc,'ITU-FieldOps-Staff.pdf');break}
+    case 'inc-xlsx':xlsx('ITU-FieldOps-Incidents.xlsx',{Incidents:incExportRows(incList())});break;
+    case 'inc-pdf':{const l=incList(),doc=pdfStart('Incident Log',`${l.length} incidents`);if(!doc)break;pdfTable(doc,['Date','Time','Category','Severity','Department','Description','By'],l.map(i=>[i.date.slice(5),i.time,i.cat,i.sev,i.dept,i.desc,i.by]));pdfFinish(doc,'ITU-FieldOps-Incidents.pdf');break}
+    case 'sc-xlsx':xlsx('ITU-FieldOps-Shift-Changes.xlsx',{'Shift changes':scExportRows()});break;
+    case 'sc-pdf':{const l=shiftLog(),doc=pdfStart('Shift Change Audit Record',`${l.length} changes · each approved by ${APPROVER} by email`);if(!doc)break;pdfTable(doc,['Recorded','Staff','From','To','Effective','Email date','Reference','By'],l.map(a=>[tsFmt(a.ts),a.staffCode+' '+a.staffName,a.fromShift,a.toShift,a.effective,a.emailDate,a.emailRef,a.by]));pdfFinish(doc,'ITU-FieldOps-Shift-Changes.pdf');break}
+    case 'audit-xlsx':xlsx('ITU-FieldOps-Audit-Log.xlsx',{'Audit log':auditList().map(a=>({Recorded:tsFmt(a.ts),Type:a.type,Detail:a.detail,By:a.by}))});break;
+    case 'audit-pdf':{const l=auditList(),doc=pdfStart('Audit Log',`${l.length} entries`);if(!doc)break;pdfTable(doc,['Recorded','Type','Detail','By'],l.map(a=>[tsFmt(a.ts),a.type,a.detail,a.by]));pdfFinish(doc,'ITU-FieldOps-Audit-Log.pdf');break}
+    case 'tpl':xlsx('ITU-FieldOps-Staff-Template.xlsx',{Staff:[{'Employee ID':'SUP-01','Full Name':'Example Supervisor','Role':'Supervisor','Phone':'+974 5000 0000'},{'Employee ID':'MAR-001','Full Name':'Example Marshal','Role':'Marshal','Phone':'+974 5000 0001'}]});break;
+    case 'imp-cancel':ui.importPreview=null;render();break;
+    case 'imp-go':confirmBox(ui.lang==='ar'?'سيتم استبدال قائمة الموظفين وحذف الحضور والحوادث الحالية. هل تريد المتابعة؟':'This replaces the staff list and clears current attendance and incidents. Continue?',()=>{const p=ui.importPreview,keep={departments:S.departments,shifts:S.shifts,settings:S.settings,audit:S.audit};
+      S=freshState(p.rows.map(r=>({id:uid(),...r,sup:'',dept:'',shifts:[]})),'import');Object.assign(S,keep);ui.role='pm';Prefs.set('role','pm');
+      log('Import',`${p.rows.length} staff imported from ${p.file} (all unassigned)`);ui.importPreview=null;save();render();toast(t('Saved'))});break;
+    case 'demo':if(LIVE)break;confirmBox(ui.lang==='ar'?'سيتم استبدال التوزيع الحالي ببيانات وهمية. متابعة؟':'This replaces current assignments and attendance with fake demo data. Continue?',loadDemo);break;
+    case 'reset-sample':if(LIVE)break;confirmBox(ui.lang==='ar'?'إعادة القائمة النموذجية: 68 موظفاً غير موزَّعين وبدون سجلات.':'Reset to the clean sample: 68 unassigned staff, no records.',()=>{S=freshState(sampleStaff(),'sample');ui.role='pm';Prefs.set('role','pm');save();render()});break;
+    case 'signout':Cloud.auth.signOut().then(()=>location.reload());break;
+    case 'acc-save':{if(!LIVE||!pm)break;const em=($('#acc-'+id).value||'').trim().toLowerCase(),s=byId(id);
+      if(em&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){toast('Enter a valid email address.');break}
+      const b=Cloud.db.batch();for(const[e2,a]of Cloud.access)if(a.staffId===id&&e2!==em)b.delete(Cloud.db.collection('access').doc(e2));
+      if(em)b.set(Cloud.db.collection('access').doc(em),{role:'supervisor',staffId:id,name:s.name});
+      b.commit().then(()=>{log('Account',`${s.code} ${s.name}: login email ${em||'removed'}`);save();toast(t('Saved'))}).catch(e=>toast('Not saved: '+e.code));break}
+    case 'auth-in':case 'auth-up':case 'auth-reset':authAction(a);break;
+    case 'dept-add':{const v2=$('#new-dept').value.trim();if(v2&&!S.departments.includes(v2)){S.departments.push(v2);log('Settings','Department added: '+v2);save();render()}break}
+    case 'dept-del':{if(S.staff.some(s=>s.dept===v)){toast('Staff are assigned to this department.');break}S.departments=S.departments.filter(d=>d!==v);log('Settings','Department removed: '+v);save();render();break}
+    case 'shift-add':{const ids='ABCDEFGHIJ'.split('').filter(x=>!S.shifts.some(s=>s.id===x));if(!ids.length)break;S.shifts.push({id:ids[0],name:'New shift',start:'09:00',end:'17:00'});log('Settings','Shift added: '+ids[0]);save();render();break}
+  }
+});
+document.addEventListener('change',e=>{const el=e.target;
+  if(el.dataset.actChange==='day'){ui.day=el.value;render();return}
+  if(el.dataset.actChange==='role'){ui.role=el.value;Prefs.set('role',el.value);ui.tab='';render();return}
+  if(el.dataset.assign&&ui.role==='pm'){const s=byId(el.dataset.id);if(assign(s,el.dataset.assign,el.value)){save();toast(t('Saved'));$('#res-staff').innerHTML=RES.staff()}return}
+  if(el.id==='imp-file'&&el.files[0]){if(!window.XLSX){toast('Excel library failed to load.');return}readImport(el.files[0]);return}
+  if(el.id==='set-grace'){const g=Math.max(0,Math.min(120,parseInt(el.value,10)||0));S.settings.grace=g;log('Settings','Grace period: '+g+' min');save();toast(t('Saved'));return}
+  if(el.dataset.shift){const x=shiftById(el.dataset.shift);if(x&&el.value){x[el.dataset.k]=el.value;log('Settings',`Shift ${x.id} ${el.dataset.k}: ${el.value}`);save();toast(t('Saved'))}return}
+  if(el.id==='sc-staff'){ui.scStaff=el.value;const s=byId(el.value);$('#sc-cur').value=s?shLabel(shiftOf(s,$('#sc-eff').value||ui.day)):'';return}
+  if(el.dataset.f&&el.tagName==='SELECT'||el.dataset.f&&(el.type==='date'||el.type==='time'))filterInput(el);
+});
+document.addEventListener('input',e=>{const el=e.target;if(el.dataset.f&&(el.type==='search'||el.type==='text'))filterInput(el)});
+document.addEventListener('submit',e=>{if(e.target.id==='sc-form')submitShift(e)});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#modal').hidden)closeModal()});
+$('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal()});
+function filterInput(el){const [scope,key]=el.dataset.f.split('.');ui.f[scope][key]=el.value;const box=$('#res-'+scope);if(box)box.innerHTML=RES[scope]()}
+/* ---------- Live sign-in ---------- */
+function signInView(){return `<div class="wrap" style="padding-block:48px;display:flex;justify-content:center"><form class="panel" id="auth-form" style="width:min(400px,100%);display:flex;flex-direction:column;gap:12px;padding:22px">
+  <div class="brand"><b>ITU FIELD OPS 2026</b><span>DECC · Doha · 9–27 Nov</span></div>
+  <label class="small muted" style="display:flex;flex-direction:column;gap:4px">${t('Email')}<input type="text" inputmode="email" autocomplete="username" id="au-email" value="${esc(ui.authEmail||'')}"></label>
+  <label class="small muted" style="display:flex;flex-direction:column;gap:4px">Password<input type="password" autocomplete="current-password" id="au-pass"></label>
+  ${ui.authMsg?`<div class="small" style="color:var(--bad)">${esc(ui.authMsg)}</div>`:''}
+  <button class="btn pri" type="submit">Sign in</button>
+  <div class="row between small"><button class="btn ghost sm" type="button" data-act="auth-up">First time? Create password</button><button class="btn ghost sm" type="button" data-act="auth-reset">Forgot password</button></div>
+  <button class="btn ghost sm" type="button" data-act="lang">${ui.lang==='ar'?'English':'العربية'}</button></form></div>`}
+async function authAction(kind){const em=($('#au-email').value||'').trim().toLowerCase(),pw=$('#au-pass').value;ui.authEmail=em;ui.authMsg='';
+  try{if(kind==='auth-reset'){if(!em)throw{message:'Enter your email first.'};await Cloud.auth.sendPasswordResetEmail(em);ui.authMsg='';toast('Password reset email sent to '+em);return}
+    if(!em||!pw)throw{message:'Enter your email and password.'};
+    if(kind==='auth-up'){if(pw.length<8)throw{message:'Use at least 8 characters for the password.'};await Cloud.auth.createUserWithEmailAndPassword(em,pw)}
+    else await Cloud.auth.signInWithEmailAndPassword(em,pw);
+  }catch(e){const c=e.code||'';ui.authMsg=c.includes('invalid-credential')||c.includes('wrong-password')||c.includes('user-not-found')?'Email or password is wrong. First time here? Use "Create password".':c.includes('email-already-in-use')?'This email already has a password. Sign in, or use "Forgot password".':c.includes('too-many-requests')?'Too many attempts. Wait a few minutes.':(e.message||'Sign-in failed.');render()}}
+document.addEventListener('submit',e=>{if(e.target.id==='auth-form'){e.preventDefault();authAction('auth-in')}});
+async function bootLive(){
+  firebase.initializeApp(FIREBASE_CONFIG);Cloud.auth=firebase.auth();Cloud.db=firebase.firestore();
+  try{await Cloud.db.enablePersistence({synchronizeTabs:true})}catch(e){}
+  Cloud.auth.onAuthStateChanged(async u=>{Cloud.unsubs.forEach(f=>f());Cloud.unsubs=[];Cloud.loaded.clear();Cloud.synced={};Cloud.priv=new Map();Cloud.access=new Map();Cloud.initDone=false;S={...freshState([],'live'),audit:[]};
+    if(!u){ui.role='';render();return}
+    const em=(u.email||'').toLowerCase();Cloud.email=em;
+    if(PM_EMAILS.includes(em))ui.role='pm';
+    else{try{const d=await Cloud.db.collection('access').doc(em).get();ui.role=d.exists&&d.data().role==='supervisor'?d.data().staffId:''}catch(e){ui.role=''}
+      if(!ui.role){ui.authMsg=`${em} is not registered yet. Ask the Project Manager to add your email.`;await Cloud.auth.signOut();return}}
+    ui.authMsg='';render();Cloud.start()});
+}
+/* Live refresh: statuses like "Not checked in" change with the clock */
+setInterval(()=>{if((!LIVE||ui.role)&&$('#modal').hidden&&!document.activeElement?.matches('input,select,textarea')&&['dash','team','rep'].includes(ui.tab))render()},60000);
+if(LIVE)bootLive();
+render();
+</script>
+</body></html>
