@@ -56,6 +56,7 @@ table.stk thead th:nth-child(1),table.stk thead th:nth-child(3){z-index:3;backgr
 .nmbtn{background:none;border:0;padding:0;text-align:start;cursor:pointer;color:inherit;font:inherit;text-decoration:underline dotted;text-underline-offset:3px}
 .perm.sub{padding-inline-start:18px}.perm.sub span::before{content:'↳ ';color:var(--muted)}.menu .who .pos{font-size:12px;color:var(--muted);font-weight:500;margin-top:2px}
 .seg.need span{border-color:var(--bad)}
+#np-cfm[hidden],#np-btns[hidden]{display:none!important}
 .duty-sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;margin-top:12px}.duty-sum button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface);cursor:pointer;text-align:start;color:var(--fg)}
 .duty-sum b{font-size:22px;line-height:1;font-family:var(--f-display)}.duty-sum span{font-size:11.5px;color:var(--muted)}.duty-sum button:first-child b{color:var(--bad)}.duty-sum .ok b{color:#1f9d55}.duty-sum button.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
 .duty-shifts{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}.duty-shifts .btn{flex-direction:column;justify-content:center;height:auto;padding:12px 10px;gap:4px;border-radius:14px;white-space:normal;text-align:center;line-height:1.25;min-width:0;overflow-wrap:anywhere}.duty-shifts .btn span{white-space:normal}.duty-shifts .btn b{font-size:14px;display:block;max-width:100%}
@@ -593,7 +594,7 @@ const supName=id=>byId(id)?.name||'';
 
 /* ---------- Generic UI helpers ---------- */
 function toast(msg){const el=$('#toast');el.textContent=msg;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,2600)}
-function modal(html){const m=$('#modal');if(m.hidden)ovPush();m.innerHTML=`<div class="dlg" role="dialog" aria-modal="true">${html}</div>`;m.hidden=false;const f=m.querySelector('input,select,textarea,button');f&&f.focus()}
+function modal(html,lock){const m=$('#modal');if(m.hidden)ovPush();m.dataset.lock=lock?'1':'';m.innerHTML=`<div class="dlg" role="dialog" aria-modal="true">${html}</div>`;m.hidden=false;const f=m.querySelector('input,select,textarea,button');f&&f.focus()}
 function hideModal(){$('#modal').hidden=true;$('#modal').innerHTML=''}
 function closeModal(){hideModal();ovBack()}
 /* Phone back button: every popup adds one history step, so Back closes it; on pages Back goes to the previous page */
@@ -602,7 +603,7 @@ function ovBack(){setTimeout(()=>{if(!ovOpen()&&history.state&&history.state.ov)
 const ovOpen=()=>!$('#modal').hidden||!!document.querySelector('.ig.is-open,.inst-modal.is-open');
 addEventListener('popstate',()=>{if(ui.skipPop){ui.skipPop=false;return}
   const ov=[...document.querySelectorAll('.ig.is-open,.inst-modal.is-open')].pop();if(ov){if(ov===gEl){gRun++;gEl=null}ov.close(true);return}
-  if(!$('#modal').hidden){hideModal();return}
+  if(!$('#modal').hidden){if($('#modal').dataset.lock){ovPush();return}hideModal();return}
   if(ui.menu){ui.menu=false;render()}});
 function confirmBox(msg,yes,label){modal(`<h2>${t('Confirm')}</h2><p>${msg}</p><div class="row" style="justify-content:flex-end"><button class="btn" data-act="close">${t('Cancel')}</button><button class="btn pri" id="cfm-yes">${esc(label||t('Confirm'))}</button></div>`);$('#cfm-yes').onclick=()=>{closeModal();yes()}}
 const chip=k=>`<span class="chip c-${k}">${t(STATUS_LABEL[k]||k)}</span>`;
@@ -1064,11 +1065,14 @@ function bulkBack(){const ar=ui.lang==='ar',list=[...ui.sel].map(byId).filter(s=
 function staffAdd(){const ar=ui.lang==='ar';
   modal(`<h2>${t('Add staff')}</h2><div class="form"><label>${t('Role')}<select id="np-role">${opt('Marshal',t('Marshal'),'Marshal')}${opt('Supervisor',t('Supervisor'),'')}</select></label><label>${t('Start date')}<input type="date" id="np-from" min="${EVENT_START}" max="${EVENT_END}" value="${ui.day}"></label>
    ${personFields('Marshal')}<label>${t('Supervisor')}<select id="np-sup">${supOptions('','—')}</select></label><label>${t('Department')}<select id="np-dept">${deptOptions('','—')}</select></label><label>${t('Shift')}<select id="np-shift">${shiftOptions('','—')}</select></label></div>
-  <div class="row" style="justify-content:flex-end"><button class="btn" data-act="close">${t('Cancel')}</button><button class="btn pri" id="np-save">${t('Save')}</button></div>`);
+  <div class="row" id="np-btns" style="justify-content:flex-end"><button class="btn" data-act="close">${t('Cancel')}</button><button class="btn pri" id="np-save">${t('Save')}</button></div>
+  <div class="panel" id="np-cfm" hidden style="background:var(--accent-soft);border-color:var(--accent);display:flex;flex-direction:column;gap:10px"><b id="np-cfm-t"></b><div class="row" style="justify-content:flex-end"><button class="btn" id="np-back">${ar?'رجوع':'Back'}</button><button class="btn pri" id="np-ok">${ar?'موافق':'OK'}</button></div></div>`,true);
   $('#np-role').onchange=e=>{$('#np-code').value=nextCode(e.target.value)};
+  $('#np-back').onclick=()=>{$('#np-cfm').hidden=true;$('#np-btns').hidden=false};
   $('#np-save').onclick=()=>{const role=$('#np-role').value,from=$('#np-from').value||ui.day,n=readPerson(role,from,{sup:role==='Marshal'?$('#np-sup').value:'',dept:$('#np-dept').value,shift:$('#np-shift').value});
     if(!n){toast(ar?'اكتب الاسم.':'Type the name.');return}if(S.staff.some(x=>x.code===n.code)){toast(t('This ID is already used.'));return}
-    S.staff.push(n);log('Staff added',`${n.code} ${n.name} (${role}) from ${from}`);closeModal();save();render();toast(t('Saved'))}}
+    $('#np-cfm-t').textContent=ar?`بدك تضيف ${n.name} (${n.code}) كـ ${t(role)}؟`:`Add ${n.name} (${n.code}) as ${role}?`;$('#np-btns').hidden=true;$('#np-cfm').hidden=false;$('#np-ok').focus();
+    $('#np-ok').onclick=()=>{if(S.staff.some(x=>x.code===n.code))return;S.staff.push(n);log('Staff added',`${n.code} ${n.name} (${role}) from ${from}`);closeModal();save();render();toast(t('Saved'))}}}
 /* Hours & pay */
 const rateOf=s=>+(s.role==='Supervisor'?(S.settings.rateS||S.settings.rateM):S.settings.rateM)||0;
 const payOf=(s,mins)=>Math.round(mins/60*rateOf(s)*100)/100;
@@ -1645,7 +1649,7 @@ document.addEventListener('change',e=>{const el=e.target;
 document.addEventListener('input',e=>{const el=e.target;if(el.dataset.f&&(el.type==='search'||el.type==='text'))filterInput(el)});
 document.addEventListener('submit',e=>{if(e.target.id==='sc-form')submitShift(e)});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#modal').hidden)closeModal()});
-$('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal()});
+$('#modal').addEventListener('click',e=>{if(e.target.id==='modal'&&!$('#modal').dataset.lock)closeModal()});
 function filterInput(el){const [scope,key]=el.dataset.f.split('.');ui.f[scope][key]=el.value;
   if(scope==='scope'){if(key==='from'&&ui.f.scope.to&&ui.f.scope.to<el.value)ui.f.scope.to='';render();return}const box=$('#res-'+scope);if(box)box.innerHTML=RES[scope]()}
 /* ---------- Live sign-in ---------- */
