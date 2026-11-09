@@ -58,6 +58,7 @@ table.stk thead th:nth-child(1),table.stk thead th:nth-child(3){z-index:3;backgr
 .seg.need span{border-color:var(--bad)}
 #np-cfm[hidden],#np-btns[hidden]{display:none!important}
 .cl{display:inline-flex;gap:4px;vertical-align:middle;margin-inline-start:6px}.cl a{transform:scale(.9)}
+.deptbtn{max-width:220px;white-space:normal;text-align:start;min-height:34px;font-weight:500}
 .duty-sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;margin-top:12px}.duty-sum button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface);cursor:pointer;text-align:start;color:var(--fg)}
 .duty-sum b{font-size:22px;line-height:1;font-family:var(--f-display)}.duty-sum span{font-size:11.5px;color:var(--muted)}.duty-sum button:first-child b{color:var(--bad)}.duty-sum .ok b{color:#1f9d55}.duty-sum button.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
 .duty-shifts{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}.duty-shifts .btn{flex-direction:column;justify-content:center;height:auto;padding:12px 10px;gap:4px;border-radius:14px;white-space:normal;text-align:center;line-height:1.25;min-width:0;overflow-wrap:anywhere}.duty-shifts .btn span{white-space:normal}.duty-shifts .btn b{font-size:14px;display:block;max-width:100%}
@@ -410,6 +411,8 @@ const ICON={search:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" s
  wa:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.5-3.9-4.7-4.1-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.3.5-.4.4c-.1.1-.3.3-.1.6.2.3.7 1.2 1.5 1.9 1 .9 1.9 1.2 2.2 1.3.3.1.4.1.6-.1l.8-1c.2-.2.4-.2.6-.1l1.9.9c.3.1.5.2.5.3.1.1.1.6-.1 1.2z"/></svg>'};
 const LOGO_ICON='data:image/png;base64,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';
 const DL=(act,kind,sm)=>`<button class="dl ${kind}${sm?' sm':''}" data-act="${act}" title="${kind==='pdf'?'Download PDF':'Download Excel'}" aria-label="${kind==='pdf'?'Download PDF':'Download Excel'}"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 3h12l7 7v19H7z" fill="var(--surface)" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M19 3v7h7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><rect x="3" y="13" width="18" height="9" rx="2" fill="currentColor"/><text x="12" y="20" text-anchor="middle" font-size="6.2" font-weight="800" font-family="Arial,sans-serif" fill="#fff">${kind==='pdf'?'PDF':'XLS'}</text><path d="M16.5 24v5M14 26.8l2.5 2.5 2.5-2.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`;
+/* A person can work in more than one department: stored as "A, B" in s.dept */
+const DSEP=', ',deptsOf=s=>String((s&&s.dept)||'').split(DSEP).map(x=>x.trim()).filter(Boolean),inDept=(s,d)=>deptsOf(s).includes(d);
 /* Call + WhatsApp icons next to a supervisor's name */
 const supCall=id=>{const x=id&&S.staff.find(y=>y.id===id);return x&&x.phone?`<span class="cl">${waLink(x.phone)}</span>`:''};
 function waLink(phone){let d=String(phone||'').replace(/\D/g,'');if(!d)return '';if(d.startsWith('00'))d=d.slice(2);if(d.length===8)d='974'+d;return `<a class="tel" href="tel:+${d}" title="Call" aria-label="Call">${ICON.tel}</a><a class="wa" href="https://wa.me/${d}" target="_blank" rel="noopener" title="WhatsApp" aria-label="WhatsApp">${ICON.wa}</a>`}
@@ -865,7 +868,7 @@ function personList(title,sel,{multi=false,pm=ui.role==='pm',group=true,manage=f
   modal(`<div class="row between"><h2>${esc(title)} · ${sel.length}${extra}</h2><div class="row">${frees&&sel.length?`<button class="btn sm" data-act="free-all">↺ ${t('All available')}</button>`:''}<button class="btn sm" data-act="close">${t('Close')}</button></div></div>
   ${sel.length?`<div class="small muted">${ui.lang==='ar'?'اكبس على أي سطر لتعليمه.':'Tap a row to mark it.'}</div><div class="tbl-wrap"><table class="pick"><thead><tr>${multi?`<th>${t('Date')}</th>`:''}<th>${t('ID')}</th><th>${t('Name')}</th>${pm?`<th>${t('Department')}</th>`:''}<th>${t('Shift')}</th><th>${t('In')}</th><th>${t('Out')}</th><th>${t('Status')}</th><th>${t('Phone')}</th>${frees?'<th></th>':''}</tr></thead><tbody>${html}</tbody></table></div>`:`<div class="empty">${t('None')}</div>`}`)}
 function groupList(v){ui.lastGrp=v;ui.lastKpi='';const [kind,key]=v.split('|'),sc=SC(),rows=scopeRows(S.staff,sc),multi=sc.days.length>1;
-  const sel=kind==='sup'?rows.filter(r=>key?r.s.sup===key:(r.s.role==='Marshal'&&!r.s.sup)):rows.filter(r=>key?r.s.dept===key:!r.s.dept);
+  const sel=kind==='sup'?rows.filter(r=>key?r.s.sup===key:(r.s.role==='Marshal'&&!r.s.sup)):rows.filter(r=>key?inDept(r.s,key):!r.s.dept);
   /* a supervisor's list also shows team members who have no shift yet */
   if(kind==='sup'&&!scopeActive(sc))for(const m of S.staff)if(m.role==='Marshal'&&(key?m.sup===key:!m.sup)&&!m.left&&!m.shifts.length)sel.push({d:sc.from,s:m,st:{k:'unassigned',sh:null,late:0}});
   personList(`${kind==='sup'?(key?supName(key):t('Unassigned')):(key||t('Unassigned'))}`,sel,{multi,manage:kind==='sup',extra:kind==='sup'?supCall(key):''})}
@@ -913,16 +916,22 @@ function reqDo(id,newId){const r=(S.requests||[]).find(x=>x.id===id),old=r&&byId
   log('Replacement',`${nw.code} ${nw.name} replaces ${old.code} ${old.name} for ${r.supName} from ${d} (${r.reason}, on supervisor request)`);
   ui.reqQ='';closeModal();save();render();toast(`${nw.name} → ${r.supName}`);setTimeout(reqPopup,400)}
 function reqRefuse(id){const r=(S.requests||[]).find(x=>x.id===id);if(!r)return;confirmBox(ui.lang==='ar'?'رفض هالطلب؟':'Refuse this request?',()=>{r.status='refused';r.doneBy=actor();r.doneAt=new Date().toISOString();log('Replacement request',`${r.code} ${r.name}: request from ${r.supName} refused`);save();render();setTimeout(reqPopup,400)})}
+const deptChecks=(name,sel)=>`<div class="seg">${S.departments.map(d=>`<label><input type="checkbox" name="${name}" value="${esc(d)}" ${sel.includes(d)?'checked':''}><span>${esc(d)}</span></label>`).join('')}</div>`;
+const checkedDepts=name=>[...document.querySelectorAll(`input[name=${name}]:checked`)].map(x=>x.value);
+function deptPick(id){const s=byId(id),ar=ui.lang==='ar';if(!s)return;
+  modal(`<h2>${t('Department')}</h2><div class="muted">${esc(s.code)} · ${esc(s.name)}</div><div class="small muted">${ar?'فيك تختار قسم واحد أو أكتر.':'Pick one or more departments.'}</div>${deptChecks('dp-pick',deptsOf(s))}
+  <div class="row" style="justify-content:flex-end"><button class="btn" data-act="close">${t('Cancel')}</button><button class="btn pri" id="dp-save">${t('Save')}</button></div>`);
+  $('#dp-save').onclick=()=>{const v=checkedDepts('dp-pick').join(DSEP);if(v!==(s.dept||''))assign(s,'dept',v);closeModal();save();render();toast(t('Saved'))}}
 function supAssignOpen(){const ar=ui.lang==='ar',ms=[...ui.sel].map(byId).filter(s=>s&&s.role==='Marshal'&&!s.left);
   if(!ms.length){toast(ar?'حدد مارشالز أولاً (المشرفين ما بينحطوا تحت مشرف).':'Select marshals first (supervisors cannot be put under a supervisor).');return}
   modal(`<h2>${t('Assign to supervisor')} · ${ms.length}</h2>${ms.some(m=>!m.shifts.length)?`<div class="small muted">${ar?'اللي ما إلهن وردية بياخدوا هالوردية وبينحسبوا بالتوتال:':'Those without a shift get this shift and count in the total:'}</div>
   <div class="seg">${opt2('auto',ar?'وردية المشرف':'Supervisor’s shift')}${S.shifts.map(h=>opt2(h.id,h.name)).join('')}</div>`:''}
-  <div class="small"><b>${t('Department')}</b> <span style="color:var(--bad)">*</span></div>
-  <div class="seg">${S.departments.map(d=>`<label><input type="radio" name="sa-dp" value="${esc(d)}"><span>${esc(d)}</span></label>`).join('')}</div>
+  <div class="small"><b>${t('Department')}</b> <span style="color:var(--bad)">*</span> <span class="muted">${ar?'(واحد أو أكتر)':'(one or more)'}</span></div>
+  ${deptChecks('sa-dp',[])}
   <div class="small muted">${ar?'اكبس على المشرف:':'Tap the supervisor:'}</div>
   <div class="duty-shifts">${sups().filter(x=>!x.left).map(x=>{const n=S.staff.filter(m=>m.sup===x.id&&!m.left).length,sh=shiftOf(x,ui.day)||(x.shifts[0]&&shiftById(x.shifts[0].id));return `<button class="btn" data-act="sup-go" data-v="${x.id}"><b>${esc(x.name)}</b><span class="small muted">${n} ${t('Marshals')}${sh?' · '+esc(sh.name):''}${x.dept?' · '+esc(x.dept):''}</span></button>`}).join('')}</div>
   <div class="row" style="justify-content:flex-end"><button class="btn" data-act="close">${t('Cancel')}</button></div>`)}
-function supGo(id){const ar=ui.lang==='ar',dp=(document.querySelector('input[name=sa-dp]:checked')||{}).value||'';
+function supGo(id){const ar=ui.lang==='ar',dp=checkedDepts('sa-dp').join(DSEP);
   if(!dp){toast(ar?'اختار القسم أولاً.':'Choose the department first.');const g=document.querySelector('input[name=sa-dp]');g&&g.closest('.seg').classList.add('need');return}
   const sp=byId(id),pick=(document.querySelector('input[name=sa-sh]:checked')||{}).value||'auto',sh=pick!=='auto'?shiftById(pick):(shiftOf(sp,ui.day)||(sp.shifts[0]&&shiftById(sp.shifts[0].id))||S.shifts[0]);let n=0;
   for(const sid of ui.sel){const s=byId(sid);if(!s||s.role!=='Marshal'||s.left)continue;assign(s,'sup',id);if(!s.shifts.length&&sh)assign(s,'shift',sh.id);if(s.dept!==dp)assign(s,'dept',dp);n++}
@@ -930,7 +939,7 @@ function supGo(id){const ar=ui.lang==='ar',dp=(document.querySelector('input[nam
 
 /* ---------- Scope filter (Dashboard + Reports) ---------- */
 function SC(){const f=ui.tab==='dash'&&ui.role==='pm'&&!can('dashFilter')?{}:ui.f.scope,from=f.from||ui.day,to=f.to&&f.to>=from?f.to:from;return{...f,from,to,days:DAYS.filter(d=>d>=from&&d<=to),person:ui.tab==='rep'?ui.repPerson||'':''}}
-const inScope=(s,sc)=>(!sc.person||s.id===sc.person)&&(!sc.dept||s.dept===sc.dept)&&(!sc.sup||s.sup===sc.sup||s.id===sc.sup);
+const inScope=(s,sc)=>(!sc.person||s.id===sc.person)&&(!sc.dept||inDept(s,sc.dept))&&(!sc.sup||s.sup===sc.sup||s.id===sc.sup);
 function scopeRows(list,sc){const out=[];for(const d of sc.days)for(const s of list){if(!inScope(s,sc))continue;const st=statusOf(s,d);if(st.k==='unassigned')continue;if(sc.shift&&st.sh?.id!==sc.shift)continue;if(sc.status&&!stMatch(st,sc.status))continue;out.push({d,s,st})}return out}
 const stMatch=(st,k)=>k==='onduty'?!!(st.r&&st.r.in&&!st.r.out):k==='out'?!!(st.r&&st.r.out):k==='issue'?['late','absent','not_in'].includes(st.k):st.k===k;
 const ST_OPTS=[['issue','Late, absent or not in'],['late','Late'],['absent','Absent'],['not_in','Not checked in'],['on_time','On time'],['onduty','On duty now'],['out','Checked out'],['scheduled','Scheduled']];
@@ -957,7 +966,7 @@ function breakdown(groups,kind){
   </tbody></table></div>`;
 }
 function groupsBySup(rows,sc){const g=[...sups().map(s=>[s.name,rows.filter(r=>r.s.sup===s.id),s.id]),[t('Unassigned'),rows.filter(r=>r.s.role==='Marshal'&&!r.s.sup),'']];return scopeActive(sc)?g.filter(x=>x[1].length):g}
-function groupsByDept(rows,sc){const g=[...S.departments.map(d=>[d,rows.filter(r=>r.s.dept===d),d]),[t('Unassigned'),rows.filter(r=>!r.s.dept),'']];return scopeActive(sc)?g.filter(x=>x[1].length):g}
+function groupsByDept(rows,sc){const g=[...S.departments.map(d=>[d,rows.filter(r=>inDept(r.s,d)),d]),[t('Unassigned'),rows.filter(r=>!r.s.dept),'']];return scopeActive(sc)?g.filter(x=>x[1].length):g}
 const VIEWS={};
 VIEWS.dash=()=>{
   const sc=SC(),rows=scopeRows(S.staff,sc),c=statsOf(rows),inc=scopeIncidents(sc);
@@ -974,7 +983,7 @@ VIEWS.dash=()=>{
 
 /* ---------- Staff & assignment ---------- */
 function staffRows(){const f=ui.f.staff,q=f.q.trim().toLowerCase(),qd=q.replace(/\D/g,'');
-  return S.staff.filter(s=>(!q||s.name.toLowerCase().includes(q)||s.code.toLowerCase().includes(q)||String(s.qid||'').includes(q)||String(s.phone||'').includes(q)||(qd.length>=3&&String(s.phone||'').replace(/\D/g,'').includes(qd)))&&(!f.role||s.role===f.role)&&(!f.sup||(f.sup==='none'?!s.sup&&s.role==='Marshal':s.sup===f.sup||s.id===f.sup))&&(!f.dept||(f.dept==='none'?!s.dept:s.dept===f.dept))&&(!f.shift||(f.shift==='none'?!s.shifts.length:shiftOf(s,ui.day)?.id===f.shift))
+  return S.staff.filter(s=>(!q||s.name.toLowerCase().includes(q)||s.code.toLowerCase().includes(q)||String(s.qid||'').includes(q)||String(s.phone||'').includes(q)||(qd.length>=3&&String(s.phone||'').replace(/\D/g,'').includes(qd)))&&(!f.role||s.role===f.role)&&(!f.sup||(f.sup==='none'?!s.sup&&s.role==='Marshal':s.sup===f.sup||s.id===f.sup))&&(!f.dept||(f.dept==='none'?!s.dept:inDept(s,f.dept)))&&(!f.shift||(f.shift==='none'?!s.shifts.length:shiftOf(s,ui.day)?.id===f.shift))
     &&(!f.asg||(f.asg==='duty'?!!s.shifts.length&&!s.left:f.asg==='noduty'?!s.shifts.length&&!s.left:f.asg==='left'?!!s.left:f.asg==='new'?!!s.joined:!s.left&&(f.asg==='no')===!(s.shifts.length&&s.dept&&(s.role==='Supervisor'||s.sup)))))}
 VIEWS.staff=()=>`<div class="row between"><h2>${t('Staff & assignment')}</h2><div class="row">${can('staff')?`<button class="btn pri" data-act="st-add">+ ${t('Add staff')}</button>`:''}${DL('staff-pdf','pdf')}${DL('staff-xlsx','xlsx')}</div></div>
   <div class="panel filters">${fSel('staff','role','Role',opt('',t('All'),ui.f.staff.role)+opt('Marshal',t('Marshal'),ui.f.staff.role)+opt('Supervisor',t('Supervisor'),ui.f.staff.role))}
@@ -993,7 +1002,7 @@ RES.staff=()=>{const rows=staffRows();
   ${rows.map(s=>{const sh=shiftOf(s,ui.day)||(s.shifts.length?shiftById(s.shifts[0].id):null);return `<tr><td><input type="checkbox" data-act="sel" data-id="${s.id}" ${ui.sel.has(s.id)?'checked':''} aria-label="Select ${esc(s.name)}"></td>
     <td class="mono">${esc(s.code)}</td><td>${esc(s.name)}${lifeChips(s)}${s.role==='Supervisor'?`<div><button class="lnkbtn" data-act="team" data-id="${s.id}">${t('Team')} (${S.staff.filter(m=>m.sup===s.id&&!m.left).length}) ›</button></div>`:''}</td><td>${t(s.role)}</td>
     <td>${s.role==='Marshal'?`<select data-assign="sup" data-id="${s.id}">${supOptions(s.sup,'—')}</select>`:'<span class="muted">—</span>'}</td>
-    <td><select data-assign="dept" data-id="${s.id}">${deptOptions(s.dept,'—')}</select></td>
+    <td><button class="btn sm deptbtn" data-act="dept-pick" data-id="${s.id}">${deptsOf(s).length?esc(deptsOf(s).join(DSEP)):'—'} ▾</button></td>
     <td>${s.shifts.length?`<span>${esc(shLabel(sh))}</span> <button class="btn sm ghost" data-act="shift-change" data-id="${s.id}">${t('Change')}</button>`:`<select data-assign="shift" data-id="${s.id}">${shiftOptions('','—')}</select>`}</td>
     <td class="mono small">${esc(s.phone)}${waLink(s.phone)}</td><td class="mono small">${esc(s.qid||'')}</td><td class="small">${esc(s.nat||'')}</td><td>${can('staff')?(s.left?`<button class="btn sm ghost" data-act="st-back" data-id="${s.id}">${t('Reinstate')}</button>`:`<button class="btn sm" data-act="st-out" data-id="${s.id}">${t('Withdraw / replace')}</button>`):''}</td></tr>`}).join('')}</tbody></table></div>`:`<div class="panel empty">${t('Nothing matches these filters.')}</div>`}
   ${ui.sel.size?`<div class="bulk" style="margin-top:10px"><b>${ui.sel.size} ${t('selected')}</b>${can('staff')?`<button class="btn pri" data-act="duty-open" style="background:#1f9d55;border-color:#1f9d55;box-shadow:none">✓ ${t('Assign a shift')}</button><button class="btn pri" data-act="sup-open">👤 ${t('Assign to supervisor')}</button>${[...ui.sel].some(id=>{const x=byId(id);return x&&(x.shifts.length||x.sup||x.dept||x.left||attKeys(id).length)})?`<button class="btn" data-act="free-open" style="background:#fff;color:#111">↺ ${t('Back to available')}</button>`:''}`:''}${[...ui.sel].some(id=>byId(id)?.left)&&can('staff')?`<button class="btn sm" data-act="bulk-back">${t('Make available again')} (${[...ui.sel].filter(id=>byId(id)?.left).length})</button>`:''}<button class="btn sm" data-act="bulk-more">${ui.bulkMore?'▴':'▾'} ${t('More')}</button><button class="btn sm" data-act="sel-none">${t('Cancel')}</button>
@@ -1098,7 +1107,7 @@ function attRows(){const f=ui.f.att,q=f.q.trim().toLowerCase(),from=f.from||ui.d
   for(const d of DAYS){if(d<from||d>to)continue;
     for(const s of S.staff){const st=statusOf(s,d);if(st.k==='unassigned')continue;
       if(q&&!s.name.toLowerCase().includes(q)&&!s.code.toLowerCase().includes(q))continue;
-      if(f.sup&&s.sup!==f.sup&&s.id!==f.sup)continue;if(f.dept&&s.dept!==f.dept)continue;if(f.shift&&st.sh?.id!==f.shift)continue;
+      if(f.sup&&s.sup!==f.sup&&s.id!==f.sup)continue;if(f.dept&&!inDept(s,f.dept))continue;if(f.shift&&st.sh?.id!==f.shift)continue;
       if(f.status&&(f.status==='out'?!(st.r&&st.r.out):f.status==='onduty'?!(st.r&&st.r.in&&!st.r.out):st.k!==f.status))continue;
       const tin=st.r?.in||'';if((f.tf||f.tt)&&(!tin||(f.tf&&tin<f.tf)||(f.tt&&tin>f.tt)))continue;
       out.push({d,s,st});}}
@@ -1547,6 +1556,7 @@ document.addEventListener('click',e=>{if(e.target.closest('a.tel,a.wa'))return;c
       const a={id:uid(),text:tx,by:actor(),byId:'pm',ts:new Date().toISOString()};S.ann.push(a);log('Announcement',tx.slice(0,100));save();annList();toast(t('Sent'));break}
     case 'ann-del':if(!can('announcements'))break;S.ann=S.ann.filter(a=>a.id!==id);log('Announcement','Removed an announcement');save();annList();break;
     case 'kpi':kpiList(v);break;
+    case 'dept-pick':if(can('staff'))deptPick(id);break;
     case 'free-one':if(isOwner())freeFromList([id]);break;
     case 'free-all':if(isOwner())freeFromList(ui.listIds||[]);break;
     case 'late-ok':if(can('attendance'))lateSet(v,true);break;
