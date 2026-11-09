@@ -71,7 +71,11 @@ service cloud.firestore {
     match /devices/{email} {
       allow read: if office() || (signedIn() && email == em());
       allow create: if signedIn() && email == em();
-      allow update: if canP('accounts') || (signedIn() && email == em() && resource.data.standalone == false && request.resource.data.standalone == true && !('prev' in resource.data));
+      allow update: if canP('accounts') || (signedIn() && email == em() && resource.data.standalone == false && request.resource.data.standalone == true && !('prev' in resource.data))
+        // extra devices: the account adds its own device while under the limit the owner set (access.maxDev)
+        || (signedIn() && email == em() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['ids'])
+            && request.resource.data.ids.hasAll(resource.data.get('ids', []))
+            && request.resource.data.ids.size() < acc().get('maxDev', 1));
       allow delete: if canP('accounts');
     }
     // A refused sign-in from another phone alerts the Project Manager.

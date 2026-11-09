@@ -73,6 +73,7 @@ details.paste{display:flex;flex-direction:column;gap:8px}details.paste summary{c
 .ck-st{display:flex;flex-direction:column;gap:2px;align-items:flex-end;font-size:13px}.ck-btns{display:flex;gap:6px;align-items:center;justify-content:flex-end}.ck-btns .btn{min-height:42px;padding:0 16px;font-size:14px}
 .ck-btns .btn.sm{min-height:34px;padding:0 10px}.btn.warnb{background:#fff4e5;border-color:#e0a040;color:#9a5a00}.btn.outb{background:#222;border-color:#222;color:#fff}.ok-t{color:#1f9d55;font-weight:700}
 @media (max-width:640px){.ck-row{grid-template-columns:1fr auto}.ck-btns{grid-column:1/-1;justify-content:stretch}.ck-btns .btn:not(.sm){flex:1}}
+.devmax{display:inline-flex;align-items:center;gap:4px;margin-inline-start:auto}.devmax select{height:30px;padding:0 6px;font-size:12px;border-radius:8px;max-width:120px}
 .duty-sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;margin-top:12px}.duty-sum button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface);cursor:pointer;text-align:start;color:var(--fg)}
 .duty-sum b{font-size:22px;line-height:1;font-family:var(--f-display)}.duty-sum span{font-size:11.5px;color:var(--muted)}.duty-sum button:first-child b{color:var(--bad)}.duty-sum .ok b{color:#1f9d55}.duty-sum button.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
 .duty-shifts{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}.duty-shifts .btn{flex-direction:column;justify-content:center;height:auto;padding:12px 10px;gap:4px;border-radius:14px;white-space:normal;text-align:center;line-height:1.25;min-width:0;overflow-wrap:anywhere}.duty-shifts .btn span{white-space:normal}.duty-shifts .btn b{font-size:14px;display:block;max-width:100%}
@@ -1502,6 +1503,8 @@ VIEWS.data=()=>{const p=ui.importPreview;return `<h2>${t('Data & import')}</h2>
   <section class="panel" style="display:flex;flex-direction:column;gap:10px"><div class="row between"><h3>${t('Audit log')}</h3><div class="row">${DL('audit-pdf','pdf',1)}${DL('audit-xlsx','xlsx',1)}</div></div>
    <div class="filters">${fInp('audit','q','Search name or ID','search')}${fSel('audit','type','Type',opt('',t('All'),ui.f.audit.type)+[...new Set(S.audit.map(a=>a.type))].map(x=>opt(x,x,ui.f.audit.type)).join(''))}</div>
    <div id="res-audit">${RES.audit()}</div></section>`};
+function devMax(em){if(!em)return '';const a=Cloud.access.get(em);if(!a)return '';const v=a.maxDev!=null?+a.maxDev:1,ar=ui.lang==='ar',d=Cloud.devices&&Cloud.devices.get(em),used=d?1+(d.ids||[]).length:0;
+  return `<span class="devmax" data-act="noop" title="${ar?'كم جهاز بيقدر يفوت':'How many devices can sign in'}">📱<select data-dev-max="${esc(em)}" aria-label="${ar?'عدد الأجهزة':'Devices'}">${[1,2,3,5,0].map(n=>`<option value="${n}" ${n===v?'selected':''}>${n?n+(ar?(n===1?' جهاز':' أجهزة'):(n===1?' device':' devices')):(ar?'بلا حد':'Unlimited')}</option>`).join('')}</select>${v!==0&&used?`<span class="small muted">${used}/${v}</span>`:''}</span>`}
 function devChip(em){if(!em)return '';const d=Cloud.devices&&Cloud.devices.get(em),ar=ui.lang==='ar';
   return d?`<span class="chip c-scheduled" title="${esc(d.ua||'')}">📱 ${esc(d.plat)}${d.standalone?' · app':''}</span><button class="btn sm ghost" data-act="dev-reset" data-v="${esc(em)}">${ar?'فك ربط التلفون':'Unlock phone'}</button>`:`<span class="chip c-scheduled">📱 ${ar?'لم يدخل بعد':'No phone yet'}</span>`}
 function accountsPanel(){const userOf=new Map([...Cloud.logins].map(([u,l])=>[l.staffId,u]));
@@ -1510,7 +1513,7 @@ function accountsPanel(){const userOf=new Map([...Cloud.logins].map(([u,l])=>[l.
    ${sups().length?`<div class="tbl-wrap"><table><thead><tr><th>${t('ID')}</th><th>${t('Name')}</th><th>${t('Username')}</th><th>${t('New password')}</th><th></th></tr></thead><tbody>${sups().map(s=>{const u=userOf.get(s.id)||'';return `<tr><td class="mono">${esc(s.code)}</td><td>${esc(s.name)}</td>
      <td><input type="text" autocomplete="off" autocapitalize="none" spellcheck="false" id="acc-${s.id}" value="${esc(u)}" placeholder="e.g. ${esc(s.code.toLowerCase())}" style="width:150px"></td>
      <td><input type="text" autocomplete="off" autocapitalize="none" spellcheck="false" id="pw-${s.id}" placeholder="${u?'••••••':'min 6 characters'}" style="width:150px"></td>
-     <td><div class="row"><button class="btn sm ${u?'':'pri'}" data-act="acc-save" data-id="${s.id}">${t('Set password')}</button>${u?`<span class="chip c-on_time">${t('Active')}</span>${devChip(Cloud.logins.get(u)?.email)}<button class="btn sm ghost" data-act="acc-del" data-id="${s.id}">${t('Remove')}</button>`:''}</div></td></tr>`}).join('')}</tbody></table></div>`:`<div class="empty">${ui.lang==='ar'?'استورد ملف الموظفين أولاً.':'Import the staff file first.'}</div>`}
+     <td><div class="row"><button class="btn sm ${u?'':'pri'}" data-act="acc-save" data-id="${s.id}">${t('Set password')}</button>${u?`<span class="chip c-on_time">${t('Active')}</span>${devChip(Cloud.logins.get(u)?.email)}${devMax(Cloud.logins.get(u)?.email)}<button class="btn sm ghost" data-act="acc-del" data-id="${s.id}">${t('Remove')}</button>`:''}</div></td></tr>`}).join('')}</tbody></table></div>`:`<div class="empty">${ui.lang==='ar'?'استورد ملف الموظفين أولاً.':'Import the staff file first.'}</div>`}
   </section>`}
 async function setAccount(id){const s=byId(id),raw=($('#acc-'+id).value||'').trim().toLowerCase(),pw=$('#pw-'+id).value;
   if(!/^[a-z0-9._-]{3,30}$/.test(raw)){toast('Username: 3+ letters, numbers, dots or dashes. No spaces.');return}
@@ -1566,7 +1569,7 @@ function teamPanel(){ui.newPerms=ui.newPerms||{};const ar=ui.lang==='ar';
     ${permToggles('new',ui.newPerms)}
     <div class="row" style="justify-content:flex-end"><button class="btn pri" data-act="adm-new">${t('Create account')}</button></div></div>
    ${admins().length?`<div class="acc-cards">${admins().map(a=>{const o=ui.accOpen===a.adminId,np=a.perms?.all?null:PERMS.filter(x=>a.perms?.[x[0]]).length;return `<div class="acc-card${o?' open':''}${a.disabled?' off':''}"><div class="acc-head" data-act="acc-open" data-id="${esc(a.adminId)}"><span class="av">${esc(String(a.name||a.username).trim().charAt(0).toUpperCase())}</span><div class="acc-t"><b>${esc(a.name||a.username)}</b><span>${esc(a.position||'—')}${a.disabled?` · <b style="color:var(--bad)">${ar?'موقوف':'Off'}</b>`:''}</span></div>
-     <span class="chev">${o?'▴':'▾'}</span><label class="sw" title="${ar?'تشغيل / إيقاف الحساب':'Account on / off'}"><input type="checkbox" data-acc-on="${esc(a.email)}" ${a.disabled?'':'checked'}><span></span></label></div>
+     ${devMax(a.email)}<span class="chev">${o?'▴':'▾'}</span><label class="sw" title="${ar?'تشغيل / إيقاف الحساب':'Account on / off'}"><input type="checkbox" data-acc-on="${esc(a.email)}" ${a.disabled?'':'checked'}><span></span></label></div>
      ${o?`<div class="acc-body"><div class="small muted"><span class="mono">${esc(a.username)}</span> · ${np===null?t('Full access'):`${np} ${ar?'صلاحيات':'permissions'}`}</div>
      <label class="small muted" style="display:flex;flex-direction:column;gap:4px">${t('Position')}<input type="text" data-acc-pos="${esc(a.email)}" value="${esc(a.position||'')}" autocomplete="off"></label>
      ${permToggles(a.email,a.perms)}
@@ -1790,7 +1793,7 @@ document.addEventListener('click',e=>{if(e.target.closest('a.tel,a.wa'))return;c
   switch(a){
     case 'tab':closeModal();if(v!==ui.tab)try{history.pushState(null,'','#'+v)}catch(e){}ui.tab=v;ui.sel.clear();render();window.scrollTo(0,0);break;
     case 'alert-yes':case 'alert-no':{const yes=a==='alert-yes',al=(Cloud.alerts||[]).find(x=>x.id===id);closeModal();if(!al)break;const ref=Cloud.db.collection('devices').doc(al.email);
-      (yes?ref.set({id:al.devId,plat:al.plat,standalone:!!al.standalone,ua:al.ua||'',ts:new Date().toISOString(),approved:true}):ref.update({denied:al.devId})).catch(e=>toast(e.message));
+      (yes?((Cloud.access.get(al.email)?.maxDev??1)!=1?ref.update({ids:firebase.firestore.FieldValue.arrayUnion(al.devId)}):ref.set({id:al.devId,plat:al.plat,standalone:!!al.standalone,ua:al.ua||'',ts:new Date().toISOString(),approved:true})):ref.update({denied:al.devId})).catch(e=>toast(e.message));
       Cloud.db.collection('alerts').doc(id).update({seen:true,approved:yes}).catch(()=>{});log('Account',`${al.username}: new phone ${yes?'approved':'refused'}`);save();
       toast(yes?(ui.lang==='ar'?'تمت الموافقة، رح يفوت هلق':'Approved, they are signing in now'):(ui.lang==='ar'?'تم الرفض':'Refused'));setTimeout(alertPopup,400);break}
     case 'notif-on':try{Notification.requestPermission().then(p=>{toast(p==='granted'?(ui.lang==='ar'?'التنبيهات شغالة':'Alerts on'):(ui.lang==='ar'?'التنبيهات ممنوعة من إعدادات المتصفح':'Alerts are blocked in browser settings'));render()})}catch(e){}break;
@@ -1934,6 +1937,8 @@ document.addEventListener('change',e=>{const el=e.target;
   if(el.id==='rv-from'){recvList();return}
   if(el.id==='ck-day'){ui.f.ck.day=el.value;render();return}
   if(el.dataset.mv&&can('staff')){const s=byId(el.dataset.mv),to=el.value==='none'?'':el.value;if(!s||el.value==='')return;assign(s,'sup',to);save();toast(`${s.name} → ${to?supName(to):t('Unassigned')}`);render();groupList(ui.lastGrp||('sup|'+to));return}
+  if(el.dataset.devMax){const em=el.dataset.devMax,n=+el.value,a=Cloud.access.get(em);if(!a||!can('accounts'))return;
+    Cloud.db.collection('access').doc(em).update({maxDev:n}).then(()=>{log('Account',`${a.username||userLabel(em)}: devices allowed ${n||'unlimited'}`);save();toast(t('Saved'))}).catch(e=>toast('Not saved: '+e.code));return}
   if(el.dataset.accOn){const em=el.dataset.accOn,a=Cloud.access.get(em),on=el.checked;if(!a||!can('accounts'))return;
     Cloud.db.collection('access').doc(em).update({disabled:!on}).then(()=>{log('Account',`${a.name||a.username}: account ${on?'on':'off'}`);save();toast(on?(ui.lang==='ar'?'الحساب شغال':'Account on'):(ui.lang==='ar'?'الحساب موقوف، ما بيقدر يفوت':'Account off: they cannot sign in'))}).catch(e=>{toast('Not saved: '+(e.code||e.message));render()});return}
   if(el.dataset.accPos){const em=el.dataset.accPos,a=Cloud.access.get(em);if(a&&can('accounts'))Cloud.db.collection('access').doc(em).update({position:el.value.trim()}).then(()=>{log('Account',`${a.name||a.username}: position ${el.value.trim()}`);save();toast(t('Saved'))}).catch(e=>toast('Not saved: '+(e.code||e.message)));return}
@@ -1976,9 +1981,11 @@ document.addEventListener('submit',e=>{if(e.target.id==='auth-form'){e.preventDe
 /* One phone per account: the first phone that signs in owns the account. Another phone is refused and the Project Manager is alerted. */
 const DEV_ID=(()=>{let d=Prefs.get('dev','');if(!d){d=Array.from(crypto.getRandomValues(new Uint8Array(9)),x=>x.toString(16).padStart(2,'0')).join('');Prefs.set('dev',d)}return d})();
 const devInfo=()=>({id:DEV_ID,standalone:isStandalone(),plat:IS_IOS?'iPhone':IS_ANDROID?'Android':'Computer',ua:navigator.userAgent.slice(0,200),ts:new Date().toISOString()});
-async function deviceCheck(em){const ref=Cloud.db.collection('devices').doc(em),me=devInfo();let d;try{d=await ref.get()}catch(e){return true}
+async function deviceCheck(em){const ref=Cloud.db.collection('devices').doc(em),me=devInfo(),max=ui.maxDev??1;if(max===0)return true;let d;try{d=await ref.get()}catch(e){return true}
   if(!d.exists){try{await ref.set(me)}catch(e){}return true}
-  const cur=d.data();if(cur.id===me.id)return true;
+  const cur=d.data();if(cur.id===me.id||cur.prev===me.id||(cur.ids||[]).includes(me.id))return true;
+  /* the owner allowed more than one device: the next ones join until the limit */
+  if(max>1&&1+(cur.ids||[]).length<max){try{await ref.update({ids:[...(cur.ids||[]),me.id]});return true}catch(e){console.error(e)}}
   /* iPhone keeps the installed app apart from Safari: moving from the browser into the app on the same kind of phone is allowed once */
   if(!cur.standalone&&me.standalone&&cur.plat===me.plat&&!cur.prev){try{await ref.set({...me,prev:cur.id})}catch(e){}return true}
   try{const a=(await Cloud.db.collection('access').doc(em).get()).data()||{};await Cloud.db.collection('alerts').doc(Date.now().toString(36)+DEV_ID.slice(0,6)).set({email:em,username:a.username||Cloud.uname||'',name:a.name||'',staffId:a.staffId||'',plat:me.plat,ua:me.ua,ts:me.ts,first:cur.plat||'',seen:false,devId:me.id,standalone:me.standalone})}catch(e){console.error(e)}
@@ -2005,16 +2012,16 @@ async function bootLive(){
     if(PM_EMAILS.includes(em)){ui.role='pm';ui.owner=true;ui.perms={all:true}}
     else{try{const d=await Cloud.db.collection('access').doc(em).get(),a=d.exists?d.data():null;
         if(a&&a.role==='supervisor')ui.role=a.staffId;else if(a&&a.role==='admin'&&!a.disabled){ui.role='pm';ui.perms=a.perms||{};ui.adminName=a.name||a.username||'';ui.adminPos=a.position||''}else ui.role='';
-        if(a&&a.username)Cloud.uname=a.username}catch(e){ui.role=''}
+        if(a&&a.username)Cloud.uname=a.username;ui.maxDev=a&&a.maxDev!=null?+a.maxDev:1}catch(e){ui.role=''}
       if(!ui.role){ui.authMsg=ui.lang==='ar'?'هذا الحساب غير مفعّل. اطلب من مدير المشروع حساباً جديداً.':'This account is not active. Ask the Project Manager for a new one.';await Cloud.auth.signOut();return}}
     if(!ui.owner&&!(await deviceCheck(em))){ui.role='';ui.waitDev=true;render();
       const off=Cloud.db.collection('devices').doc(em).onSnapshot(d=>{const x=d.data()||{};
-        if(x.id===DEV_ID){off();ui.waitDev=false;location.reload()}
+        if(x.id===DEV_ID||(x.ids||[]).includes(DEV_ID)){off();ui.waitDev=false;location.reload()}
         else if(x.denied===DEV_ID){off();ui.waitDev=false;ui.authMsg=ui.lang==='ar'?'رفض مدير المشروع الدخول من هذا التلفون.':'The Project Manager refused sign-in on this phone.';Cloud.auth.signOut()}},()=>{});
       Cloud.unsubs.push(off);return}
     ui.waitDev=false;
-    if(!ui.owner)Cloud.unsubs.push(Cloud.db.collection('access').doc(em).onSnapshot(d=>{const x=d.data();if(x&&x.disabled){ui.authMsg=ui.lang==='ar'?'تم إيقاف هذا الحساب من مدير المشروع.':'This account was turned off by the Project Manager.';Cloud.auth.signOut()}},()=>{}));
-    if(!ui.owner)Cloud.unsubs.push(Cloud.db.collection('devices').doc(em).onSnapshot(d=>{const x=d.data();if(x&&x.id&&x.id!==DEV_ID&&x.prev!==DEV_ID){ui.authMsg=ui.lang==='ar'?'تم نقل هذا الحساب لتلفون آخر بموافقة مدير المشروع.':'This account was moved to another phone by the Project Manager.';Cloud.auth.signOut()}},()=>{}));
+    if(!ui.owner)Cloud.unsubs.push(Cloud.db.collection('access').doc(em).onSnapshot(d=>{const x=d.data();if(x)ui.maxDev=x.maxDev!=null?+x.maxDev:1;if(x&&x.disabled){ui.authMsg=ui.lang==='ar'?'تم إيقاف هذا الحساب من مدير المشروع.':'This account was turned off by the Project Manager.';Cloud.auth.signOut()}},()=>{}));
+    if(!ui.owner)Cloud.unsubs.push(Cloud.db.collection('devices').doc(em).onSnapshot(d=>{const x=d.data();if(ui.maxDev!==0&&x&&x.id&&x.id!==DEV_ID&&x.prev!==DEV_ID&&!(x.ids||[]).includes(DEV_ID)){ui.authMsg=ui.lang==='ar'?'تم نقل هذا الحساب لتلفون آخر بموافقة مدير المشروع.':'This account was moved to another phone by the Project Manager.';Cloud.auth.signOut()}},()=>{}));
     ui.authMsg='';render();Cloud.start()});
 }
 /* Live refresh: statuses like "Not checked in" change with the clock */
