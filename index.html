@@ -51,6 +51,8 @@ table.stk thead th:nth-child(1),table.stk thead th:nth-child(3){z-index:3;backgr
 .lnkbtn{background:none;border:0;padding:0;color:var(--accent);font-size:12px;font-weight:600;cursor:pointer}select.mv{height:30px;font-size:12px;padding:0 22px 0 8px;width:auto;max-width:150px}
 .seg{display:flex;flex-wrap:wrap;gap:6px}.seg label{cursor:pointer}.seg input{position:absolute;opacity:0}.seg span{display:inline-block;padding:7px 12px;border:1px solid var(--line);border-radius:99px;font-size:13px;font-weight:600}.seg input:checked+span{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}.seg input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
 .mvrow{display:flex;gap:6px;align-items:center;margin-top:4px}.mvrow .btn{height:30px;padding:0 10px;font-size:12px}
+.reqbar{display:flex;align-items:center;gap:8px;width:100%;margin:12px 0 0;padding:12px 14px;border-radius:12px;border:1px solid var(--accent);background:var(--accent-soft);color:var(--fg);font-size:14px;cursor:pointer;text-align:start}.reqbar span{margin-inline-start:auto;color:var(--accent);font-weight:800}
+.nmbtn{background:none;border:0;padding:0;text-align:start;cursor:pointer;color:inherit;font:inherit;text-decoration:underline dotted;text-underline-offset:3px}
 .duty-sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.duty-sum button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface);cursor:pointer;text-align:start;color:var(--fg)}
 .duty-sum b{font-size:22px;line-height:1;font-family:var(--f-display)}.duty-sum span{font-size:11.5px;color:var(--muted)}.duty-sum button:first-child b{color:var(--bad)}.duty-sum .ok b{color:#1f9d55}.duty-sum button.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
 .duty-shifts{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}.duty-shifts .btn{flex-direction:column;justify-content:center;height:auto;padding:12px 10px;gap:4px;border-radius:14px;white-space:normal;text-align:center;line-height:1.25;min-width:0;overflow-wrap:anywhere}.duty-shifts .btn span{white-space:normal}.duty-shifts .btn b{font-size:14px;display:block;max-width:100%}
@@ -453,7 +455,7 @@ const AR={
 'Language':'اللغة','Nationality':'الجنسية','Sign out':'تسجيل خروج','Supervisor accounts':'حسابات المشرفين','Email':'البريد الإلكتروني','Username':'اسم المستخدم','Password':'كلمة السر','Operational summary':'الملخص التشغيلي','Announcements':'الإعلانات','Announcement':'إعلان','Received':'تم الاستلام','received':'استلموا','Send to supervisors':'إرسال للمشرفين','Sent':'تم الإرسال','Install app':'تثبيت التطبيق','New password':'كلمة سر جديدة','Set password':'تعيين كلمة السر','Active':'مفعّل','Remove':'إزالة','Account ready':'الحساب جاهز','Present':'حاضر','Nothing matches these filters.':'لا توجد نتائج لهذه الفلاتر.','No incidents recorded.':'لا توجد حوادث مسجلة.','No shift changes recorded yet.':'لا توجد تغييرات ورديات بعد.',
 'Only staff who already have a shift appear here. First-time shift assignment is done in Staff & assignment.':'يظهر هنا فقط من لديه وردية. التوزيع الأول للوردية يتم من صفحة الموظفين والتوزيع.',
 'I confirm Rabea approved this change by email.':'أؤكد أن ربيع وافق على هذا التغيير عبر البريد.','Staff member':'الموظف','Saved':'تم الحفظ','Day summary':'ملخص اليوم','Employees':'الموظفون','Rows shown':'الصفوف المعروضة',
-'Timesheet':'كشف الدوام','Custom range':'مدة مخصصة','Your name':'اسمك','Position':'المنصب','Withdrawn':'منسحبون','Replacements & added':'بدلاء ومضافون','Add staff':'إضافة موظف','Withdraw / replace':'انسحاب / بديل','Withdraw selected':'سحب المحددين','More':'المزيد','Back to available':'رجّعهم متاحين','Assign to supervisor':'تعيين لمشرف','Send to':'انقل إلى','Assign a shift':'تعيين وردية','Assigned (has a shift)':'معيّنين (إلهم وردية)','Available (no shift)':'متاحين (بلا وردية)','Make available again':'إرجاع للعمل','Withdraw':'سحب','Reinstate':'إرجاع','Withdrew':'انسحب','Replaces':'بديل عن','From':'من','No show':'لم يحضر','Dismissed':'تم الاستغناء','Not working from':'لا يعمل اعتباراً من','Reason':'السبب','Add a replacement':'إضافة بديل','Employee ID':'الرقم الوظيفي','Start date':'تاريخ البدء','This ID is already used.':'هذا الرقم مستخدم.','Days worked':'أيام العمل','Replaced by':'البديل','Withdrawals & replacements':'الانسحابات والبدلاء','Pay (QAR)':'الأجر (ريال)','Total':'المجموع','Hourly rate, Marshal (QAR)':'أجر الساعة للمارشال (ريال)','Hourly rate, Supervisor (QAR)':'أجر الساعة للمشرف (ريال)','By person':'حسب الشخص','Days':'الأيام','Late, absent or not in':'متأخر أو غائب أو لم يسجّل','Signature':'التوقيع','Sign with your finger':'وقّع بإصبعك','Clear':'مسح','Send to':'إرسال إلى','Share PDF':'مشاركة PDF','Hours':'الساعات','Total hours':'مجموع الساعات','Timesheet recipients':'مستلمو كشف الدوام','Title':'المسمى','Team accounts':'حسابات الفريق','Full access':'صلاحيات كاملة','Create account':'إنشاء حساب','Display name':'الاسم الظاهر','Username or email':'اسم المستخدم أو الإيميل','Attendance corrections':'تعديل الحضور','Shift changes':'تغيير الورديات','Reports, timesheets & exports':'التقارير وكشوف الدوام والتصدير','Announcements':'الإعلانات','Import & settings':'الاستيراد والإعدادات','Accounts & permissions':'الحسابات والصلاحيات','Permissions':'الصلاحيات',
+'Timesheet':'كشف الدوام','Custom range':'مدة مخصصة','Your name':'اسمك','Position':'المنصب','Withdrawn':'منسحبون','Replacements & added':'بدلاء ومضافون','Add staff':'إضافة موظف','Withdraw / replace':'انسحاب / بديل','Withdraw selected':'سحب المحددين','More':'المزيد','Replace with another marshal':'استبدال بمارشال تاني','Send request':'إرسال الطلب','Replacement requested, waiting for the Project Manager':'انطلب بديل، بانتظار مدير المشروع','Replacement request refused':'انرفض طلب البديل','replacement request':'طلب بديل','replacement requests':'طلبات بديل','Replacement request':'طلب بديل','Replacement requests':'طلبات البديل','Choose replacement':'اختيار بديل','Refuse':'رفض','Later':'لاحقاً','Person':'الشخص','Person history':'سجل الشخص','All actions':'كل الحركات','Days':'الأيام','When':'الوقت','Details':'التفاصيل','By':'بواسطة','changed':'معدّل','Clear':'مسح','Absent':'غائب','Back to available':'رجّعهم متاحين','Assign to supervisor':'تعيين لمشرف','Send to':'انقل إلى','Assign a shift':'تعيين وردية','Assigned (has a shift)':'معيّنين (إلهم وردية)','Available (no shift)':'متاحين (بلا وردية)','Make available again':'إرجاع للعمل','Withdraw':'سحب','Reinstate':'إرجاع','Withdrew':'انسحب','Replaces':'بديل عن','From':'من','No show':'لم يحضر','Dismissed':'تم الاستغناء','Not working from':'لا يعمل اعتباراً من','Reason':'السبب','Add a replacement':'إضافة بديل','Employee ID':'الرقم الوظيفي','Start date':'تاريخ البدء','This ID is already used.':'هذا الرقم مستخدم.','Days worked':'أيام العمل','Replaced by':'البديل','Withdrawals & replacements':'الانسحابات والبدلاء','Pay (QAR)':'الأجر (ريال)','Total':'المجموع','Hourly rate, Marshal (QAR)':'أجر الساعة للمارشال (ريال)','Hourly rate, Supervisor (QAR)':'أجر الساعة للمشرف (ريال)','By person':'حسب الشخص','Days':'الأيام','Late, absent or not in':'متأخر أو غائب أو لم يسجّل','Signature':'التوقيع','Sign with your finger':'وقّع بإصبعك','Clear':'مسح','Send to':'إرسال إلى','Share PDF':'مشاركة PDF','Hours':'الساعات','Total hours':'مجموع الساعات','Timesheet recipients':'مستلمو كشف الدوام','Title':'المسمى','Team accounts':'حسابات الفريق','Full access':'صلاحيات كاملة','Create account':'إنشاء حساب','Display name':'الاسم الظاهر','Username or email':'اسم المستخدم أو الإيميل','Attendance corrections':'تعديل الحضور','Shift changes':'تغيير الورديات','Reports, timesheets & exports':'التقارير وكشوف الدوام والتصدير','Announcements':'الإعلانات','Import & settings':'الاستيراد والإعدادات','Accounts & permissions':'الحسابات والصلاحيات','Permissions':'الصلاحيات',
 };
 const t=s=>ui.lang==='ar'&&AR[s]?AR[s]:s;
 const STATUS_LABEL={on_time:'On time',late:'Late',absent:'Absent',not_in:'Not checked in',scheduled:'Scheduled',unassigned:'Unassigned'};
@@ -485,7 +487,7 @@ function freshState(staff,source){
   return {v:1,source,demoScenario:false,staff,
     departments:['Registration','Plenary Hall','Exhibition','VIP & Protocol','Media Centre','Gates & Access','Car Park'],
     shifts:[{id:'A',name:'Morning',start:'07:00',end:'15:00'},{id:'B',name:'Afternoon',start:'14:00',end:'22:00'},{id:'C',name:'Night',start:'22:00',end:'06:00'}],
-    att:{},incidents:[],ann:[],annReads:{},audit:[{id:uid(),ts:new Date().toISOString(),by:'System',type:'Setup',detail:source==='sample'?'Sample staff list created (60 Marshals, 8 Supervisors), all unassigned':'Staff imported'}],
+    att:{},incidents:[],ann:[],annReads:{},requests:[],audit:[{id:uid(),ts:new Date().toISOString(),by:'System',type:'Setup',detail:source==='sample'?'Sample staff list created (60 Marshals, 8 Supervisors), all unassigned':'Staff imported'}],
     settings:{grace:10}};
 }
 /* LIVE mode: config.js defines FIREBASE_CONFIG + PM_EMAILS and the Firebase SDK is loaded. Otherwise DEMO (this device only). */
@@ -495,7 +497,7 @@ const USER_DOMAIN='itufieldops.local';
 const toEmail=u=>{u=String(u||'').trim().toLowerCase();return !u||u.includes('@')?u:u+'@'+USER_DOMAIN};
 const userLabel=e=>String(e||'').endsWith('@'+USER_DOMAIN)?e.slice(0,-USER_DOMAIN.length-1):e;
 const PM_EMAILS=(window.PM_EMAILS||[]).map(toEmail);
-let S=LIVE?{...freshState([],'live'),audit:[]}:(Store.load()||freshState(sampleStaff(),'sample'));
+let S=LIVE?{...freshState([],'live'),audit:[]}:(Store.load()||freshState(sampleStaff(),'sample'));if(!S.requests)S.requests=[];
 S.ann=S.ann||[];S.annReads=S.annReads||{};
 const save=()=>LIVE?Cloud.sync():Store.save(S);
 /* Stable stringify so local state and Firestore docs compare equal regardless of key order */
@@ -509,6 +511,7 @@ const Cloud={db:null,auth:null,user:null,email:'',synced:{},unsubs:[],loaded:new
     incidents:new Map(S.incidents.map(i=>[i.id,i])),
     announcements:new Map(S.ann.map(a=>[a.id,a])),
     annReads:new Map(Object.entries(S.annReads).map(([k,r])=>[k.replace('|','_'),r])),
+    requests:new Map((S.requests||[]).map(r=>[r.id,r])),
     audit:new Map(S.audit.map(a=>[a.id,a]))}},
   async sync(){
     if(!this.db)return;const pm=ui.role==='pm',cur=this.docs(),ops=[];
@@ -534,6 +537,8 @@ const Cloud={db:null,auth:null,user:null,email:'',synced:{},unsubs:[],loaded:new
     this.watch(pm?db.collection('incidents'):db.collection('incidents').where('byId','==',me),'incidents',m=>{S.incidents=[...m.values()]});
     this.watch(db.collection('announcements'),'announcements',m=>{S.ann=[...m.values()];setTimeout(annPopup,200)});
     this.watch(pm?db.collection('annReads'):db.collection('annReads').where('staffId','==',me),'annReads',m=>{S.annReads={};for(const v of m.values())S.annReads[v.annId+'|'+v.staffId]=v});
+    if(pm&&can('staff'))this.watch(db.collection('requests'),'requests',m=>{S.requests=[...m.values()];setTimeout(reqPopup,400);reqNotify()});
+    if(!pm)this.watch(db.collection('requests').where('supId','==',me),'requests',m=>{S.requests=[...m.values()]});
     if(pm){this.watch(db.collection('audit').orderBy('ts','desc').limit(3000),'audit',m=>{S.audit=[...m.values()]});
       if(can('accounts')){this.unsubs.push(db.collection('access').onSnapshot(s=>{this.access=new Map();s.forEach(d=>this.access.set(d.id,d.data()));scheduleRender()}));
       this.unsubs.push(db.collection('logins').onSnapshot(s=>{this.logins=new Map();s.forEach(d=>this.logins.set(d.id,d.data()));scheduleRender()}));
@@ -570,7 +575,7 @@ function statusOf(s,date){
   if(!active(s,date))return{k:'unassigned',inactive:true,sh:null,late:0};
   const sh=shiftOf(s,date),r=S.att[date+'|'+s.id];
   if(r&&r.absent)return{k:'absent',r,sh,late:0};
-  if(r&&r.in){const late=sh?lateMin(sh,r.in):0;return{k:late?'late':'on_time',late,r,sh}}
+  if(r&&r.in){const late=sh&&!r.ok?lateMin(sh,r.in):0;return{k:late?'late':'on_time',late,r,sh}}
   if(!sh)return{k:'unassigned',sh,late:0};
   const n=doha();
   if(date>n.date||(date===n.date&&toMin(n.time)<toMin(sh.start)+S.settings.grace))return{k:'scheduled',sh,late:0};
@@ -686,7 +691,7 @@ function render(){
     <nav class="tabs">${tabs.map(([k,l])=>`<button data-act="tab" data-v="${k}" aria-current="${ui.tab===k}">${t(l)}</button>`).join('')}</nav>
   </div></header>
   <main class="wrap">
-    ${installBanner()}
+    ${installBanner()}${reqBanner()}
     ${S.source==='sample'?`<div class="banner"><b>${t('Sample staff list (68)')}</b><span>${t('Import your Excel file in Data & import before go-live.')}</span></div>`:''}
     ${S.demoScenario?`<div class="banner"><b>${t('Demo scenario loaded')}</b><span>${t('Generated attendance and incidents are fake. Reset before go-live.')}</span>${ui.role==='pm'?`<button class="btn sm" data-act="reset-sample">${t('Reset to clean sample')}</button>`:''}</div>`:''}
     ${ui.day!==today&&today>=EVENT_START&&today<=EVENT_END?`<div class="small muted">Viewing ${fmtEn(ui.day)}. Today is ${fmtEn(today)}.</div>`:''}
@@ -829,10 +834,16 @@ function annList(){const pm=ui.role==='pm',list=annSorted(),sp=sups();
     ${pm?`<div class="reads">${reads.map(([s,r])=>`<span class="chip ${r?'c-on_time':'c-scheduled'}" title="${r?tsFmt(r.ts):''}">${r?'✓':'○'} ${esc(s.name)}${r?' · '+tsFmt(r.ts):''}</span>`).join('')}</div>`:''}</div>`}).join('<hr class="sep">'):`<div class="empty">${ui.lang==='ar'?'لا توجد إعلانات بعد.':'No announcements yet.'}</div>`}`)}
 
 /* ---------- KPI drill-down ---------- */
-function kpiList(k){const pm=ui.role==='pm',rows=pm?scopeRows(S.staff,SC()):scopeRows(S.staff.filter(m=>m.sup===ui.role),{days:[ui.day]}),multi=pm&&SC().days.length>1;
+function kpiList(k){ui.lastKpi=k;const pm=ui.role==='pm',rows=pm?scopeRows(S.staff,SC()):scopeRows(S.staff.filter(m=>m.sup===ui.role),{days:[ui.day]}),multi=pm&&SC().days.length>1;
   const sel=rows.filter(({st})=>k==='total'||(k==='onduty'?st.r&&st.r.in&&!st.r.out:k==='out'?st.r&&st.r.out:st.k===k));
   const label={total:'Assigned',onduty:'On duty now',on_time:'On time',late:'Late',absent:'Absent',not_in:'Not checked in',out:'Checked out'}[k];
   personList(t(label),sel,{multi,pm})}
+/* Office can turn a late arrival into on time (e.g. they came on time but were recorded late) */
+const lateFix=(d,s,st)=>ui.role==='pm'&&can('attendance')?(st.k==='late'?` <button class="btn sm" data-act="late-ok" data-v="${d}|${s.id}">✓ ${t('On time')}</button>`:st.r&&st.r.ok?` <span class="small muted">(${t('changed')})</span> <button class="btn sm ghost" data-act="late-undo" data-v="${d}|${s.id}" title="${t('Undo')}">↺</button>`:''):'';
+function lateSet(v,ok){const [d,id]=v.split('|'),s=byId(id),r=S.att[d+'|'+id];if(!s||!r||!r.in)return;const sh=shiftOf(s,d),m=sh?lateMin(sh,r.in):0;
+  if(ok){r.ok=true;r.okBy=actor();r.okAt=new Date().toISOString();log('Attendance',`${s.code} ${s.name} ${d}: late (+${m} min, in ${r.in}) changed to on time`)}
+  else{delete r.ok;delete r.okBy;delete r.okAt;log('Attendance',`${s.code} ${s.name} ${d}: back to late (+${m} min)`)}
+  save();render();if(!$('#modal').hidden&&ui.lastKpi)kpiList(ui.lastKpi);toast(t('Saved'))}
 /* Supervisor of a row: a marshal's supervisor, or the supervisor themself */
 const supKey=s=>s.role==='Supervisor'?s.id:(s.sup||'');
 function personList(title,sel,{multi=false,pm=ui.role==='pm',group=true,manage=false}={}){manage=manage&&pm&&can('staff');
@@ -841,7 +852,7 @@ function personList(title,sel,{multi=false,pm=ui.role==='pm',group=true,manage=f
   const cols=(multi?1:0)+(pm?7:6);let last=null,html='';
   for(const {d,s,st} of list){const k=supKey(s);
     if(group&&pm&&k!==last){last=k;const n=list.filter(r=>supKey(r.s)===k).length;html+=`<tr class="grp"><td colspan="${cols}">${esc(k?supName(k):t('Unassigned'))} <span class="muted">· ${n}</span></td></tr>`}
-    html+=`<tr>${multi?`<td class="mono small">${d.slice(5)}</td>`:''}<td class="mono">${esc(s.code)}</td><td>${esc(s.name)}${manage&&s.role==='Marshal'&&!s.left?`<div class="mvrow"><select class="mv" data-mv="${s.id}" aria-label="${t('Send to')}">${opt('','↪ '+t('Send to')+'…','')}${sups().filter(x=>x.id!==s.sup&&!x.left).map(x=>opt(x.id,x.name,'')).join('')}${s.sup?opt('none',t('Unassigned'),''):''}</select><button class="btn sm ghost" data-act="st-out" data-id="${s.id}">${t('Withdraw')}</button></div>`:pm&&s.role==='Marshal'?`<div class="sub">${esc(s.sup?supName(s.sup):t('Unassigned'))}</div>`:pm&&s.role==='Supervisor'?`<div class="sub">${t('Supervisor')}</div>`:''}</td>${pm?`<td class="small">${esc(s.dept||'—')}</td>`:''}<td class="small">${esc(st.sh?.name||'')}</td><td class="mono">${esc(st.r?.in||'')}</td><td class="mono">${esc(st.r?.out||'')}</td><td>${chip(st.k)}${st.late?` <span class="small mono">+${st.late}</span>`:''}</td><td class="mono small nowrap">${esc(s.phone)}${waLink(s.phone)}</td></tr>`}
+    html+=`<tr>${multi?`<td class="mono small">${d.slice(5)}</td>`:''}<td class="mono">${esc(s.code)}</td><td>${esc(s.name)}${manage&&s.role==='Marshal'&&!s.left?`<div class="mvrow"><select class="mv" data-mv="${s.id}" aria-label="${t('Send to')}">${opt('','↪ '+t('Send to')+'…','')}${sups().filter(x=>x.id!==s.sup&&!x.left).map(x=>opt(x.id,x.name,'')).join('')}${s.sup?opt('none',t('Unassigned'),''):''}</select><button class="btn sm ghost" data-act="st-out" data-id="${s.id}">${t('Withdraw')}</button></div>`:pm&&s.role==='Marshal'?`<div class="sub">${esc(s.sup?supName(s.sup):t('Unassigned'))}</div>`:pm&&s.role==='Supervisor'?`<div class="sub">${t('Supervisor')}</div>`:''}</td>${pm?`<td class="small">${esc(s.dept||'—')}</td>`:''}<td class="small">${esc(st.sh?.name||'')}</td><td class="mono">${esc(st.r?.in||'')}</td><td class="mono">${esc(st.r?.out||'')}</td><td class="nowrap">${chip(st.k)}${st.late?` <span class="small mono">+${st.late}</span>`:''}${lateFix(d,s,st)}</td><td class="mono small nowrap">${esc(s.phone)}${waLink(s.phone)}</td></tr>`}
   modal(`<div class="row between"><h2>${esc(title)} · ${sel.length}</h2><button class="btn sm" data-act="close">${t('Close')}</button></div>
   ${sel.length?`<div class="small muted">${ui.lang==='ar'?'اكبس على أي سطر لتعليمه.':'Tap a row to mark it.'}</div><div class="tbl-wrap"><table class="pick"><thead><tr>${multi?`<th>${t('Date')}</th>`:''}<th>${t('ID')}</th><th>${t('Name')}</th>${pm?`<th>${t('Department')}</th>`:''}<th>${t('Shift')}</th><th>${t('In')}</th><th>${t('Out')}</th><th>${t('Status')}</th><th>${t('Phone')}</th></tr></thead><tbody>${html}</tbody></table></div>`:`<div class="empty">${t('None')}</div>`}`)}
 function groupList(v){ui.lastGrp=v;const [kind,key]=v.split('|'),sc=SC(),rows=scopeRows(S.staff,sc),multi=sc.days.length>1;
@@ -856,6 +867,35 @@ function freeOpen(){const ar=ui.lang==='ar',list=[...ui.sel].map(byId).filter(x=
   $('#fr-save').onclick=()=>{const ps=picked('fr-p');if(!ps.length){toast(ar?'ما في حدا محدد.':'Nobody is ticked.');return}
     for(const s of ps){s.shifts=[];s.sup='';s.dept='';delete s.left;delete s.leftReason;delete s.leftNote;delete s.replacedBy;if(s.role==='Supervisor')for(const m of S.staff)if(m.sup===s.id)m.sup='';log('Assignment',`${s.code} ${s.name}: assignment cleared, back to available`)}
     ui.sel.clear();closeModal();save();render();toast(`${ps.length} ${ar?'رجعوا متاحين':'back to available'}`)}}
+const openReqs=()=>(S.requests||[]).filter(r=>r.status==='open').sort((a,b)=>a.ts.localeCompare(b.ts));
+const availMarshals=()=>S.staff.filter(x=>x.role==='Marshal'&&!x.left&&!x.shifts.length&&!x.sup).sort((a,b)=>a.code.localeCompare(b.code,undefined,{numeric:true}));
+function reqBanner(){if(ui.role!=='pm'||!can('staff'))return '';const n=openReqs().length;return n?`<button class="reqbar" data-act="req-list">🔔 <b>${n}</b> ${t(n>1?'replacement requests':'replacement request')} <span>›</span></button>`:''}
+function reqCard(r){const ar=ui.lang==='ar';return `<div class="panel" style="display:flex;flex-direction:column;gap:6px"><div><b>${esc(r.supName||supName(r.supId))}</b> <span class="muted">${ar?'بدو بديل عن':'asks to replace'}</span> <b>${esc(r.name)}</b> <span class="mono small muted">${esc(r.code)}</span></div>
+  <div class="small muted">${esc(t(r.reason))}${r.note?' · '+esc(r.note):''} · ${esc(tsFmt(r.ts))}</div>
+  <div class="row" style="justify-content:flex-end"><button class="btn sm ghost" data-act="req-no" data-id="${esc(r.id)}">${t('Refuse')}</button><button class="btn sm pri" data-act="req-pick" data-id="${esc(r.id)}">${t('Choose replacement')}</button></div></div>`}
+function reqList(){const l=openReqs();modal(`<div class="row between"><h2>${t('Replacement requests')} · ${l.length}</h2><button class="btn sm" data-act="close">${t('Close')}</button></div>${l.length?l.map(reqCard).join(''):`<div class="empty">${t('None')}</div>`}`)}
+function reqPopup(){if(ui.role!=='pm'||!can('staff')||!$('#modal').hidden)return;ui.reqSeen=ui.reqSeen||new Set();const r=openReqs().find(x=>!ui.reqSeen.has(x.id));if(!r)return;ui.reqSeen.add(r.id);
+  modal(`<div class="small" style="text-transform:uppercase;letter-spacing:.08em;font-weight:800;color:var(--accent)">🔔 ${t('Replacement request')}</div>${reqCard(r)}<div class="row" style="justify-content:flex-end"><button class="btn sm" data-act="close">${t('Later')}</button></div>`)}
+const reqNotified=new Set();
+function reqNotify(){for(const r of openReqs()){if(reqNotified.has(r.id))continue;reqNotified.add(r.id);if(Date.now()-new Date(r.ts)>36e5)continue;
+  try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch(e){}
+  if(!('Notification' in window)||Notification.permission!=='granted')continue;const title=ui.lang==='ar'?'طلب بديل':'Replacement request',body=`${r.supName}: ${r.name} (${r.reason})`;
+  (navigator.serviceWorker?navigator.serviceWorker.ready.then(g=>g.showNotification(title,{body,icon:'icon-192.png',tag:'rq'+r.id})):Promise.reject()).catch(()=>{try{new Notification(title,{body})}catch(e){}})}}
+function reqPick(id){const r=(S.requests||[]).find(x=>x.id===id),ar=ui.lang==='ar';if(!r)return;const av=availMarshals(),q=(ui.reqQ||'').toLowerCase(),list=av.filter(x=>!q||x.name.toLowerCase().includes(q)||x.code.toLowerCase().includes(q)||String(x.phone||'').replace(/\D/g,'').includes(q.replace(/\D/g,'')||'#'));
+  modal(`<div class="row between"><h2>${t('Choose replacement')}</h2><button class="btn sm" data-act="close">${t('Close')}</button></div>
+  <div class="small muted">${ar?`بدل <b>${esc(r.name)}</b> عند <b>${esc(r.supName)}</b>. هدول المارشالز المتاحين (بلا وردية ولا مشرف). اكبس على واحد ليروح لعند المشرف.`:`Replacing <b>${esc(r.name)}</b> for <b>${esc(r.supName)}</b>. These marshals are available (no shift, no supervisor). Tap one to send them to the supervisor.`}</div>
+  <label class="qsearch" style="margin:0">${ICON.search}<input type="search" id="rq-q" value="${esc(ui.reqQ||'')}" placeholder="${t('Search name, ID or phone')}" autocomplete="off"></label>
+  ${list.length?`<div class="tbl-wrap" style="max-height:50vh;overflow:auto"><table><tbody>${list.map(x=>`<tr><td class="mono">${esc(x.code)}</td><td>${esc(x.name)}<div class="sub mono">${esc(x.phone||'')}</div></td><td style="text-align:end"><button class="btn sm pri" data-act="req-go" data-id="${esc(r.id)}" data-v="${x.id}">${t('Send to')} ${esc(String(r.supName).split(/\s+/)[0])}</button></td></tr>`).join('')}</tbody></table></div>`:`<div class="empty">${ar?'ما في مارشالز متاحين. رجّع حدا متاح من Staff & assignment.':'No marshals are available. Free someone up in Staff & assignment.'}</div>`}`);
+  const qi=$('#rq-q');qi.oninput=()=>{ui.reqQ=qi.value;const pos=qi.selectionStart;reqPick(id);const n=$('#rq-q');n.focus();try{n.setSelectionRange(pos,pos)}catch(e){}}}
+function reqDo(id,newId){const r=(S.requests||[]).find(x=>x.id===id),old=r&&byId(r.staffId),nw=byId(newId),ar=ui.lang==='ar';if(!r||!old||!nw||r.status!=='open')return;
+  if(nw.shifts.length||nw.left||nw.sup){toast(ar?'هالمارشال مش متاح.':'This marshal is not available.');return}
+  const d=r.date>EVENT_START?r.date:EVENT_START,sp=byId(r.supId),sh=shiftOf(old,d)||(old.shifts[0]&&shiftById(old.shifts[0].id))||(sp&&(shiftOf(sp,d)||(sp.shifts[0]&&shiftById(sp.shifts[0].id))))||S.shifts[0];
+  old.left=d;old.leftReason=r.reason;old.leftNote=r.note||'';old.replacedBy=nw.id;
+  nw.sup=r.supId;nw.dept=old.dept||(sp&&sp.dept)||'';nw.shifts=sh?[{id:sh.id,from:d}]:[];nw.joined=d;nw.replaces=old.id;
+  r.status='done';r.newId=nw.id;r.doneBy=actor();r.doneAt=new Date().toISOString();
+  log('Replacement',`${nw.code} ${nw.name} replaces ${old.code} ${old.name} for ${r.supName} from ${d} (${r.reason}, on supervisor request)`);
+  ui.reqQ='';closeModal();save();render();toast(`${nw.name} → ${r.supName}`);setTimeout(reqPopup,400)}
+function reqRefuse(id){const r=(S.requests||[]).find(x=>x.id===id);if(!r)return;confirmBox(ui.lang==='ar'?'رفض هالطلب؟':'Refuse this request?',()=>{r.status='refused';r.doneBy=actor();r.doneAt=new Date().toISOString();log('Replacement request',`${r.code} ${r.name}: request from ${r.supName} refused`);save();render();setTimeout(reqPopup,400)})}
 function supAssignOpen(){const ar=ui.lang==='ar',ms=[...ui.sel].map(byId).filter(s=>s&&s.role==='Marshal'&&!s.left);
   if(!ms.length){toast(ar?'حدد مارشالز أولاً (المشرفين ما بينحطوا تحت مشرف).':'Select marshals first (supervisors cannot be put under a supervisor).');return}
   modal(`<h2>${t('Assign to supervisor')} · ${ms.length}</h2>${ms.some(m=>!m.shifts.length)?`<div class="small muted">${ar?'اللي ما إلهن وردية بياخدوا هالوردية وبينحسبوا بالتوتال:':'Those without a shift get this shift and count in the total:'}</div>
@@ -868,14 +908,14 @@ function supGo(id){const ar=ui.lang==='ar',sp=byId(id),pick=(document.querySelec
   ui.sel.clear();closeModal();save();render();toast(`${n} ${ar?'صاروا مع':'now with'} ${sp.name}`)}
 
 /* ---------- Scope filter (Dashboard + Reports) ---------- */
-function SC(){const f=ui.f.scope,from=f.from||ui.day,to=f.to&&f.to>=from?f.to:from;return{...f,from,to,days:DAYS.filter(d=>d>=from&&d<=to)}}
-const inScope=(s,sc)=>(!sc.dept||s.dept===sc.dept)&&(!sc.sup||s.sup===sc.sup||s.id===sc.sup);
+function SC(){const f=ui.f.scope,from=f.from||ui.day,to=f.to&&f.to>=from?f.to:from;return{...f,from,to,days:DAYS.filter(d=>d>=from&&d<=to),person:ui.tab==='rep'?ui.repPerson||'':''}}
+const inScope=(s,sc)=>(!sc.person||s.id===sc.person)&&(!sc.dept||s.dept===sc.dept)&&(!sc.sup||s.sup===sc.sup||s.id===sc.sup);
 function scopeRows(list,sc){const out=[];for(const d of sc.days)for(const s of list){if(!inScope(s,sc))continue;const st=statusOf(s,d);if(st.k==='unassigned')continue;if(sc.shift&&st.sh?.id!==sc.shift)continue;if(sc.status&&!stMatch(st,sc.status))continue;out.push({d,s,st})}return out}
 const stMatch=(st,k)=>k==='onduty'?!!(st.r&&st.r.in&&!st.r.out):k==='out'?!!(st.r&&st.r.out):k==='issue'?['late','absent','not_in'].includes(st.k):st.k===k;
 const ST_OPTS=[['issue','Late, absent or not in'],['late','Late'],['absent','Absent'],['not_in','Not checked in'],['on_time','On time'],['onduty','On duty now'],['out','Checked out'],['scheduled','Scheduled']];
 function statsOf(rows){const c={total:0,on_time:0,late:0,absent:0,not_in:0,scheduled:0,onduty:0,out:0};for(const{st}of rows){c.total++;c[st.k]++;if(st.r&&st.r.in&&!st.r.out)c.onduty++;if(st.r&&st.r.out)c.out++}return c}
 const scopeIncidents=sc=>S.incidents.filter(i=>i.date>=sc.from&&i.date<=sc.to&&(!sc.dept||i.dept===sc.dept)&&(!sc.sup||i.byId===sc.sup||byId(i.staff)?.sup===sc.sup)).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
-const scopeActive=sc=>!!(sc.dept||sc.sup||sc.shift||sc.status);
+const scopeActive=sc=>!!(sc.dept||sc.sup||sc.shift||sc.status||sc.person);
 const scopeLabel=sc=>sc.from===sc.to?`${t('Day')} ${dayNo(sc.from)}, ${fmtD(sc.from)}`:`${fmtD(sc.from)} – ${fmtD(sc.to)} (${sc.days.length} ${ui.lang==='ar'?'أيام':'days'})`;
 const scopeLabelEn=sc=>sc.from===sc.to?`Day ${dayNo(sc.from)} · ${fmtEn(sc.from)}`:`${fmtEn(sc.from)} to ${fmtEn(sc.to)} (${sc.days.length} days)`;
 const scopeFiltersEn=sc=>[sc.dept&&'Department: '+sc.dept,sc.shift&&'Shift: '+(shiftById(sc.shift)?.name||sc.shift),sc.sup&&'Supervisor: '+supName(sc.sup),sc.status&&'Status: '+(ST_OPTS.find(x=>x[0]===sc.status)||[,sc.status])[1]].filter(Boolean).join(' · ');
@@ -1070,12 +1110,24 @@ VIEWS.team=()=>{const me=byId(ui.role),team=S.staff.filter(m=>m.sup===ui.role&&a
   ${kpiTiles(c)}
   <div class="panel row"><label class="small muted" style="display:flex;gap:8px;align-items:center">${t('Record time')}<input type="time" id="rec-time"></label><span class="small muted">${t('Leave empty to use current Doha time')} (${doha().time})</span></div>
   ${team.length?`<div class="cards">${team.map(m=>{const st=statusOf(m,ui.day),r=st.r;
-    return `<div class="card"><div class="row between"><div style="min-width:0"><div class="nm">${esc(m.name)}</div><div class="small muted"><span class="mono">${esc(m.code)}</span> · ${esc(st.sh?shLabel(st.sh):t('Unassigned'))}${m.dept?' · '+esc(m.dept):''}</div>${m.phone?`<div class="small mono" style="margin-top:4px">${esc(m.phone)}${waLink(m.phone)}</div>`:''}</div>${chip(st.k)}</div>
+    const rq=(S.requests||[]).filter(x=>x.staffId===m.id).sort((a,b)=>b.ts.localeCompare(a.ts))[0];
+    return `<div class="card"><div class="row between"><div style="min-width:0"><button class="nm nmbtn" data-act="rep-tog" data-id="${m.id}">${esc(m.name)}</button>${lifeChips(m)}<div class="small muted"><span class="mono">${esc(m.code)}</span> · ${esc(st.sh?shLabel(st.sh):t('Unassigned'))}${m.dept?' · '+esc(m.dept):''}</div>${m.phone?`<div class="small mono" style="margin-top:4px">${esc(m.phone)}${waLink(m.phone)}</div>`:''}</div>${chip(st.k)}</div>
       ${r&&(r.in||r.out)?`<div class="small mono">${t('In')} ${esc(r.in||'—')} · ${t('Out')} ${esc(r.out||'—')}${st.late?` · +${st.late} min`:''}</div>`:''}
       <div class="acts">${!st.sh?'':!r?`<button class="btn ok sm" data-act="ci" data-id="${m.id}">${t('Check in')}</button><button class="btn bad sm" data-act="abs" data-id="${m.id}">${t('Mark absent')}</button>`
         :r.absent?`<button class="btn sm" data-act="undo" data-id="${m.id}">${t('Undo')}</button>`
         :!r.out?`<button class="btn pri sm" data-act="co" data-id="${m.id}">${t('Check out')}</button><button class="btn sm ghost" data-act="undo" data-id="${m.id}">${t('Undo')}</button>`
-        :`<button class="btn sm ghost" data-act="undo-out" data-id="${m.id}">${t('Undo')}</button>`}</div></div>`}).join('')}</div>`:`<div class="panel empty">${t('No marshals are assigned to you yet.')}</div>`}`};
+        :`<button class="btn sm ghost" data-act="undo-out" data-id="${m.id}">${t('Undo')}</button>`}</div>
+      ${rq&&rq.status==='open'?`<div class="small" style="color:var(--warn,#b7791f)">⏳ ${t('Replacement requested, waiting for the Project Manager')}</div>`:rq&&rq.status==='refused'&&ui.repOpen!==m.id?`<div class="small muted">${t('Replacement request refused')}</div>`:''}
+      ${ui.repOpen===m.id&&!(rq&&rq.status==='open')?`<div class="acts"><button class="btn sm" data-act="rep-req" data-id="${m.id}">↺ ${t('Replace with another marshal')}</button></div>`:''}</div>`}).join('')}</div>`:`<div class="panel empty">${t('No marshals are assigned to you yet.')}</div>`}`};
+function repRequest(id){const m=byId(id),ar=ui.lang==='ar';if(!m||ui.role==='pm'||m.sup!==ui.role)return;
+  modal(`<h2>${t('Replace with another marshal')}</h2><div class="muted">${esc(m.code)} · ${esc(m.name)}</div>
+  <div class="form"><label>${t('Reason')}<select id="rq-reason">${['No show','Absent','Withdrew','Other'].map(r=>opt(r,t(r),'No show')).join('')}</select></label>
+   <label class="full">${t('Notes')}<input type="text" id="rq-note" autocomplete="off"></label></div>
+  <div class="small muted">${ar?'بيوصل طلب لمدير المشروع، وهو بيختار البديل وبيبعتلك ياه على قائمتك.':'The Project Manager gets the request, picks a replacement and sends them to your list.'}</div>
+  <div class="row" style="justify-content:flex-end"><button class="btn" data-act="close">${t('Cancel')}</button><button class="btn pri" id="rq-send">${t('Send request')}</button></div>`);
+  $('#rq-send').onclick=()=>{const reason=$('#rq-reason').value,note=$('#rq-note').value.trim().slice(0,300),me=byId(ui.role);
+    S.requests.push({id:uid(),staffId:m.id,code:m.code,name:m.name,supId:ui.role,supName:me?me.name:'',reason,note,date:ui.day,ts:new Date().toISOString(),status:'open'});
+    log('Replacement request',`${m.code} ${m.name}: ${reason}${note?' · '+note:''} (by ${me?me.name:'supervisor'})`);ui.repOpen='';closeModal();save();render();toast(ar?'انبعت الطلب لمدير المشروع':'Request sent to the Project Manager')}}
 function recTime(){return ($('#rec-time')&&$('#rec-time').value)||doha().time}
 function mark(id,kind){const s=byId(id),k=ui.day+'|'+id,tm=recTime();const r=S.att[k];
   if(LIVE&&ui.role!=='pm'&&ui.day!==doha().date){toast(ui.lang==='ar'?'يمكنك تسجيل الحضور لليوم الحالي فقط.':'You can record attendance for today only.');return}
@@ -1160,18 +1212,30 @@ function daySummary(sc){
 VIEWS.rep=()=>{const R=daySummary(SC()),multi=R.sc.days.length>1,dt=d=>multi?`<td class="mono small">${d.slice(5)}</td>`:'',pp=(arr,cols)=>arr.length?`<div class="tbl-wrap"><table><tbody>${arr.map(cols).join('')}</tbody></table></div>`:`<div class="muted small">${t('None')}</div>`;
   return `<div class="row between"><h2>${t('Operational summary')} · ${esc(scopeLabel(R.sc))}</h2><div class="row"><button class="btn pri" data-act="ts-open">${t('Timesheet')}</button>${DL('sum-pdf','pdf')}${DL('sum-xlsx','xlsx')}</div></div>
   ${scopeBar()}
+  <div class="panel filters"><label style="flex:1;min-width:220px">${t('Person')}<input type="search" id="rp-in" style="width:100%" list="rp-list" value="${esc(ui.repPerson&&byId(ui.repPerson)?byId(ui.repPerson).code+' · '+byId(ui.repPerson).name:'')}" placeholder="${t('Search name, ID or phone')}" autocomplete="off"></label><datalist id="rp-list">${S.staff.map(x=>`<option value="${esc(x.code+' · '+x.name)}">`).join('')}</datalist>${ui.repPerson?`<button class="btn ghost" data-act="rp-clear">${t('Clear')}</button>`:''}</div>
+  ${ui.repPerson&&byId(ui.repPerson)?personHistory(byId(ui.repPerson),R.sc):''}
   ${kpiTiles(R.c,R.inc.length)}
   <div class="grid2">
    <section class="panel" style="display:flex;flex-direction:column;gap:10px;grid-column:1/-1"><h3>${t('By person')}</h3><div class="small muted">${ui.lang==='ar'?'كل شخص ضمن الفلاتر: كم مرة تأخر أو غاب. اختر مشرفاً لترى فريقه، واختر الحالة لترى المتأخرين أو الغائبين فقط.':'Everyone in the filters, with how often they were late or absent. Pick a supervisor to see their team, and a status to see only late or absent.'}</div>${personTable(byPerson(R.rows))}</section>
    <section class="panel" style="display:flex;flex-direction:column;gap:10px;grid-column:1/-1"><h3>${t('Withdrawals & replacements')} (${leavers(R.sc).length})</h3>${leaversTable(leavers(R.sc))}</section>
-   <section class="panel" style="display:flex;flex-direction:column;gap:10px"><h3>${t('Late arrivals')} (${R.late.length})</h3>${pp(R.late,({d,s,st})=>`<tr>${dt(d)}<td class="mono">${esc(s.code)}</td><td>${esc(s.name)}</td><td>${esc(supName(s.sup))}</td><td class="mono">${esc(st.r.in)}</td><td class="num mono">+${st.late}</td></tr>`)}</section>
+   <section class="panel" style="display:flex;flex-direction:column;gap:10px"><h3>${t('Late arrivals')} (${R.late.length})</h3>${pp(R.late,({d,s,st})=>`<tr>${dt(d)}<td class="mono">${esc(s.code)}</td><td>${esc(s.name)}</td><td>${esc(supName(s.sup))}</td><td class="mono">${esc(st.r.in)}</td><td class="num mono">+${st.late}</td><td class="nowrap">${lateFix(d,s,st)}</td></tr>`)}</section>
    <section class="panel" style="display:flex;flex-direction:column;gap:10px"><h3>${t('Absences')} (${R.absent.length}) · ${t('Not yet checked in')} (${R.notin.length})</h3>${pp([...R.absent,...R.notin],({d,s,st})=>`<tr>${dt(d)}<td class="mono">${esc(s.code)}</td><td>${esc(s.name)}</td><td>${esc(supName(s.sup))}</td><td>${chip(st.k)}</td><td>${waLink(s.phone)}</td></tr>`)}</section>
   </div>
   <div class="grid2"><section class="panel" style="display:flex;flex-direction:column;gap:10px"><h3>${t('By supervisor')}</h3>${breakdown(groupsBySup(R.rows,R.sc),'sup')}</section><section class="panel" style="display:flex;flex-direction:column;gap:10px"><h3>${t('By department')}</h3>${breakdown(groupsByDept(R.rows,R.sc),'dept')}</section></div>
   <section class="panel" style="display:flex;flex-direction:column;gap:10px"><h3>${t('Incidents')} (${R.inc.length})</h3>${incTable(R.inc)}</section>`};
+/* Everything that happened to one person: days, and every logged action that names them */
+function personEvents(s){const code=s.code;return S.audit.filter(a=>{const d=String(a.detail||'');return d.startsWith(code+' ')||d.includes(' '+code+' ')||d.includes('('+code+')')}).sort((a,b)=>a.ts.localeCompare(b.ts))}
+function personDays(s,sc){return sc.days.map(d=>{const st=statusOf(s,d),r=st.r||S.att[d+'|'+s.id]||{};return{d,st,r,mins:minsWorked(r)||0}}).filter(x=>x.st.k!=='unassigned'||x.r.in||x.r.absent)}
+function personHistory(s,sc){const ev=personEvents(s),days=personDays(s,sc),inc=S.incidents.filter(i=>i.staff===s.id),ar=ui.lang==='ar';
+  return `<section class="panel" style="display:flex;flex-direction:column;gap:10px"><div class="row between"><h3>${t('Person history')} · ${esc(s.code)} ${esc(s.name)}</h3><span class="small muted">${t(s.role)}${s.sup?' · '+esc(supName(s.sup)):''}${s.dept?' · '+esc(s.dept):''}</span></div>${lifeChips(s)}
+   <b class="small">${t('Days')} (${days.length})</b>${days.length?`<div class="tbl-wrap"><table><thead><tr><th>${t('Date')}</th><th>${t('Shift')}</th><th>${t('In')}</th><th>${t('Out')}</th><th>${t('Status')}</th><th>${t('Hours')}</th></tr></thead><tbody>${days.map(({d,st,r,mins})=>`<tr><td class="mono small">${esc(fmtShort(d))}</td><td class="small">${esc(st.sh?.name||'')}</td><td class="mono">${esc(r.in||'')}</td><td class="mono">${esc(r.out||'')}</td><td class="nowrap">${chip(st.k)}${st.late?` <span class="small mono">+${st.late}</span>`:''}${lateFix(d,s,st)}</td><td class="mono">${mins?hm(mins):''}</td></tr>`).join('')}</tbody></table></div>`:`<div class="muted small">${t('None')}</div>`}
+   <b class="small">${t('All actions')} (${ev.length+inc.length})</b>${ev.length||inc.length?`<div class="tbl-wrap"><table><thead><tr><th>${t('When')}</th><th>${t('Type')}</th><th>${t('Details')}</th><th>${t('By')}</th></tr></thead><tbody>${[...ev.map(a=>({ts:a.ts,type:a.type,detail:a.detail,by:a.by})),...inc.map(i=>({ts:i.date+'T'+(i.time||'00:00')+':00+03:00',type:'Incident',detail:`${i.cat} · ${i.sev} · ${i.desc}`,by:i.by}))].sort((a,b)=>a.ts.localeCompare(b.ts)).map(a=>`<tr><td class="mono small nowrap">${esc(tsFmt(a.ts))}</td><td class="small">${esc(a.type)}</td><td class="small">${esc(a.detail)}</td><td class="small">${esc(a.by||'')}</td></tr>`).join('')}</tbody></table></div>`:`<div class="muted small">${t('None')}</div>`}</section>`}
 function sumName(sc,ext){return `ITU-FieldOps-Summary-${sc.from}${sc.to!==sc.from?'_'+sc.to:''}.${ext}`}
 function sumPdf(){const R=daySummary(SC()),sc=R.sc,multi=sc.days.length>1,fl=scopeFiltersEn(sc);
   const doc=pdfStart(multi?'Operational Summary':'Daily Operational Summary',`${scopeLabelEn(sc)} · DECC, Doha${fl?' · '+fl:''}`);if(!doc)return;
+  {const ps=sc.person&&byId(sc.person);if(ps){pdfSection(doc,`Person history: ${ps.code} ${ps.name} (${ps.role}${ps.sup?', '+supName(ps.sup):''})`);
+    pdfTable(doc,['Date','Shift','In','Out','Status','Hours'],personDays(ps,sc).map(({d,st,r,mins})=>[d,st.sh?.name||'',r.in||'',r.out||'',STATUS_LABEL[st.k]+(st.late?' +'+st.late+' min':'')+(r.ok?' (changed to on time)':''),mins?hm(mins):'']));
+    pdfSection(doc,'All actions');pdfTable(doc,['When (Doha)','Type','Details','By'],personEvents(ps).map(a=>[tsFmt(a.ts),a.type,a.detail,a.by||'']))}}
   pdfKpis(doc,[{v:R.c.total,l:multi?'Assigned (person-days)':'Assigned',c:PDF.acc},{v:R.c.on_time,l:'On time'},{v:R.c.late,l:'Late'},{v:R.c.absent,l:'Absent'},{v:R.c.not_in,l:'Not checked in'},{v:R.inc.length,l:'Incidents'}]);
   const br=g=>g.map(([l,rows])=>{const c=statsOf(rows);return [l===t('Unassigned')?'Unassigned':l,c.total,c.on_time,c.late,c.absent,c.not_in]}).filter(r=>r[1]);
   const D=d=>multi?[d.slice(5)]:[],DH=multi?['Date']:[];
@@ -1184,9 +1248,10 @@ function sumPdf(){const R=daySummary(SC()),sc=R.sc,multi=sc.days.length>1,fl=sco
   pdfSection(doc,`Incidents (${R.inc.length})`);pdfTable(doc,[...(multi?['Date']:[]),'Time','Category','Severity','Department','Description','By'],R.inc.map(i=>[...(multi?[i.date.slice(5)]:[]),i.time,i.cat,i.sev,i.dept,i.desc,i.by]));
   pdfFinish(doc,sumName(sc,'pdf'))}
 function sumXlsx(){const R=daySummary(SC()),sc=R.sc,br=g=>g.map(([l,rows])=>{const c=statsOf(rows);return {Group:l,Team:c.total,'On time':c.on_time,Late:c.late,Absent:c.absent,'Not checked in':c.not_in}});
-  xlsx(sumName(sc,'xlsx'),{Summary:[{From:sc.from,To:sc.to,Department:sc.dept||'All',Shift:sc.shift?shiftById(sc.shift)?.name:'All',Supervisor:sc.sup?supName(sc.sup):'All',Status:sc.status?(ST_OPTS.find(x=>x[0]===sc.status)||[,''])[1]:'All',Assigned:R.c.total,'On time':R.c.on_time,Late:R.c.late,Absent:R.c.absent,'Not checked in':R.c.not_in,'Checked out':R.c.out,Incidents:R.inc.length}],
+  xlsx(sumName(sc,'xlsx'),{Summary:[{From:sc.from,To:sc.to,Department:sc.dept||'All',Shift:sc.shift?shiftById(sc.shift)?.name:'All',Supervisor:sc.sup?supName(sc.sup):'All',Person:sc.person&&byId(sc.person)?byId(sc.person).code+' '+byId(sc.person).name:'All',Status:sc.status?(ST_OPTS.find(x=>x[0]===sc.status)||[,''])[1]:'All',Assigned:R.c.total,'On time':R.c.on_time,Late:R.c.late,Absent:R.c.absent,'Not checked in':R.c.not_in,'Checked out':R.c.out,Incidents:R.inc.length}],
     'By person':byPerson(R.rows).map(p=>({'Employee ID':p.s.code,Name:p.s.name,Role:p.s.role,Supervisor:p.s.role==='Marshal'?supName(p.s.sup):'','On time':p.on_time,Late:p.late,'Late minutes':p.lateMin,Absent:p.absent,'Not checked in':p.not_in,'Days worked':p.worked||0,Hours:hm(p.mins),'Hours (decimal)':Math.round(p.mins/60*100)/100,'Rate QAR/h':rateOf(p.s),'Pay QAR':payOf(p.s,p.mins),Status:p.s.left?'Withdrew '+p.s.left:p.s.replaces?'Replacement':''})),
-    'Withdrawals':leavers(sc).map(s=>{const w=workedAll(s),n=byId(s.replacedBy);return {'Employee ID':s.code,Name:s.name,Role:s.role,Supervisor:s.role==='Marshal'?supName(s.sup):'','Not working from':s.left,Reason:s.leftReason||'',Notes:s.leftNote||'','Days worked':w.days,Hours:hm(w.mins),'Replaced by':n?n.code+' '+n.name:''}}),'By supervisor':br(groupsBySup(R.rows,sc)),'By department':br(groupsByDept(R.rows,sc)),Attendance:attExportRows(R.rows),Incidents:incExportRows(R.inc)})}
+    'Withdrawals':leavers(sc).map(s=>{const w=workedAll(s),n=byId(s.replacedBy);return {'Employee ID':s.code,Name:s.name,Role:s.role,Supervisor:s.role==='Marshal'?supName(s.sup):'','Not working from':s.left,Reason:s.leftReason||'',Notes:s.leftNote||'','Days worked':w.days,Hours:hm(w.mins),'Replaced by':n?n.code+' '+n.name:''}}),'By supervisor':br(groupsBySup(R.rows,sc)),'By department':br(groupsByDept(R.rows,sc)),Attendance:attExportRows(R.rows),Incidents:incExportRows(R.inc),
+    ...(sc.person&&byId(sc.person)?{'Person history':personEvents(byId(sc.person)).map(a=>({'When (Doha)':tsFmt(a.ts),Type:a.type,Details:a.detail,By:a.by||''}))}:{})})}
 
 /* ---------- Data & import ---------- */
 VIEWS.data=()=>{const p=ui.importPreview;return `<h2>${t('Data & import')}</h2>
@@ -1452,6 +1517,15 @@ document.addEventListener('click',e=>{const pr=e.target.closest('table.pick tbod
       const a={id:uid(),text:tx,by:actor(),byId:'pm',ts:new Date().toISOString()};S.ann.push(a);log('Announcement',tx.slice(0,100));save();annList();toast(t('Sent'));break}
     case 'ann-del':if(!can('announcements'))break;S.ann=S.ann.filter(a=>a.id!==id);log('Announcement','Removed an announcement');save();annList();break;
     case 'kpi':kpiList(v);break;
+    case 'late-ok':if(can('attendance'))lateSet(v,true);break;
+    case 'late-undo':if(can('attendance'))lateSet(v,false);break;
+    case 'rep-tog':ui.repOpen=ui.repOpen===id?'':id;render();break;
+    case 'rep-req':repRequest(id);break;
+    case 'req-list':if(can('staff'))reqList();break;
+    case 'req-pick':if(can('staff'))reqPick(id);break;
+    case 'req-no':if(can('staff'))reqRefuse(id);break;
+    case 'req-go':if(can('staff'))reqDo(id,v);break;
+    case 'rp-clear':ui.repPerson='';render();break;
     case 'grp':groupList(v);break;
     case 'free-open':if(can('staff'))freeOpen();break;
     case 'sup-open':if(can('staff'))supAssignOpen();break;
@@ -1466,7 +1540,7 @@ document.addEventListener('click',e=>{const pr=e.target.closest('table.pick tbod
     case 'pw-eye':{const i=$('#au-pass');i.type=i.type==='password'?'text':'password';el.innerHTML=i.type==='password'?ICON.eye:ICON.eyeOff;el.setAttribute('aria-label',i.type==='password'?'Show password':'Hide password');i.focus();break}
     case 'legend':legend();break;
     case 'close':closeModal();break;
-    case 'clear-f':for(const k in ui.f[v])ui.f[v][k]='';render();break;
+    case 'clear-f':for(const k in ui.f[v])ui.f[v][k]='';if(v==='scope')ui.repPerson='';render();break;
     case 'sel':if(el.checked)ui.sel.add(id);else ui.sel.delete(id);$('#res-staff').innerHTML=RES.staff();break;
     case 'sel-all':staffRows().forEach(s=>el.checked?ui.sel.add(s.id):ui.sel.delete(s.id));$('#res-staff').innerHTML=RES.staff();break;
     case 'sel-none':ui.sel.clear();$('#res-staff').innerHTML=RES.staff();break;
@@ -1523,9 +1597,10 @@ document.addEventListener('click',e=>{const pr=e.target.closest('table.pick tbod
   }
 });
 document.addEventListener('change',e=>{const el=e.target;
+  if(el.id==='rp-in'){const v=el.value.trim().toLowerCase(),code=v.split(' · ')[0],p=S.staff.find(x=>x.code.toLowerCase()===code)||S.staff.find(x=>x.name.toLowerCase()===v)||S.staff.find(x=>x.name.toLowerCase().includes(v)||x.code.toLowerCase().includes(v));ui.repPerson=v&&p?p.id:'';if(v&&!p)toast(t('None'));render();return}
   if(el.dataset.actChange==='scope-day'){if(el.value){ui.f.scope.from=el.value;ui.f.scope.to=el.value;render()}return}
   if(el.dataset.actChange==='day'){ui.day=el.value;ui.f.scope.from='';ui.f.scope.to='';render();return}
-  if(el.dataset.actChange==='role'){ui.role=el.value;Prefs.set('role',el.value);ui.tab='';ui.annShown='';render();setTimeout(annPopup,200);return}
+  if(el.dataset.actChange==='role'){ui.role=el.value;Prefs.set('role',el.value);ui.tab='';ui.annShown='';render();setTimeout(annPopup,200);setTimeout(reqPopup,300);return}
   if(el.dataset.assign&&can('staff')){const s=byId(el.dataset.id);if(assign(s,el.dataset.assign,el.value)){save();toast(t('Saved'));$('#res-staff').innerHTML=RES.staff()}return}
   if(el.id==='imp-file'&&el.files[0]){if(!window.XLSX){toast('Excel library failed to load.');return}readImport(el.files[0]);return}
   if(el.id==='set-rate-m'||el.id==='set-rate-s'){const k=el.id==='set-rate-m'?'rateM':'rateS',v=Math.max(0,parseFloat(el.value)||0);S.settings[k]=v;log('Settings',`Hourly rate ${k==='rateM'?'Marshal':'Supervisor'}: ${v} QAR`);save();toast(t('Saved'));return}

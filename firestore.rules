@@ -80,6 +80,12 @@ service cloud.firestore {
       allow create: if signedIn() && request.resource.data.email == em();
       allow update, delete: if canP('accounts');
     }
+    // A supervisor asks for a replacement for one of their own marshals; staff managers answer it.
+    match /requests/{id} {
+      allow read: if canP('staff') || (isSup() && resource.data.supId == me());
+      allow create: if canP('staff') || (isSup() && request.resource.data.supId == me() && request.resource.data.status == 'open' && staffSup(request.resource.data.staffId) == me());
+      allow update, delete: if canP('staff');
+    }
     // Append-only audit trail. Shift changes need the shifts permission.
     match /audit/{id} {
       allow read: if office();
