@@ -42,9 +42,9 @@ service cloud.firestore {
     // One doc per person per day: {date}_{staffId}
     match /attendance/{id} {
       allow read: if office() || (isSup() && resource.data.sup == me());
-      allow create: if canP('attendance') || canP('staff') || canP('settings') || (isSup() && request.resource.data.sup == me() && staffSup(request.resource.data.staffId) == me());
-      allow update: if canP('attendance') || canP('staff') || canP('settings') || (isSup() && resource.data.sup == me() && request.resource.data.sup == me() && staffSup(request.resource.data.staffId) == me());
-      allow delete: if canP('attendance') || canP('staff') || canP('settings') || (isSup() && resource.data.sup == me());
+      allow create: if canP('attendance') || canP('checkin') || canP('staff') || canP('settings') || (isSup() && request.resource.data.sup == me() && staffSup(request.resource.data.staffId) == me());
+      allow update: if canP('attendance') || canP('checkin') || canP('staff') || canP('settings') || (isSup() && resource.data.sup == me() && request.resource.data.sup == me() && staffSup(request.resource.data.staffId) == me());
+      allow delete: if canP('attendance') || canP('checkin') || canP('staff') || canP('settings') || (isSup() && resource.data.sup == me());
     }
     match /incidents/{id} {
       allow read: if office() || (isSup() && resource.data.byId == me());
