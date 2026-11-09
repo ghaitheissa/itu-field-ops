@@ -59,6 +59,7 @@ table.stk thead th:nth-child(1),table.stk thead th:nth-child(3){z-index:3;backgr
 #np-cfm[hidden],#np-btns[hidden]{display:none!important}
 .cl{display:inline-flex;gap:4px;vertical-align:middle;margin-inline-start:6px}.cl a{transform:scale(.9)}
 .deptbtn{max-width:220px;white-space:normal;text-align:start;min-height:34px;font-weight:500}
+details.paste{display:flex;flex-direction:column;gap:8px}details.paste summary{cursor:pointer;font-weight:600;color:var(--accent)}details.paste textarea{width:100%;font-family:var(--f-mono,monospace);font-size:12px;margin-top:6px}
 .duty-sum .ds{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}.duty-sum .ds.ok b{color:#1f9d55}.duty-sum .ds.bad b{color:var(--bad)}
 .duty-sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;margin-top:12px}.duty-sum button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface);cursor:pointer;text-align:start;color:var(--fg)}
 .duty-sum b{font-size:22px;line-height:1;font-family:var(--f-display)}.duty-sum span{font-size:11.5px;color:var(--muted)}.duty-sum button:first-child b{color:var(--bad)}.duty-sum .ok b{color:#1f9d55}.duty-sum button.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
@@ -1298,7 +1299,11 @@ VIEWS.data=()=>{const p=ui.importPreview;return `<h2>${t('Data & import')}</h2>
    <div class="small muted">${ui.lang==='ar'?'الأعمدة المقبولة: Employee ID، Full Name، Role (Marshal / Supervisor)، Phone. الاستيراد يستبدل قائمة الموظفين ويُبقي الجميع غير موزَّعين.':'Columns: Employee ID, Full Name, Role (Marshal or Supervisor), Phone. Importing replaces the staff list and keeps everyone unassigned.'}</div>
    ${S.staff.length&&can('staff')?`<div class="panel" style="border-color:var(--accent);display:flex;flex-direction:column;gap:8px"><b>${ui.lang==='ar'?'تحديث القائمة من ملف جديد (بيحافظ على التعيين)':'Update the list from a newer file (keeps assignments)'}</b>
     <div class="small muted">${ui.lang==='ar'?'اختار الإكسل الجديد. بيقارنه بالقائمة الحالية بالـ QID أو التلفون أو الاسم، وبيوريك مين جديد ومين مش موجود ومين مكرر قبل ما يغيّر أي شي.':'Pick the newer Excel. It is compared with the current list by QID, phone or name, and you see who is new, missing or duplicated before anything changes.'}</div>
-    <input type="file" id="upd-file" accept=".xlsx,.xls,.csv">${ui.updPreview?updView(ui.updPreview):''}</div>
+    <input type="file" id="upd-file" accept=".xlsx,.xls,.csv">
+    <details class="paste"${ui.updPreview?'':' open'}><summary>${ui.lang==='ar'?'أو انسخ والصق من الإكسل (أسهل إذا الملف مكركب)':'Or copy and paste from Excel (easier if the file is messy)'}</summary>
+     <div class="small muted">${ui.lang==='ar'?'بالإكسل حدد الأعمدة (الاسم، والتلفون، والـ QID، والوظيفة) مع سطر العناوين إذا فيك، واعمل Copy، والصقهن هون.':'In Excel select the columns (name, phone, QID, designation), with the headings row if you can, copy, and paste here.'}</div>
+     <textarea id="upd-paste" rows="5" placeholder="NAME&#9;MOBILE NO&#9;Q.ID NUMBER&#9;DESIGNATION"></textarea><div class="row" style="justify-content:flex-end"><button class="btn pri" data-act="upd-paste">${ui.lang==='ar'?'قارن':'Compare'}</button></div></details>
+    ${ui.updPreview?updView(ui.updPreview):''}</div>
     <div class="small muted">${ui.lang==='ar'?'أو استبدال كامل (بيمسح كل التعيين والحضور):':'Or full replace (clears all assignments and attendance):'}</div>`:''}
    <div class="drop"><input type="file" id="imp-file" accept=".xlsx,.xls,.csv"><button class="btn sm ghost" data-act="tpl">${t('Download template')}</button></div>
    ${can('staff')?`<div class="row" style="align-items:center;gap:10px"><span class="small muted">${ui.lang==='ar'?'أو ضيف شخص واحد بإيدك:':'Or add one person by hand:'}</span><button class="btn pri" data-act="st-add">+ ${t('Add person')}</button></div>`:''}
@@ -1503,7 +1508,7 @@ function updDiff(rows,file){const used=new Set(),seen={q:new Map(),p:new Map(),n
     const free=x=>!used.has(x.id);
     const m=(q&&pool.find(x=>free(x)&&nDig(x.qid)===q))||(ph&&ph.length>=7&&pool.find(x=>free(x)&&nPh(x.phone)===ph))||pool.find(x=>free(x)&&nNm(x.name)===nm);
     if(!m){add.push(r);continue}used.add(m.id);
-    const diff=[];if(nNm(m.name)!==nm)diff.push(['Name',m.name,r.name]);if(r.phone&&nPh(m.phone)!==ph)diff.push(['Phone',m.phone,r.phone]);if(r.qid&&nDig(m.qid)!==q)diff.push(['QID',m.qid||'—',r.qid]);if(r.nat&&(m.nat||'')!==r.nat)diff.push(['Nationality',m.nat||'—',r.nat]);if(m.role!==r.role)diff.push(['Role',m.role,r.role]);
+    const diff=[];if(nNm(m.name)!==nm)diff.push(['Name',m.name,r.name]);if(r.phone&&nPh(m.phone)!==ph)diff.push(['Phone',m.phone,r.phone]);if(r.qid&&nDig(m.qid)!==q)diff.push(['QID',m.qid||'—',r.qid]);if(r.nat&&(m.nat||'')!==r.nat)diff.push(['Nationality',m.nat||'—',r.nat]);if(r.rk&&m.role!==r.role)diff.push(['Role',m.role,r.role]);
     (diff.length?chg:keep).push({s:m,r,diff})}
   const del=pool.filter(x=>!used.has(x.id)).map(x=>({s:x,worked:attKeys(x.id).length>0||S.incidents.some(i=>i.staff===x.id)}));
   return {file,add,chg,keep:keep.length,del,dup,total:rows.length}}
@@ -1525,20 +1530,43 @@ function updApply(){const u=ui.updPreview;if(!u)return;const today=doha().date,d
   for(const r of u.add){const n={id:uid(),code:nextCode(r.role),name:r.name,role:r.role,phone:r.phone,qid:r.qid,nat:r.nat,sup:'',dept:'',shifts:[]};S.staff.push(n);log('Staff added',`${n.code} ${n.name} (${n.role}) from ${u.file}`);na++}
   log('Import',`Staff list updated from ${u.file}: ${na} added, ${nd} deleted, ${nw} withdrawn, ${nc} details changed, ${u.dup.length} duplicates skipped; assignments kept`);
   ui.updPreview=null;save();render();toast(ui.lang==='ar'?`تم: ${na} انضافوا، ${nd+nw} انشالوا، ${nc} تعدّلوا`:`Done: ${na} added, ${nd+nw} removed, ${nc} updated`)}
-function readImport(file,upd){const rd=new FileReader();rd.onload=()=>{try{
-  const wb=XLSX.read(new Uint8Array(rd.result),{type:'array'}),json=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
-  if(!json.length){toast('The sheet is empty.');return}
-  const keys=Object.keys(json[0]),find=re=>keys.find(k=>re.test(k.trim()));
+/* Messy workbooks: look through every sheet, find the row with the headings, read values (not formulas) */
+const NAME_RE=/name|الاسم/i;
+function tableFrom(aoa){for(let i=0;i<Math.min(aoa.length,40);i++){const row=aoa[i]||[];if(row.some(c=>NAME_RE.test(String(c||''))&&String(c).length<40)){
+    const hdr=row.map((c,j)=>String(c||'').trim()||('col'+j));return aoa.slice(i+1).map(r=>{const o={};hdr.forEach((h,j)=>o[h]=r&&r[j]!=null?String(r[j]):'');return o}).filter(o=>Object.values(o).some(v=>String(v).trim()))}}
+  return null}
+/* Pasted rows without headings: guess the columns from what the cells look like */
+function guessRows(aoa){return aoa.map(r=>{const cells=r.map(c=>String(c||'').trim()).filter(Boolean),o={};
+    for(const c of cells){const d=c.replace(/\D/g,'');
+      if(!o['QID']&&/^\d{11}$/.test(d)&&d.length===c.replace(/\s/g,'').length)o['QID']=c;
+      else if(!o['Phone']&&/^(\+?974|00974)?[\s-]*\d{4}[\s-]?\d{4}$/.test(c))o['Phone']=c;
+      else if(!o['Role']&&/^(marshal|supervisor|مارشال|مشرف)/i.test(c))o['Role']=c;
+      else if(!o['Name']&&/[A-Za-z\u0600-\u06FF]{2,}\s+[A-Za-z\u0600-\u06FF]{2,}/.test(c))o['Name']=c;
+      else if(o['Name']&&!o['Nationality']&&/^[A-Za-z\u0600-\u06FF ]{3,25}$/.test(c))o['Nationality']=c}
+    return o}).filter(o=>o.Name)}
+function workbookJson(wb){let best=null;for(const n of wb.SheetNames){const ws=wb.Sheets[n];if(!ws||!ws['!ref'])continue;
+    const aoa=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:false,blankrows:false}),tb=tableFrom(aoa);if(!tb||!tb.length)continue;
+    const k=Object.keys(tb[0]).find(h=>NAME_RE.test(h)),n2=tb.filter(r=>String(r[k]||'').trim()).length;if(!best||n2>best.n)best={json:tb,n:n2,sheet:n}}
+  return best}
+function importJson(json,fname,upd){
+  if(!json||!json.length){toast(ui.lang==='ar'?'ما لقيت أسماء.':'No names found.');return}
+  const keys=[...new Set(json.flatMap(o=>Object.keys(o)))],find=re=>keys.find(k=>re.test(k.trim()));
   const kName=find(/name|الاسم/i),kId=find(/employee\s*(id|no|code)|staff\s*(id|no|code)|^code$|^id$/i),kQid=find(/q\.?\s*id|qid|id\s*number|رقم الهوية|البطاقة/i),kNat=find(/nationality|الجنسية/i),kRole=find(/role|position|title|job|designation|الوظيفة|المسمى|الدور/i),kPhone=find(/phone|mobile|tel|جوال|هاتف/i);
   if(!kName){toast('No name column found. Use the template headings.');return}
-  const warn=[],cnt={Supervisor:0,Marshal:0},rows=json.filter(r=>String(r[kName]).trim()).map(r=>{const role=/super|مشرف/i.test(String(kRole?r[kRole]:''))?'Supervisor':'Marshal';cnt[role]++;
+  const warn=[],cnt={Supervisor:0,Marshal:0},rows=json.filter(r=>{const v=String(r[kName]||'').trim();return v&&!/^(total|grand total|المجموع|الإجمالي)$/i.test(v)&&!/^[\d\s.,-]+$/.test(v)&&!NAME_RE.test(v)}).map(r=>{const role=/super|مشرف/i.test(String(kRole?r[kRole]:''))?'Supervisor':'Marshal';cnt[role]++;
     return {code:String(kId?r[kId]:'').trim()||(role==='Supervisor'?'SUP-'+String(cnt[role]).padStart(2,'0'):'MAR-'+String(cnt[role]).padStart(3,'0')),name:String(r[kName]).replace(/\s+/g,' ').trim(),role,phone:String(kPhone?r[kPhone]:'').trim(),qid:String(kQid?r[kQid]:'').trim(),nat:String(kNat?r[kNat]:'').trim()}});
-  if(upd){ui.updPreview=updDiff(rows,file.name);ui.importPreview=null;render();return}
+  if(upd){rows.forEach(r=>r.rk=!!kRole);ui.updPreview=updDiff(rows,fname);ui.importPreview=null;render();return}
   const nm=rows.filter(r=>r.role==='Marshal').length,ns=rows.length-nm;
   if(!kRole)warn.push('No role column found: everyone was read as Marshal.');
   if(nm!==60||ns!==8)warn.push(`Expected 60 Marshals and 8 Supervisors; the file has ${nm} and ${ns}.`);
   const dup=rows.map(r=>r.code).filter((c,i,a)=>a.indexOf(c)!==i);if(dup.length)warn.push('Duplicate IDs: '+[...new Set(dup)].join(', '));
-  ui.importPreview={rows,warn,file:file.name};render();}catch(e){toast('Could not read this file. Save it as .xlsx and try again.')}};rd.readAsArrayBuffer(file)}
+  ui.importPreview={rows,warn,file:fname};render()}
+function readImport(file,upd){const rd=new FileReader();rd.onload=()=>{try{
+  const wb=XLSX.read(new Uint8Array(rd.result),{type:'array',cellFormula:false}),b=workbookJson(wb);
+  if(!b){toast(ui.lang==='ar'?'ما لقيت عمود الاسم بأي ورقة. جرّب النسخ واللصق.':'No name column found in any sheet. Try copy and paste instead.');return}
+  importJson(b.json,file.name+(wb.SheetNames.length>1?' · '+b.sheet:''),upd)}catch(e){console.error(e);toast('Could not read this file. Save it as .xlsx and try again.')}};rd.readAsArrayBuffer(file)}
+function readPaste(txt){const aoa=String(txt||'').split(/\r?\n/).map(l=>l.split('\t')).filter(r=>r.some(c=>c.trim()));if(!aoa.length){toast(ui.lang==='ar'?'الصق الأسماء أولاً.':'Paste the names first.');return}
+  const tb=tableFrom(aoa);importJson(tb&&tb.length?tb:guessRows(aoa),ui.lang==='ar'?'لصق من إكسل':'Pasted from Excel',true)}
 function loadDemo(){const r=rng(9),sp=sups(),mar=S.staff.filter(s=>s.role==='Marshal'),n=doha();
   S.staff.forEach(s=>{s.sup='';s.dept='';s.shifts=[]});S.att={};S.incidents=[];
   sp.forEach((s,i)=>{s.dept=S.departments[i%S.departments.length];s.shifts=[{id:S.shifts[i<3?0:i<6?1:2]?.id||S.shifts[0].id,from:EVENT_START}]});
@@ -1654,6 +1682,7 @@ document.addEventListener('click',e=>{if(e.target.closest('a.tel,a.wa'))return;c
     case 'audit-pdf':{const l=auditList(),doc=pdfStart('Audit Log',`${l.length} entries`);if(!doc)break;pdfTable(doc,['Recorded','Type','Detail','By'],l.map(a=>[tsFmt(a.ts),a.type,a.detail,a.by]));pdfFinish(doc,'ITU-FieldOps-Audit-Log.pdf');break}
     case 'tpl':xlsx('ITU-FieldOps-Staff-Template.xlsx',{Staff:[{'Employee ID':'SUP-01','Full Name':'Example Supervisor','Role':'Supervisor','Phone':'+974 5000 0000'},{'Employee ID':'MAR-001','Full Name':'Example Marshal','Role':'Marshal','Phone':'+974 5000 0001'}]});break;
     case 'imp-cancel':ui.importPreview=null;render();break;
+    case 'upd-paste':if(can('staff'))readPaste($('#upd-paste').value);break;
     case 'upd-cancel':ui.updPreview=null;render();break;
     case 'upd-go':if(can('staff')&&ui.updPreview){const u=ui.updPreview,ar=ui.lang==='ar';confirmBox(ar?`رح ينضاف ${u.add.length}، وينشال ${u.del.length}، ويتعدّل ${u.chg.length}. التعيين للباقيين بيضل متل ما هو. متابعة؟`:`${u.add.length} will be added, ${u.del.length} removed and ${u.chg.length} updated. Everyone else keeps their assignment. Continue?`,updApply,ar?'موافق':'OK')}break;
     case 'imp-go':confirmBox(ui.lang==='ar'?'سيتم استبدال قائمة الموظفين وحذف الحضور والحوادث الحالية. هل تريد المتابعة؟':'This replaces the staff list and clears current attendance and incidents. Continue?',()=>{const p=ui.importPreview,keep={departments:S.departments,shifts:S.shifts,settings:S.settings,audit:S.audit};
