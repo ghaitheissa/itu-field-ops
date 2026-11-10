@@ -1480,10 +1480,10 @@ function personTable(list){if(!list.length)return `<div class="muted small">${t(
   return `<div class="tbl-wrap"><table><thead><tr><th>${t('ID')}</th><th>${t('Name')}</th><th>${t('Supervisor')}</th><th class="num">${t('Days worked')}</th><th class="num">${t('On time')}</th><th class="num">${t('Late')}</th><th class="num">${t('Late (min)')}</th><th class="num">${t('Absent')}</th><th class="num">${t('Not checked in')}</th><th class="num">${t('Hours')}</th>${pay?`<th class="num">${t('Pay (QAR)')}</th>`:''}<th>${t('Phone')}</th></tr></thead><tbody>
   ${list.map(p=>`<tr><td class="mono">${esc(p.s.code)}</td><td>${esc(p.s.name)}${lifeChips(p.s)}</td><td class="small">${esc(p.s.role==='Marshal'?supName(p.s.sup):t('Supervisor'))}</td><td class="num">${p.worked||0}</td><td class="num">${p.on_time||''}</td><td class="num"${p.late?' style="color:var(--warn);font-weight:700"':''}>${p.late||''}</td><td class="num mono">${p.lateMin?'+'+p.lateMin:''}</td><td class="num"${p.absent?' style="color:var(--bad);font-weight:700"':''}>${p.absent||''}</td><td class="num">${p.not_in||''}</td><td class="num mono">${hm(p.mins)}</td>${pay?`<td class="num mono">${money((p.pay||0))}</td>`:''}<td class="mono small">${waLink(p.s.phone)}</td></tr>`).join('')}
   <tr style="font-weight:700"><td></td><td>${t('Total')}</td><td colspan="7"></td><td class="num mono">${hm(tm)}</td>${pay?`<td class="num mono">${money(tp)}</td>`:''}<td></td></tr></tbody></table></div><div class="small muted">${list.length} ${t('results')}${pay?'':' · '+(ui.lang==='ar'?'حدّد أجر الساعة من البيانات › الإعدادات لحساب الرواتب.':'Set the hourly rate in Data & import › Settings to calculate pay.')} · ${ui.lang==='ar'?'الساعات تُحسب من الدخول إلى الخروج.':'Hours count from check-in to check-out.'}</div>`}
-/* PDF choice for one day: 'a' = assigned to a supervisor (and the supervisors), 'u' = marshals with no supervisor, '' = all */
-const asgMatch=(s,a)=>!a||(a==='u'?s.role==='Marshal'&&!s.sup:s.role!=='Marshal'||!!s.sup);
-function daySummary(sc,a){
-  const rows=scopeRows(S.staff,sc).filter(r=>asgMatch(r.s,a)),c=statsOf(rows),inc=scopeIncidents(sc),k=x=>rows.filter(r=>r.st.k===x);
+/* PDF choice for one day: 'a' = only the staff working that day, 'u' = only the staff off that day (left or not started yet), '' = all */
+const offOn=(sc,d)=>S.staff.filter(s=>!active(s,d)&&inScope(s,{...sc,shift:''})).sort((a,b)=>a.code.localeCompare(b.code,undefined,{numeric:true}));
+function daySummary(sc){
+  const rows=scopeRows(S.staff,sc),c=statsOf(rows),inc=scopeIncidents(sc),k=x=>rows.filter(r=>r.st.k===x);
   return {sc,rows,c,inc,late:k('late').sort((a,b)=>a.d.localeCompare(b.d)||b.st.late-a.st.late),absent:k('absent'),notin:k('not_in')};
 }
 VIEWS.rep=()=>{const R=daySummary(SC()),multi=R.sc.days.length>1,dt=d=>multi?`<td class="mono small">${d.slice(5)}</td>`:'',pp=(arr,cols)=>arr.length?`<div class="tbl-wrap"><table><tbody>${arr.map(cols).join('')}</tbody></table></div>`:`<div class="muted small">${t('None')}</div>`;
@@ -1544,14 +1544,17 @@ function pdfTotals(doc,label,T,strong){if(doc._y>PDF.H-34){doc.addPage();doc._y=
   doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(...(strong?[255,255,255]:PDF.mut));doc.text(label.toUpperCase(),PDF.L+4,y+9);
   const x0=PDF.L+30,cw=(W-32)/cells.length;cells.forEach(([l,v,c],i)=>{const x=x0+i*cw;doc.setFont('helvetica','normal');doc.setFontSize(6.5);doc.setTextColor(...(strong?[220,220,220]:PDF.mut));doc.text(l,x,y+5.2);
     doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(...(strong?[255,255,255]:c));doc.text(String(v),x,y+11.6)});doc._y=y+15}
-function sumPdfPick(){const sc=SC();if(sc.from!==sc.to)return sumPdfRun();const rows=scopeRows(S.staff,sc),n=a=>rows.filter(r=>asgMatch(r.s,a)).length;
+function sumPdfPick(){const sc=SC();if(sc.from!==sc.to)return sumPdfRun();const on=new Set(scopeRows(S.staff,sc).map(r=>r.s.id)).size,off=offOn(sc,sc.from).length,n=a=>a==='a'?on:a==='u'?off:on+off;
   modal(`<h2>${t('Download PDF')}</h2><div class="muted small">${esc(scopeLabel(sc))}</div><div style="display:flex;flex-direction:column;gap:8px">
    <button class="btn" data-act="sum-pdf-go" data-v="a">${t('Assigned only')} <span class="muted">· ${n('a')}</span></button>
    <button class="btn" data-act="sum-pdf-go" data-v="u">${t('Unassigned only')} <span class="muted">· ${n('u')}</span></button>
    <button class="btn pri" data-act="sum-pdf-go" data-v="">${t('All')} <span class="muted">· ${n('')}</span></button></div>
    <div class="row" style="justify-content:flex-end"><button class="btn ghost" data-act="close">${t('Cancel')}</button></div>`)}
 function sumPdfRun(a){try{sumPdf(a)}catch(e){console.error(e);toast('PDF error: '+(e&&e.message||e));clearTimeout(toast.t);toast.t=setTimeout(()=>$('#toast').hidden=true,15000)}}
-function sumPdf(a){const R=daySummary(SC(),a),sc=R.sc,multi=sc.days.length>1,fl=[scopeFiltersEn(sc),a==='a'?'Assigned staff only':a==='u'?'Unassigned marshals only':''].filter(Boolean).join(' · ');
+function sumPdf(a){const R=daySummary(SC()),sc=R.sc,multi=sc.days.length>1,fl=[scopeFiltersEn(sc),a==='a'?'Assigned staff only':a==='u'?'Unassigned staff only':''].filter(Boolean).join(' · ');
+  if(a==='u'){const l=offOn(sc,sc.from),doc=pdfStart('Unassigned Staff',`${scopeLabelEn(sc)} · DECC, Doha · ${l.length} people not working this day${scopeFiltersEn(sc)?' · '+scopeFiltersEn(sc):''}`);if(!doc)return;
+    pdfTable(doc,['ID','Name','Role','Supervisor','Phone','Not working from','Reason'],l.map(s=>[s.code,s.name,s.role,s.role==='Marshal'?supName(s.sup)||'-':'-',s.phone||'',s.left&&sc.from>=s.left?s.left:'Starts '+(s.joined||''),s.left&&sc.from>=s.left?s.leftReason||'':'Not started yet']));
+    return pdfFinish(doc,sumName(sc,'pdf').replace('.pdf','-Unassigned.pdf'))}
   const doc=pdfStart(multi?'Operational Summary':'Daily Operational Summary',`${scopeLabelEn(sc)} · DECC, Doha${fl?' · '+fl:''}`);if(!doc)return;
   {const ps=sc.person&&byId(sc.person);if(ps){pdfSection(doc,`Person history: ${ps.code} ${ps.name} (${ps.role}${ps.sup?', '+supName(ps.sup):''})`);
     pdfTable(doc,['Date','Shift','In','Out','Status','Hours'],personDays(ps,sc).map(({d,st,r,mins})=>[d,st.sh?.name||'',r.in||'',r.out||'',STATUS_LABEL[st.k]+(st.late?' +'+st.late+' min':'')+(r.ok?' (changed to on time)':''),mins?hm(mins):'']));
@@ -1563,7 +1566,7 @@ function sumPdf(a){const R=daySummary(SC(),a),sc=R.sc,multi=sc.days.length>1,fl=
   pdfSection(doc,'By supervisor (overview)');pdfTable(doc,['Supervisor','Team','On time','Late','Absent','Not in'],br(groupsBySup(R.rows,sc)));
   pdfSection(doc,'By department');pdfTable(doc,['Department','Team','On time','Late','Absent','Not in'],br(groupsByDept(R.rows,sc)));
   {const bp=byPerson(R.rows);pdfSection(doc,`By person (${bp.length})`);const pay=hasRate();pdfTable(doc,['ID','Name','Supervisor','Worked','On time','Late','Late min','Absent','Not in','Hours',...(pay?['Pay QAR']:[])],[...bp.map(p=>[p.s.code,p.s.name+(p.s.left?' (withdrew '+p.s.left.slice(5)+')':''),p.s.role==='Marshal'?supName(p.s.sup)||'-':'Supervisor',p.worked||0,p.on_time||'',p.late||'',p.lateMin?'+'+p.lateMin:'',p.absent||'',p.not_in||'',hm(p.mins),...(pay?[money((p.pay||0))]:[])]),['','Total','','','','','','','',hm(bp.reduce((n,p)=>n+p.mins,0)),...(pay?[money(bp.reduce((n,p)=>n+(p.pay||0),0))]:[])]]);
-    const lv=leavers(sc);pdfSection(doc,`Withdrawals and replacements (${lv.length})`);pdfTable(doc,['ID','Name','Role','Not working from','Reason','Days worked','Hours','Replaced by'],lv.map(s=>{const w=workedAll(s),n=byId(s.replacedBy);return [s.code,s.name,s.role,s.left,s.leftReason||'',w.days,hm(w.mins),n?n.code+' '+n.name:'-']}))}
+    if(a!=='a'){const lv=leavers(sc);pdfSection(doc,`Withdrawals and replacements (${lv.length})`);pdfTable(doc,['ID','Name','Role','Not working from','Reason','Days worked','Hours','Replaced by'],lv.map(s=>{const w=workedAll(s),n=byId(s.replacedBy);return [s.code,s.name,s.role,s.left,s.leftReason||'',w.days,hm(w.mins),n?n.code+' '+n.name:'-']}))}}
   pdfSection(doc,`Late arrivals (${R.late.length})`);pdfTable(doc,[...DH,'ID','Name','Supervisor','Shift','In','Late'],R.late.map(({d,s,st})=>[...D(d),s.code,s.name,supName(s.sup),st.sh?.name||'',st.r.in,'+'+st.late+' min']));
   pdfSection(doc,`Absent and not checked in (${R.absent.length+R.notin.length})`);pdfTable(doc,[...DH,'ID','Name','Supervisor','Shift','Status'],[...R.absent,...R.notin].map(({d,s,st})=>[...D(d),s.code,s.name,supName(s.sup),st.sh?.name||'',STATUS_LABEL[st.k]]));
   pdfSection(doc,`Incidents (${R.inc.length})`);pdfTable(doc,[...(multi?['Date']:[]),'Time','Category','Severity','Department','Description','By'],R.inc.map(i=>[...(multi?[i.date.slice(5)]:[]),i.time,i.cat,i.sev,i.dept,i.desc,i.by]));
