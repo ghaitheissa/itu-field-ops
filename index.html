@@ -1480,11 +1480,10 @@ function personTable(list){if(!list.length)return `<div class="muted small">${t(
   return `<div class="tbl-wrap"><table><thead><tr><th>${t('ID')}</th><th>${t('Name')}</th><th>${t('Supervisor')}</th><th class="num">${t('Days worked')}</th><th class="num">${t('On time')}</th><th class="num">${t('Late')}</th><th class="num">${t('Late (min)')}</th><th class="num">${t('Absent')}</th><th class="num">${t('Not checked in')}</th><th class="num">${t('Hours')}</th>${pay?`<th class="num">${t('Pay (QAR)')}</th>`:''}<th>${t('Phone')}</th></tr></thead><tbody>
   ${list.map(p=>`<tr><td class="mono">${esc(p.s.code)}</td><td>${esc(p.s.name)}${lifeChips(p.s)}</td><td class="small">${esc(p.s.role==='Marshal'?supName(p.s.sup):t('Supervisor'))}</td><td class="num">${p.worked||0}</td><td class="num">${p.on_time||''}</td><td class="num"${p.late?' style="color:var(--warn);font-weight:700"':''}>${p.late||''}</td><td class="num mono">${p.lateMin?'+'+p.lateMin:''}</td><td class="num"${p.absent?' style="color:var(--bad);font-weight:700"':''}>${p.absent||''}</td><td class="num">${p.not_in||''}</td><td class="num mono">${hm(p.mins)}</td>${pay?`<td class="num mono">${money((p.pay||0))}</td>`:''}<td class="mono small">${waLink(p.s.phone)}</td></tr>`).join('')}
   <tr style="font-weight:700"><td></td><td>${t('Total')}</td><td colspan="7"></td><td class="num mono">${hm(tm)}</td>${pay?`<td class="num mono">${money(tp)}</td>`:''}<td></td></tr></tbody></table></div><div class="small muted">${list.length} ${t('results')}${pay?'':' · '+(ui.lang==='ar'?'حدّد أجر الساعة من البيانات › الإعدادات لحساب الرواتب.':'Set the hourly rate in Data & import › Settings to calculate pay.')} · ${ui.lang==='ar'?'الساعات تُحسب من الدخول إلى الخروج.':'Hours count from check-in to check-out.'}</div>`}
-/* PDF choice for one day: 'a' = staff working that day with a supervisor (and the supervisors), 'u' = marshals with no supervisor that day plus staff off that day, '' = all */
-const hasSup=s=>s.role!=='Marshal'||!!s.sup;
-const offOn=(sc,d)=>{const on=new Set(scopeRows(S.staff,sc).map(r=>r.s.id));return S.staff.filter(s=>(!active(s,d)||on.has(s.id)&&!hasSup(s))&&inScope(s,{...sc,shift:''})).sort((a,b)=>a.code.localeCompare(b.code,undefined,{numeric:true}))};
-function daySummary(sc,a){
-  const rows=scopeRows(S.staff,sc).filter(r=>a!=='a'||hasSup(r.s)),c=statsOf(rows),inc=scopeIncidents(sc),k=x=>rows.filter(r=>r.st.k===x);
+/* PDF choice for one day: 'a' = everyone working that day (the Dashboard's Assigned count), 'u' = staff off that day (left or not started yet), '' = all */
+const offOn=(sc,d)=>S.staff.filter(s=>!active(s,d)&&inScope(s,{...sc,shift:''})).sort((a,b)=>a.code.localeCompare(b.code,undefined,{numeric:true}));
+function daySummary(sc){
+  const rows=scopeRows(S.staff,sc),c=statsOf(rows),inc=scopeIncidents(sc),k=x=>rows.filter(r=>r.st.k===x);
   return {sc,rows,c,inc,late:k('late').sort((a,b)=>a.d.localeCompare(b.d)||b.st.late-a.st.late),absent:k('absent'),notin:k('not_in')};
 }
 VIEWS.rep=()=>{const R=daySummary(SC()),multi=R.sc.days.length>1,dt=d=>multi?`<td class="mono small">${d.slice(5)}</td>`:'',pp=(arr,cols)=>arr.length?`<div class="tbl-wrap"><table><tbody>${arr.map(cols).join('')}</tbody></table></div>`:`<div class="muted small">${t('None')}</div>`;
@@ -1545,14 +1544,14 @@ function pdfTotals(doc,label,T,strong){if(doc._y>PDF.H-34){doc.addPage();doc._y=
   doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(...(strong?[255,255,255]:PDF.mut));doc.text(label.toUpperCase(),PDF.L+4,y+9);
   const x0=PDF.L+30,cw=(W-32)/cells.length;cells.forEach(([l,v,c],i)=>{const x=x0+i*cw;doc.setFont('helvetica','normal');doc.setFontSize(6.5);doc.setTextColor(...(strong?[220,220,220]:PDF.mut));doc.text(l,x,y+5.2);
     doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(...(strong?[255,255,255]:c));doc.text(String(v),x,y+11.6)});doc._y=y+15}
-function sumPdfPick(){const sc=SC();if(sc.from!==sc.to)return sumPdfRun();const on=new Set(scopeRows(S.staff,sc).filter(r=>hasSup(r.s)).map(r=>r.s.id)).size,off=offOn(sc,sc.from).length,n=a=>a==='a'?on:a==='u'?off:on+off;/* all = everyone counted once */
+function sumPdfPick(){const sc=SC();if(sc.from!==sc.to)return sumPdfRun();const on=new Set(scopeRows(S.staff,sc).map(r=>r.s.id)).size,off=offOn(sc,sc.from).length,n=a=>a==='a'?on:a==='u'?off:on+off;/* all = everyone counted once */
   modal(`<h2>${t('Download PDF')}</h2><div class="muted small">${esc(scopeLabel(sc))}</div><div style="display:flex;flex-direction:column;gap:8px">
    <button class="btn pri" data-act="sum-pdf-go" data-v="a">${t('Assigned only')} <span class="muted">· ${n('a')}</span></button>
    <button class="btn" data-act="sum-pdf-go" data-v="u">${t('Unassigned only')} <span class="muted">· ${n('u')}</span></button>
    <button class="btn" data-act="sum-pdf-go" data-v="">${t('All')} <span class="muted">· ${n('')}</span></button></div>
    <div class="row" style="justify-content:flex-end"><button class="btn ghost" data-act="close">${t('Cancel')}</button></div>`)}
 function sumPdfRun(a){try{sumPdf(a)}catch(e){console.error(e);toast('PDF error: '+(e&&e.message||e));clearTimeout(toast.t);toast.t=setTimeout(()=>$('#toast').hidden=true,15000)}}
-function sumPdf(a){const R=daySummary(SC(),a),sc=R.sc,multi=sc.days.length>1,fl=[scopeFiltersEn(sc),a==='a'?'Assigned staff only':a==='u'?'Unassigned staff only':''].filter(Boolean).join(' · ');
+function sumPdf(a){const R=daySummary(SC()),sc=R.sc,multi=sc.days.length>1,fl=[scopeFiltersEn(sc),a==='a'?'Assigned staff only':a==='u'?'Unassigned staff only':''].filter(Boolean).join(' · ');
   if(a==='u'){const l=offOn(sc,sc.from),doc=pdfStart('Unassigned Staff',`${scopeLabelEn(sc)} · DECC, Doha · ${l.length} unassigned this day${scopeFiltersEn(sc)?' · '+scopeFiltersEn(sc):''}`);if(!doc)return;
     pdfTable(doc,['ID','Name','Role','Supervisor','Phone','Not working from','Reason'],l.map(s=>[s.code,s.name,s.role,s.role==='Marshal'?supName(s.sup)||'-':'-',s.phone||'',active(s,sc.from)?'-':s.left&&sc.from>=s.left?s.left:'Starts '+(s.joined||''),active(s,sc.from)?'No supervisor':s.left&&sc.from>=s.left?s.leftReason||'':'Not started yet']));
     return pdfFinish(doc,sumName(sc,'pdf').replace('.pdf','-Unassigned.pdf'))}
