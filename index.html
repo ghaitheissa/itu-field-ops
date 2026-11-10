@@ -591,7 +591,7 @@ document.addEventListener('focusout',()=>setTimeout(()=>{if(deferRender&&$('#mod
 
 /* ---------- UI state ---------- */
 const ui={lang:Prefs.get('lang','en'),role:Prefs.get('role','pm'),tab:'',day:clampDay(doha().date),sel:new Set(),importPreview:null,
-  f:{staff:{q:'',role:'',sup:'',dept:'',shift:'',asg:''},att:{from:'',to:'',tf:'',tt:'',q:'',sup:'',dept:'',shift:'',status:''},inc:{from:'',to:'',q:'',dept:'',sev:'',cat:'',sup:''},audit:{q:'',type:''},ck:{q:'',day:'',shift:'',role:''},scope:{from:'',to:'',dept:'',shift:'',sup:'',status:''}}};
+  f:{staff:{q:'',role:'',sup:'',dept:'',shift:'',asg:''},att:{from:'',to:'',tf:'',tt:'',q:'',sup:'',dept:'',shift:'',status:''},inc:{from:'',to:'',q:'',dept:'',sev:'',cat:'',sup:''},audit:{q:'',type:''},ck:{q:'',day:'',shift:'',role:'',st:''},scope:{from:'',to:'',dept:'',shift:'',sup:'',status:''}}};
 if(LIVE)ui.role='';else if(ui.role!=='pm'&&!S.staff.some(s=>s.id===ui.role))ui.role='pm';
 
 /* ---------- Domain helpers ---------- */
@@ -1242,11 +1242,13 @@ function ckPeople(d){return S.staff.filter(s=>!s.left&&shiftOf(s,d)).sort((a,b)=
 VIEWS.ck=()=>{const d=ckDay(),ar=ui.lang==='ar';
   return `<div class="row between"><h2>${t('Check in / out')}</h2></div>
   <div class="panel ck-top"><label>${t('Day')}<select id="ck-day">${DAYS.map(x=>opt(x,`${t('Day')} ${dayNo(x)} · ${fmtD(x)}${x===doha().date?' ('+(ar?'اليوم':'today')+')':''}`,d)).join('')}</select></label>
-  ${fSel('ck','shift','Shift',shiftOptions(ui.f.ck.shift,t('All')))}${fSel('ck','role','Role',opt('',t('All'),ui.f.ck.role)+opt('Marshal',t('Marshal'),ui.f.ck.role)+opt('Supervisor',t('Supervisor'),ui.f.ck.role))}</div>
+  ${fSel('ck','shift','Shift',shiftOptions(ui.f.ck.shift,t('All')))}${fSel('ck','role','Role',opt('',t('All'),ui.f.ck.role)+opt('Marshal',t('Marshal'),ui.f.ck.role)+opt('Supervisor',t('Supervisor'),ui.f.ck.role))}
+  ${fSel('ck','st','Status',[['',t('All')],['in',ar?'عمل دخول':'Checked in'],['notin',ar?'ما عمل دخول':'Not checked in'],['out',ar?'عمل خروج':'Checked out'],['notout',ar?'داخل وما عمل خروج':'In, not checked out'],['late',t('Late')],['ontime',t('On time')]].map(([k,l])=>opt(k,l,ui.f.ck.st)).join(''))}</div>
   <label class="qsearch">${ICON.search||''}<input type="search" data-f="ck.q" value="${esc(ui.f.ck.q)}" placeholder="${t('Search name, ID or phone')}" aria-label="${t('Search name, ID or phone')}" autocomplete="off"></label>
   <div id="res-ck">${RES.ck()}</div>`};
 RES.ck=()=>{const d=ckDay(),ar=ui.lang==='ar',q=ui.f.ck.q.trim().toLowerCase(),qd=q.replace(/\D/g,''),F=ui.f.ck,all=ckPeople(d).filter(s=>(!F.shift||shiftOf(s,d)?.id===F.shift)&&(!F.role||s.role===F.role));
-  const rows=all.filter(s=>!q||s.name.toLowerCase().includes(q)||s.code.toLowerCase().includes(q)||(qd.length>=3&&String(s.phone||'').replace(/\D/g,'').includes(qd)));
+  const ST=F.st,stOk=s=>{const r=S.att[d+'|'+s.id],i=!!(r&&r.in),o=!!(r&&r.out);if(!ST)return true;if(ST==='in')return i;if(ST==='notin')return !i;if(ST==='out')return o;if(ST==='notout')return i&&!o;const k=statusOf(s,d).k;return ST==='late'?k==='late':k==='on_time'};
+  const rows=all.filter(stOk).filter(s=>!q||s.name.toLowerCase().includes(q)||s.code.toLowerCase().includes(q)||(qd.length>=3&&String(s.phone||'').replace(/\D/g,'').includes(qd)));
   const R=s=>S.att[d+'|'+s.id],nin=all.filter(s=>R(s)&&R(s).in&&!R(s).out).length,nout=all.filter(s=>R(s)&&R(s).out).length,nnot=all.filter(s=>!R(s)||(!R(s).in&&!R(s).absent)).length;
   if(!all.length)return `<div class="panel empty">${ar?'ما في حدا عندو وردية بهاليوم.':'Nobody has a shift on this day.'}</div>`;
   return `<div class="duty-sum"><div class="ds"><b>${all.length}</b><span>${ar?'الكل':'Everyone'}</span></div><div class="ds ok"><b>${nin}</b><span>${ar?'داخلين هلأ':'In now'}</span></div><div class="ds"><b>${nout}</b><span>${t('Checked out')}</span></div><div class="ds bad"><b>${nnot}</b><span>${ar?'لسا ما إجوا':'Not in yet'}</span></div></div>
