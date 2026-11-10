@@ -1564,8 +1564,7 @@ function sumPdf(a){const R=daySummary(SC()),sc=R.sc,multi=sc.days.length>1,fl=[s
   const D=d=>multi?[d.slice(5)]:[],DH=multi?['Date']:[];
   pdfSection(doc,'Teams by supervisor');pdfTeams(doc,R,sc,multi);
   pdfSection(doc,'By supervisor (overview)');pdfTable(doc,['Supervisor','Team','On time','Late','Absent','Not in'],br(groupsBySup(R.rows,sc)));
-  pdfSection(doc,'By department');pdfTable(doc,['Department','Team','On time','Late','Absent','Not in'],br(groupsByDept(R.rows,sc)));
-  {const bp=byPerson(R.rows);pdfSection(doc,`By person (${bp.length})`);const pay=hasRate();pdfTable(doc,['ID','Name','Supervisor','Worked','On time','Late','Late min','Absent','Not in','Hours',...(pay?['Pay QAR']:[])],[...bp.map(p=>[p.s.code,p.s.name+(p.s.left?' (withdrew '+p.s.left.slice(5)+')':''),p.s.role==='Marshal'?supName(p.s.sup)||'-':'Supervisor',p.worked||0,p.on_time||'',p.late||'',p.lateMin?'+'+p.lateMin:'',p.absent||'',p.not_in||'',hm(p.mins),...(pay?[money((p.pay||0))]:[])]),['','Total','','','','','','','',hm(bp.reduce((n,p)=>n+p.mins,0)),...(pay?[money(bp.reduce((n,p)=>n+(p.pay||0),0))]:[])]]);
+  {
     if(a!=='a'){const lv=leavers(sc);pdfSection(doc,`Withdrawals and replacements (${lv.length})`);pdfTable(doc,['ID','Name','Role','Not working from','Reason','Days worked','Hours','Replaced by'],lv.map(s=>{const w=workedAll(s),n=byId(s.replacedBy);return [s.code,s.name,s.role,s.left,s.leftReason||'',w.days,hm(w.mins),n?n.code+' '+n.name:'-']}))}}
   pdfSection(doc,`Late arrivals (${R.late.length})`);pdfTable(doc,[...DH,'ID','Name','Supervisor','Shift','In','Late'],R.late.map(({d,s,st})=>[...D(d),s.code,s.name,supName(s.sup),st.sh?.name||'',st.r.in,'+'+st.late+' min']));
   pdfSection(doc,`Absent and not checked in (${R.absent.length+R.notin.length})`);pdfTable(doc,[...DH,'ID','Name','Supervisor','Shift','Status'],[...R.absent,...R.notin].map(({d,s,st})=>[...D(d),s.code,s.name,supName(s.sup),st.sh?.name||'',STATUS_LABEL[st.k]]));
