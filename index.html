@@ -470,7 +470,7 @@ const tsFmt=iso=>{const d=new Date(iso);return d.toLocaleString('en-GB',{timeZon
 const AR={
 'Project Manager':'مدير المشروع','Supervisor':'مشرف','Marshal':'مارشال','Signed in as':'الدخول باسم','Operating day':'يوم التشغيل','Day':'اليوم',
 'Dashboard':'لوحة التحكم','Staff & assignment':'الموظفون والتوزيع','Attendance':'الحضور','Incidents':'الحوادث','Shift changes':'تغيير الورديات','Reports':'التقارير','Data & import':'البيانات والاستيراد','My team':'فريقي',
-'Demo mode':'وضع تجريبي','Assigned':'موزَّع','On duty now':'على رأس العمل','On time':'في الموعد','Late':'متأخر','Absent':'غائب','Not checked in':'لم يسجّل','Scheduled':'مجدول','Unassigned':'غير موزَّع','Checked out':'سجّل خروج',
+'Demo mode':'وضع تجريبي','Assigned':'موزَّع','On duty now':'على رأس العمل','On duty':'على رأس العمل','On time':'في الموعد','Late':'متأخر','Absent':'غائب','Not checked in':'لم يسجّل','Scheduled':'مجدول','Unassigned':'غير موزَّع','Checked out':'سجّل خروج',
 'Incidents today':'حوادث اليوم','Total staff':'إجمالي الموظفين','By supervisor':'حسب المشرف','By department':'حسب القسم','Team':'الفريق','In':'دخول','Out':'خروج','Late (min)':'التأخير (د)',
 'Search name or ID':'ابحث بالاسم أو الرقم','Search name, ID or phone':'ابحث بالاسم أو الرقم أو التلفون','Role':'الدور','All':'الكل','Department':'القسم','Shift':'الوردية','Status':'الحالة','Date from':'من تاريخ','Date to':'إلى تاريخ','Check-in from':'دخول من','Check-in to':'دخول إلى','Assignment':'التوزيع','Not assigned':'غير موزَّع','Fully assigned':'موزَّع بالكامل',
 'ID':'الرقم','Name':'الاسم','Phone':'الهاتف','Date':'التاريخ','Time':'الوقت','None':'بدون','Change':'تغيير','Clear filters':'مسح الفلاتر','results':'نتيجة','selected':'محدد',
@@ -867,8 +867,8 @@ function annList(){const pm=ui.role==='pm',list=annSorted(),sp=sups();
 
 /* ---------- KPI drill-down ---------- */
 function kpiList(k){ui.lastKpi=k;ui.lastGrp='';const pm=ui.role==='pm',rows=pm?scopeRows(S.staff,SC()):scopeRows(S.staff.filter(m=>m.sup===ui.role),{days:[ui.day]}),multi=pm&&SC().days.length>1;
-  const sel=rows.filter(({st})=>k==='total'||(k==='onduty'?st.r&&st.r.in&&!st.r.out:k==='out'?st.r&&st.r.out:st.k===k));
-  const label={total:'Assigned',onduty:'On duty now',on_time:'On time',late:'Late',absent:'Absent',not_in:'Not checked in',out:'Checked out'}[k];
+  const sel=rows.filter(({st})=>k==='total'||(k==='onduty'?st.r&&st.r.in:k==='out'?st.r&&st.r.out:st.k===k));
+  const label={total:'Assigned',onduty:'On duty',on_time:'On time',late:'Late',absent:'Absent',not_in:'Not checked in',out:'Checked out'}[k];
   personList(t(label),sel,{multi,pm})}
 /* Office can turn a late arrival into on time (e.g. they came on time but were recorded late) */
 const lateFix=(d,s,st)=>ui.role==='pm'&&can('attendance')?(st.k==='late'?` <button class="btn sm" data-act="late-ok" data-v="${d}|${s.id}">✓ ${t('On time')}</button>`:st.r&&st.r.ok?` <span class="small muted">(${t('changed')})</span> <button class="btn sm ghost" data-act="late-undo" data-v="${d}|${s.id}" title="${t('Undo')}">↺</button>`:''):'';
@@ -1012,9 +1012,9 @@ function supGo(id){const ar=ui.lang==='ar',dp=checkedDepts('sa-dp').join(DSEP);
 function SC(){const f=ui.tab==='dash'&&ui.role==='pm'&&!can('dashFilter')?{}:ui.f.scope,from=f.from||ui.day,to=f.to&&f.to>=from?f.to:from;return{...f,from,to,days:DAYS.filter(d=>d>=from&&d<=to),person:ui.tab==='rep'?ui.repPerson||'':''}}
 const inScope=(s,sc)=>(!sc.person||s.id===sc.person)&&(!sc.dept||inDept(s,sc.dept))&&(!sc.sup||s.sup===sc.sup||s.id===sc.sup);
 function scopeRows(list,sc){const out=[];for(const d of sc.days)for(const s of list){if(!inScope(s,sc))continue;const st=statusOf(s,d);if(st.k==='unassigned')continue;if(sc.shift&&st.sh?.id!==sc.shift)continue;if(sc.status&&!stMatch(st,sc.status))continue;out.push({d,s,st})}return out}
-const stMatch=(st,k)=>k==='onduty'?!!(st.r&&st.r.in&&!st.r.out):k==='out'?!!(st.r&&st.r.out):k==='issue'?['late','absent','not_in'].includes(st.k):st.k===k;
+const stMatch=(st,k)=>k==='onduty'?!!(st.r&&st.r.in):k==='out'?!!(st.r&&st.r.out):k==='issue'?['late','absent','not_in'].includes(st.k):st.k===k;
 const ST_OPTS=[['issue','Late, absent or not in'],['late','Late'],['absent','Absent'],['not_in','Not checked in'],['on_time','On time'],['onduty','On duty now'],['out','Checked out'],['scheduled','Scheduled']];
-function statsOf(rows){const c={total:0,on_time:0,late:0,absent:0,not_in:0,scheduled:0,onduty:0,out:0};for(const{st}of rows){c.total++;c[st.k]++;if(st.r&&st.r.in&&!st.r.out)c.onduty++;if(st.r&&st.r.out)c.out++}return c}
+function statsOf(rows){const c={total:0,on_time:0,late:0,absent:0,not_in:0,scheduled:0,onduty:0,out:0};for(const{st}of rows){c.total++;c[st.k]++;if(st.r&&st.r.in)c.onduty++;if(st.r&&st.r.out)c.out++}return c}
 const scopeIncidents=sc=>S.incidents.filter(i=>i.date>=sc.from&&i.date<=sc.to&&(!sc.dept||i.dept===sc.dept)&&(!sc.sup||i.byId===sc.sup||byId(i.staff)?.sup===sc.sup)).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
 const scopeActive=sc=>!!(sc.dept||sc.sup||sc.shift||sc.status||sc.person);
 const scopeLabel=sc=>sc.from===sc.to?`${t('Day')} ${dayNo(sc.from)}, ${fmtD(sc.from)}`:`${fmtD(sc.from)} – ${fmtD(sc.to)} (${sc.days.length} ${ui.lang==='ar'?'أيام':'days'})`;
@@ -1042,7 +1042,7 @@ function payTiles(sc){if(!sc||!(can('payments')||isOwner()))return'';const ar=ui
   return `<button class="kpi pay" data-act="pay-go"><span class="l"><i class="kd"></i>${t('Hours worked')}</span><span class="v">${hm(P.mins)||'0:00'}</span>${P.open?`<span class="ksub">+${hm(P.lm)} ${ar?'لسا على الدوام':'still on duty'}</span>`:`<span class="ksub">${ar?'دوام مكتمل':'finished shifts'}</span>`}</button>
   <button class="kpi pay money" data-act="pay-go"><span class="l"><i class="kd"></i>${t('Payments due')}</span><span class="v">${money(P.pay)}<small> QAR</small></span>${P.open?`<span class="ksub">+${money(P.lp)} ${ar?'لهلأ (يلي لسا داخلين)':'so far (still on duty)'}</span>`:`<span class="ksub">${ar?'دوام مكتمل':'finished shifts'}</span>`}</button>`}
 function kpiTiles(c,inc,sc){const k=(key,cls,v,l)=>`<button class="kpi ${cls}" data-act="kpi" data-v="${key}"><span class="l"><i class="kd"></i>${t(l)}</span>${key==='onduty'?`<span class="ksub">(${t('Checked in')})</span>`:''}${key==='total'?`<span class="v">${v}</span><span class="kb"><i style="width:100%"></i></span>`:`<span class="vr"><span class="v">${v}</span><span class="kp">${c.total?Math.round(v*100/c.total):0}%</span></span><span class="kb"><i style="width:${c.total?Math.round(v*100/c.total):0}%"></i></span>`}</button>`;
-  return `<div class="kpis">${k('total','acc',c.total,'Assigned')}${k('onduty','',c.onduty,'On duty now')}${k('on_time','ok',c.on_time,'On time')}${k('late','warn',c.late,'Late')}${k('absent','bad',c.absent,'Absent')}${k('not_in','bad',c.not_in,'Not checked in')}${k('out','',c.out,'Checked out')}
+  return `<div class="kpis">${k('total','acc',c.total,'Assigned')}${k('onduty','',c.onduty,'On duty')}${k('on_time','ok',c.on_time,'On time')}${k('late','warn',c.late,'Late')}${k('absent','bad',c.absent,'Absent')}${k('not_in','bad',c.not_in,'Not checked in')}${k('out','',c.out,'Checked out')}
   ${inc!=null?`<button class="kpi inc" data-act="tab" data-v="inc"><span class="l"><i class="kd"></i>${t('Incidents')}</span><span class="v">${inc}</span><span class="kb"><i style="width:0"></i></span></button>`:''}${payTiles(sc)}</div>`}
 function breakdown(groups,kind){
   return `<div class="tbl-wrap"><table><thead><tr><th></th><th class="num">${t('Team')}</th><th class="num">${t('On time')}</th><th class="num">${t('Late')}</th><th class="num">${t('Absent')}</th><th class="num">${t('Not checked in')}</th></tr></thead><tbody>
@@ -1229,7 +1229,7 @@ function attRows(){const f=ui.f.att,q=f.q.trim().toLowerCase(),from=f.from||ui.d
     for(const s of S.staff){const st=statusOf(s,d);if(st.k==='unassigned')continue;
       if(q&&!s.name.toLowerCase().includes(q)&&!s.code.toLowerCase().includes(q))continue;
       if(f.sup&&s.sup!==f.sup&&s.id!==f.sup)continue;if(f.dept&&!inDept(s,f.dept))continue;if(f.shift&&st.sh?.id!==f.shift)continue;
-      if(f.status&&(f.status==='out'?!(st.r&&st.r.out):f.status==='onduty'?!(st.r&&st.r.in&&!st.r.out):st.k!==f.status))continue;
+      if(f.status&&(f.status==='out'?!(st.r&&st.r.out):f.status==='onduty'?!(st.r&&st.r.in):st.k!==f.status))continue;
       const tin=st.r?.in||'';if((f.tf||f.tt)&&(!tin||(f.tf&&tin<f.tf)||(f.tt&&tin>f.tt)))continue;
       out.push({d,s,st});}}
   return out;
