@@ -1546,9 +1546,9 @@ function pdfTotals(doc,label,T,strong){if(doc._y>PDF.H-34){doc.addPage();doc._y=
     doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(...(strong?[255,255,255]:c));doc.text(String(v),x,y+11.6)});doc._y=y+15}
 function sumPdfPick(){const sc=SC();if(sc.from!==sc.to)return sumPdfRun();const on=new Set(scopeRows(S.staff,sc).map(r=>r.s.id)).size,off=offOn(sc,sc.from).length,n=a=>a==='a'?on:a==='u'?off:on+off;
   modal(`<h2>${t('Download PDF')}</h2><div class="muted small">${esc(scopeLabel(sc))}</div><div style="display:flex;flex-direction:column;gap:8px">
-   <button class="btn" data-act="sum-pdf-go" data-v="a">${t('Assigned only')} <span class="muted">· ${n('a')}</span></button>
+   <button class="btn pri" data-act="sum-pdf-go" data-v="a">${t('Assigned only')} <span class="muted">· ${n('a')}</span></button>
    <button class="btn" data-act="sum-pdf-go" data-v="u">${t('Unassigned only')} <span class="muted">· ${n('u')}</span></button>
-   <button class="btn pri" data-act="sum-pdf-go" data-v="">${t('All')} <span class="muted">· ${n('')}</span></button></div>
+   <button class="btn" data-act="sum-pdf-go" data-v="">${t('All')} <span class="muted">· ${n('')}</span></button></div>
    <div class="row" style="justify-content:flex-end"><button class="btn ghost" data-act="close">${t('Cancel')}</button></div>`)}
 function sumPdfRun(a){try{sumPdf(a)}catch(e){console.error(e);toast('PDF error: '+(e&&e.message||e));clearTimeout(toast.t);toast.t=setTimeout(()=>$('#toast').hidden=true,15000)}}
 function sumPdf(a){const R=daySummary(SC()),sc=R.sc,multi=sc.days.length>1,fl=[scopeFiltersEn(sc),a==='a'?'Assigned staff only':a==='u'?'Unassigned staff only':''].filter(Boolean).join(' · ');
