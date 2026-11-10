@@ -1030,7 +1030,7 @@ function scopeBar(){const sc=SC(),f=ui.f.scope;return `<div class="panel filters
 function dayStats(date,list){return statsOf(scopeRows(list,{days:[date]}))}
 /* Overtime (extra hours) the owner adds per person per day, kept on the staff record as s.ot=[{id,d,mins,note,by,at}] */
 const otOn=(s,d)=>(s.ot||[]).filter(o=>o.d===d).reduce((n,o)=>n+(+o.mins||0),0);
-const otIn=(s,from,to)=>(s.ot||[]).filter(o=>o.d>=from&&o.d<=to).reduce((n,o)=>n+(+o.mins||0),0);
+const otIn=(s,from,to)=>(s.ot||[]).filter(o=>o.d>=from&&o.d<=to&&active(s,o.d)).reduce((n,o)=>n+(+o.mins||0),0);
 /* Hours and money tiles (owner and Payments permission): finished shifts, plus what is building up for people still on duty */
 function payScope(sc){const today=doha().date,now=toMin(doha().time);let mins=0,pay=0,lm=0,lp=0,open=0;
   for(const{d,s,st}of scopeRows(S.staff,sc)){const o=otOn(s,d);if(o){mins+=o;pay+=payOf(s,o)}const r=st.r;if(!r)continue;const m=minsWorked(r);
@@ -1055,7 +1055,7 @@ const VIEWS={};
 /* Payments due: hours worked (check-in to check-out) x hourly rate, live from attendance */
 function payData(){const today=doha().date,mode=ui.payMode||'all',sc=SC(),from=mode==='day'?(ui.role==='pm'&&can('dashFilter')?sc.from:ui.day):EVENT_START,to=mode==='day'?(ui.role==='pm'&&can('dashFilter')?sc.to:ui.day):(today>EVENT_END?EVENT_END:today);
   const m=new Map();let open=0;
-  for(const[k,r]of Object.entries(S.att)){const[d,id]=k.split('|');if(d<from||d>to)continue;const s=byId(id);if(!s)continue;const mins=minsWorked(r);if(r.in&&!r.out&&!r.absent){open++;continue}if(!mins)continue;
+  for(const[k,r]of Object.entries(S.att)){const[d,id]=k.split('|');if(d<from||d>to)continue;const s=byId(id);if(!s||!active(s,d))continue;const mins=minsWorked(r);if(r.in&&!r.out&&!r.absent){open++;continue}if(!mins)continue;
     let p=m.get(id);if(!p)m.set(id,p={s,days:0,mins:0,pay:0,ot:0});p.days++;p.mins+=mins;p.pay+=payOf(s,mins)}
   for(const s of S.staff){const o=otIn(s,from,to);if(!o)continue;let p=m.get(s.id);if(!p)m.set(s.id,p={s,days:0,mins:0,pay:0,ot:0});p.ot+=o;p.mins+=o;p.pay+=payOf(s,o)}
   const list=[...m.values()].map(p=>({...p,pay:Math.round(p.pay*100)/100})).sort((a,b)=>b.pay-a.pay||a.s.name.localeCompare(b.s.name));
@@ -1207,14 +1207,16 @@ function staffEdit(id){const p=byId(id);if(!p)return;const ar=ui.lang==='ar';
   modal(`<h2>✎ ${ar?'تعديل المعلومات':'Edit details'}</h2><div class="muted">${esc(p.code)} · ${esc(p.name)}</div><div class="form">
    <label>${t('Name')}<input type="text" id="ed-name" value="${esc(p.name)}" autocomplete="off"></label><label>${t('Employee ID')}<input type="text" id="ed-code" value="${esc(p.code)}"></label>
    <label>${t('Phone')}<input type="text" id="ed-phone" value="${esc(p.phone||'')}" inputmode="tel" autocomplete="off"></label><label>QID<input type="text" id="ed-qid" value="${esc(p.qid||'')}" inputmode="numeric" autocomplete="off"></label>
-   <label>${t('Nationality')}<input type="text" id="ed-nat" value="${esc(p.nat||'')}" autocomplete="off"></label><label>${t('Role')}<select id="ed-role">${opt('Marshal',t('Marshal'),p.role)}${opt('Supervisor',t('Supervisor'),p.role)}</select></label></div>
+   <label>${t('Nationality')}<input type="text" id="ed-nat" value="${esc(p.nat||'')}" autocomplete="off"></label><label>${t('Role')}<select id="ed-role">${opt('Marshal',t('Marshal'),p.role)}${opt('Supervisor',t('Supervisor'),p.role)}</select></label>
+   <label>${t('Start date')}<input type="date" id="ed-join" min="${EVENT_START}" max="${EVENT_END}" value="${esc(p.joined||EVENT_START)}"></label></div>
+   <div class="small muted">${ar?'تاريخ البدء: قبلو ما بيطلع بالقوايم ولا بينحسبلو دوام أو فلوس.':'Start date: before it, the person is not listed and no hours or pay count.'}</div>
   <div class="row" id="ed-btns" style="justify-content:flex-end"><button class="btn" data-act="close">${t('Cancel')}</button><button class="btn pri" id="ed-save">${t('Save')}</button></div>
   <div class="panel" id="ed-cfm" hidden style="background:var(--accent-soft);border-color:var(--accent);display:flex;flex-direction:column;gap:10px"><b id="ed-cfm-t"></b><div class="small" id="ed-cfm-l" style="white-space:pre-line"></div><div class="row" style="justify-content:flex-end"><button class="btn" id="ed-back">${ar?'رجوع':'Back'}</button><button class="btn pri" id="ed-ok">${ar?'موافق':'OK'}</button></div></div>`,true);
   $('#ed-back').onclick=()=>{$('#ed-cfm').hidden=true;$('#ed-btns').hidden=false};
-  $('#ed-save').onclick=()=>{const v={name:$('#ed-name').value.trim(),code:$('#ed-code').value.trim(),phone:$('#ed-phone').value.trim(),qid:$('#ed-qid').value.trim(),nat:$('#ed-nat').value.trim(),role:$('#ed-role').value};
+  $('#ed-save').onclick=()=>{const v={name:$('#ed-name').value.trim(),code:$('#ed-code').value.trim(),phone:$('#ed-phone').value.trim(),qid:$('#ed-qid').value.trim(),nat:$('#ed-nat').value.trim(),role:$('#ed-role').value,joined:(()=>{const j=$('#ed-join').value;return !j||j<=EVENT_START?'':j})()};
     if(!v.name||!v.code){toast(ar?'الاسم والرقم الوظيفي لازم.':'Name and ID are required.');return}
     if(S.staff.concat(S.trash||[]).some(x=>x.id!==p.id&&x.code===v.code)){toast(t('This ID is already used.'));return}
-    const L={name:t('Name'),code:t('Employee ID'),phone:t('Phone'),qid:'QID',nat:t('Nationality'),role:t('Role')},diff=Object.keys(v).filter(k=>String(p[k]||'')!==v[k]);
+    const L={name:t('Name'),code:t('Employee ID'),phone:t('Phone'),qid:'QID',nat:t('Nationality'),role:t('Role'),joined:t('Start date')},diff=Object.keys(v).filter(k=>String(p[k]||'')!==v[k]);
     if(!diff.length){closeModal();return}
     $('#ed-cfm-t').textContent=ar?'بدك تحفظ هالتغييرات؟':'Save these changes?';$('#ed-cfm-l').textContent=diff.map(k=>`${L[k]}: ${p[k]||'—'} → ${v[k]||'—'}`).join('\n');
     $('#ed-btns').hidden=true;$('#ed-cfm').hidden=false;$('#ed-ok').focus();
@@ -1227,7 +1229,7 @@ const rateOf=s=>+(s.role==='Supervisor'?(S.settings.rateS||S.settings.rateM):S.s
 const payOf=(s,mins)=>Math.round(mins/60*rateOf(s)*100)/100;
 const money=v=>v.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2});
 const hasRate=()=>!!(+S.settings.rateM||+S.settings.rateS);
-function workedAll(s){let days=0,mins=0;for(const d of DAYS){const r=S.att[d+'|'+s.id];if(r&&r.in&&!r.absent){days++;mins+=minsWorked(r)||0}}return{days,mins}}
+function workedAll(s){let days=0,mins=0;for(const d of DAYS){const r=S.att[d+'|'+s.id];if(r&&r.in&&!r.absent&&!(s.joined&&d<s.joined)){days++;mins+=minsWorked(r)||0}}return{days,mins}}
 const leavers=sc=>S.staff.filter(s=>s.left&&s.left<=sc.to&&s.left>=EVENT_START&&inScope(s,{...sc,shift:''})).sort((a,b)=>a.left.localeCompare(b.left));
 function leaversTable(list){if(!list.length)return `<div class="muted small">${t('None')}</div>`;
   return `<div class="tbl-wrap"><table><thead><tr><th>${t('ID')}</th><th>${t('Name')}</th><th>${t('Role')}</th><th>${t('Supervisor')}</th><th>${t('Not working from')}</th><th>${t('Reason')}</th><th class="num">${t('Days worked')}</th><th class="num">${t('Hours')}</th><th>${t('Replaced by')}</th></tr></thead><tbody>
