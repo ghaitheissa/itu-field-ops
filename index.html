@@ -1264,18 +1264,27 @@ function ckLateOf(r,sh){if(!r||!r.in||!sh)return 0;let x=toMin(r.in)-toMin(sh.st
 function ckOvr(v,s,d){const sh=shiftOf(s,d);if(!sh)return '';const r=S.att[v],ar=ui.lang==='ar',lm=ckLateOf(r,sh),mode=!r||!r.in?'':lm?'late':'on';
   return `<div class="ck-ovr"><span class="small muted">${ar?'غيث:':'Owner:'}</span><select data-ck-ovr="${v}"><option value="" ${mode?'':'selected'}>—</option><option value="on" ${mode==='on'?'selected':''}>${t('On time')} (${sh.start}–${sh.end})</option><option value="late" ${mode==='late'?'selected':''}>${t('Late')}</option></select>${mode==='late'?`<span class="stepper"><button class="btn sm" data-act="ck-m" data-v="${v}|-60">−</button><b class="mono">${Math.floor(lm/60)}</b><button class="btn sm" data-act="ck-m" data-v="${v}|60">+</button><span class="small muted">${ar?'ساعة':'h'}</span></span><span class="stepper"><button class="btn sm" data-act="ck-m" data-v="${v}|-1">−</button><b class="mono">${lm%60}</b><button class="btn sm" data-act="ck-m" data-v="${v}|1">+</button><span class="small muted">${ar?'دقيقة':'min'}</span></span><span class="small muted">→ ${t('In')} ${esc(r.in)} · ${t('Out')} ${esc(r.out||'')}</span>`:''}</div>`}
 const ovrLog={};
+/* Which side the owner's On time / Late applies to: 'in', 'out' or 'both' */
+const ckTgt=()=>ui.ckTarget||'both';
+function ckRec(v,lm){const [d,id]=v.split('|'),x=byId(id),sh=x&&shiftOf(x,d);if(!sh)return false;const tg=ckTgt(),old=S.att[v]||{};
+  if(tg==='out'&&!old.in)return false;
+  S.att[v]={...old,in:tg!=='out'?mm2t(toMin(sh.start)+lm):old.in,out:tg!=='in'?sh.end:(old.out||''),absent:false,by:old.by||actor(),at:old.at||new Date().toISOString(),setBy:actor()};delete S.att[v].ovr;delete S.att[v].ok;return true}
+const tgLabel=()=>({in:'check-in',out:'check-out',both:'check-in and check-out'})[ckTgt()];
 ui.ckSel=new Set();
 function ckBulkBar(keys){const ar=ui.lang==='ar',n=[...ui.ckSel].filter(k=>keys.includes(k)).length,all=n===keys.length;
-  return `<div class="ck-bulk"><label class="row" style="gap:6px;align-items:center"><input type="checkbox" data-ck-all="${esc(keys.join(','))}" ${all?'checked':''}> <b>${n?`${n} ${t('selected')}`:(ar?'تحديد الكل':'Select all')}</b></label>
+  const tg=ckTgt(),T=ar?{in:'دخول',out:'خروج',both:'التنين'}:{in:'Check in',out:'Check out',both:'Both'};
+  return `<div class="ck-bulk"><div class="row" style="gap:6px;align-items:center;width:100%"><span class="small muted">${ar?'On time / Late بيطبّق على:':'On time / Late applies to:'}</span><div class="seg sm">${['in','out','both'].map(k=>`<button class="${tg===k?'on':''}" data-act="ck-tg" data-v="${k}">${T[k]}</button>`).join('')}</div></div><label class="row" style="gap:6px;align-items:center"><input type="checkbox" data-ck-all="${esc(keys.join(','))}" ${all?'checked':''}> <b>${n?`${n} ${t('selected')}`:(ar?'تحديد الكل':'Select all')}</b></label>
    ${n?`<button class="btn sm pri" data-act="ckb-on">✓ ${t('On time')}</button><span class="row" style="gap:4px;align-items:center"><button class="btn sm warnb" data-act="ckb-late">${t('Late')}</button><input type="number" id="ckb-h" min="0" max="12" value="0" style="width:64px;height:34px" aria-label="h"><span class="small muted">${ar?'ساعة':'h'}</span><input type="number" id="ckb-m" min="0" max="59" value="15" style="width:64px;height:34px" aria-label="min"><span class="small muted">${ar?'دقيقة':'min'}</span></span><button class="btn sm ghost" data-act="ckb-clear">${t('Cancel')}</button>`:''}</div>`}
 function ckBulk(lm){if(!isOwner())return;const ar=ui.lang==='ar',keys=[...ui.ckSel].filter(k=>{const [d,id]=k.split('|'),x=byId(id);return x&&shiftOf(x,d)});if(!keys.length)return;
-  confirmBox(lm?(ar?`تسجيل ${keys.length} شخص متأخرين ${hm(lm)} ساعة (والخروج على آخر الشيفت)؟`:`Record ${keys.length} people late by ${hm(lm)} h (out at shift end)?`):(ar?`تسجيل ${keys.length} شخص على الوقت (دخول وخروج على وقت الشيفت)؟`:`Record ${keys.length} people on time (in and out at shift times)?`),()=>{
-    for(const v of keys){const [d,id]=v.split('|'),x=byId(id),sh=shiftOf(x,d),old=S.att[v]||{};S.att[v]={...old,in:mm2t(toMin(sh.start)+lm),out:sh.end,absent:false,by:old.by||actor(),at:old.at||new Date().toISOString(),setBy:actor()};delete S.att[v].ovr;delete S.att[v].ok}
-    log('Attendance',`${keys.length} people set by the owner to ${lm?'late '+hm(lm)+' h':'on time'} (${[...new Set(keys.map(k=>k.split('|')[0]))].join(', ')}): ${keys.map(k=>byId(k.split('|')[1])?.code).join(', ')}`);
+  const tw=ar?{in:'الدخول بس',out:'الخروج بس',both:'الدخول والخروج'}[ckTgt()]:{in:'check-in only',out:'check-out only',both:'check-in and check-out'}[ckTgt()];
+  confirmBox(lm?(ar?`تسجيل ${keys.length} شخص متأخرين ${hm(lm)} ساعة (${tw})؟`:`Record ${keys.length} people late by ${hm(lm)} h (${tw})?`):(ar?`تسجيل ${keys.length} شخص على وقت الشيفت (${tw})؟`:`Record ${keys.length} people at shift times (${tw})?`),()=>{
+    let skip=0;for(const v of keys)if(!ckRec(v,lm))skip++;
+    if(skip)setTimeout(()=>toast(ar?`${skip} ما إلهن دخول، ما انسجّل خروجن.`:`${skip} had no check-in, so no check-out was set.`),900);
+    log('Attendance',`${keys.length-skip} people set by the owner to ${lm?'late '+hm(lm)+' h':'on time'}, ${tgLabel()} (${[...new Set(keys.map(k=>k.split('|')[0]))].join(', ')}): ${keys.map(k=>byId(k.split('|')[1])?.code).join(', ')}`);
     ui.ckSel.clear();save();render();toast(t('Saved'))},ar?'موافق':'OK')}
 function ckSetLate(v,lm){if(!isOwner())return;const [d,id]=v.split('|'),s=byId(id),sh=s&&shiftOf(s,d);if(!sh)return;lm=Math.max(0,Math.min(lm,720));
-  const old=S.att[v]||{};S.att[v]={...old,in:mm2t(toMin(sh.start)+lm),out:sh.end,absent:false,by:old.by||actor(),at:old.at||new Date().toISOString(),setBy:actor()};delete S.att[v].ovr;delete S.att[v].ok;
-  clearTimeout(ovrLog[v]);ovrLog[v]=setTimeout(()=>{const x=S.att[v];if(!x)return;log('Attendance',`${s.code} ${s.name} ${d}: set by the owner to ${lm?'late '+hm(lm)+' h':'on time'} (in ${x.in}, out ${x.out})`);save()},1500);
+  if(!ckRec(v,lm)){toast(ui.lang==='ar'?'ما في دخول مسجّل لهالشخص، اختار "دخول" أو "التنين".':'No check-in yet for this person. Choose In or Both.');const box=$('#res-ck');if(box)box.innerHTML=RES.ck();return}
+  clearTimeout(ovrLog[v]);ovrLog[v]=setTimeout(()=>{const x=S.att[v];if(!x)return;log('Attendance',`${s.code} ${s.name} ${d}: set by the owner to ${lm?'late '+hm(lm)+' h':'on time'}, ${tgLabel()} (in ${x.in||'-'}, out ${x.out||'-'})`);save()},1500);
   save();const box=$('#res-ck'),y=window.scrollY;if(box)box.innerHTML=RES.ck();window.scrollTo(0,y)}
 function otOpen(ids){if(!isOwner())return;const ps=ids.map(byId).filter(Boolean);if(!ps.length){toast(ui.lang==='ar'?'حدد أشخاص أولاً.':'Select people first.');return}const ar=ui.lang==='ar',one=ps.length===1?ps[0]:null,day=doha().date<EVENT_START?EVENT_START:doha().date>EVENT_END?EVENT_END:doha().date;
   modal(`<h2>⏱ ${ar?'ساعات إضافية':'Extra hours'} · ${ps.length}</h2><div class="small muted">${esc(ps.slice(0,6).map(x=>x.name).join(', '))}${ps.length>6?` +${ps.length-6}`:''}</div>
@@ -1897,6 +1906,7 @@ document.addEventListener('click',e=>{if(e.target.closest('a.tel,a.wa'))return;c
     case 'ot-open':if(isOwner())otOpen([id]);break;
     case 'ot-bulk':if(isOwner())otOpen([...ui.sel]);break;
     case 'ot-del':if(isOwner()){const x=byId(id),o=(x?.ot||[]).find(y=>y.id===v);if(x&&o){x.ot=x.ot.filter(y=>y.id!==v);log('Overtime',`${x.code} ${x.name} ${o.d}: removed +${hm(+o.mins)} h`);save();render();otOpen([id])}}break;
+    case 'ck-tg':ui.ckTarget=v;{const box=$('#res-ck'),y=window.scrollY;if(box)box.innerHTML=RES.ck();window.scrollTo(0,y)}break;
     case 'ckb-on':ckBulk(0);break;
     case 'ckb-late':{const h=Math.max(0,parseInt($('#ckb-h').value||'0',10)),mi=Math.max(0,Math.min(59,parseInt($('#ckb-m').value||'0',10)));if(!(h*60+mi)){toast(ui.lang==='ar'?'حط مدة التأخير.':'Enter how late.');break}ckBulk(h*60+mi);break}
     case 'ckb-clear':ui.ckSel.clear();{const box=$('#res-ck');if(box)box.innerHTML=RES.ck()}break;
