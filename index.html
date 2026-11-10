@@ -1033,8 +1033,8 @@ const otOn=(s,d)=>(s.ot||[]).filter(o=>o.d===d).reduce((n,o)=>n+(+o.mins||0),0);
 const otIn=(s,from,to)=>(s.ot||[]).filter(o=>o.d>=from&&o.d<=to&&active(s,o.d)).reduce((n,o)=>n+(+o.mins||0),0);
 /* Hours and money tiles (owner and Payments permission): finished shifts, plus what is building up for people still on duty */
 function payScope(sc){const today=doha().date,now=toMin(doha().time);let mins=0,pay=0,lm=0,lp=0,open=0;
-  for(const{d,s,st}of scopeRows(S.staff,sc)){const o=otOn(s,d);if(o){mins+=o;pay+=payOf(s,o)}const r=st.r;if(!r)continue;const m=minsWorked(r);
-    if(m){mins+=m;pay+=payOf(s,m)}else if(r.in&&!r.out&&!r.absent&&d===today){let x=now-toMin(r.in);if(x<0)x+=1440;open++;lm+=x;lp+=payOf(s,x)}}
+  for(const{d,s,st}of scopeRows(S.staff,sc)){const o=otOn(s,d);if(o){mins+=o;pay+=payOf(s,o,d)}const r=st.r;if(!r)continue;const m=minsWorked(r);
+    if(m){mins+=m;pay+=payOf(s,m,d)}else if(r.in&&!r.out&&!r.absent&&d===today){let x=now-toMin(r.in);if(x<0)x+=1440;open++;lm+=x;lp+=payOf(s,x,d)}}
   return {mins,pay:Math.round(pay*100)/100,lm,lp:Math.round(lp*100)/100,open}}
 function payTiles(sc){if(!sc||!(can('payments')||isOwner()))return'';const ar=ui.lang==='ar';
   if(!hasRate())return `<button class="kpi pay" data-act="tab" data-v="data"><span class="l"><i class="kd"></i>${t('Payments')}</span><span class="v">—</span><span class="ksub">${ar?'حط سعر الساعة بالإعدادات':'Set the hourly rate in Settings'}</span></button>`;
@@ -1056,8 +1056,8 @@ const VIEWS={};
 function payData(){const today=doha().date,mode=ui.payMode||'all',sc=SC(),from=mode==='day'?(ui.role==='pm'&&can('dashFilter')?sc.from:ui.day):EVENT_START,to=mode==='day'?(ui.role==='pm'&&can('dashFilter')?sc.to:ui.day):(today>EVENT_END?EVENT_END:today);
   const m=new Map();let open=0;
   for(const[k,r]of Object.entries(S.att)){const[d,id]=k.split('|');if(d<from||d>to)continue;const s=byId(id);if(!s||!active(s,d))continue;const mins=minsWorked(r);if(r.in&&!r.out&&!r.absent){open++;continue}if(!mins)continue;
-    let p=m.get(id);if(!p)m.set(id,p={s,days:0,mins:0,pay:0,ot:0});p.days++;p.mins+=mins;p.pay+=payOf(s,mins)}
-  for(const s of S.staff){const o=otIn(s,from,to);if(!o)continue;let p=m.get(s.id);if(!p)m.set(s.id,p={s,days:0,mins:0,pay:0,ot:0});p.ot+=o;p.mins+=o;p.pay+=payOf(s,o)}
+    let p=m.get(id);if(!p)m.set(id,p={s,days:0,mins:0,pay:0,ot:0});p.days++;p.mins+=mins;p.pay+=payOf(s,mins,d)}
+  for(const s of S.staff){const o=otIn(s,from,to);if(!o)continue;let p=m.get(s.id);if(!p)m.set(s.id,p={s,days:0,mins:0,pay:0,ot:0});p.ot+=o;p.mins+=o;p.pay+=(s.ot||[]).filter(x=>x.d>=from&&x.d<=to&&active(s,x.d)).reduce((n,x)=>n+payOf(s,+x.mins,x.d),0)}
   const list=[...m.values()].map(p=>({...p,pay:Math.round(p.pay*100)/100})).sort((a,b)=>b.pay-a.pay||a.s.name.localeCompare(b.s.name));
   return {from,to,list,open,total:list.reduce((n,p)=>n+p.pay,0),mins:list.reduce((n,p)=>n+p.mins,0)}}
 function payPanel(){if(!(can('payments')||isOwner()))return'';const ar=ui.lang==='ar';
@@ -1208,15 +1208,18 @@ function staffEdit(id){const p=byId(id);if(!p)return;const ar=ui.lang==='ar';
    <label>${t('Name')}<input type="text" id="ed-name" value="${esc(p.name)}" autocomplete="off"></label><label>${t('Employee ID')}<input type="text" id="ed-code" value="${esc(p.code)}"></label>
    <label>${t('Phone')}<input type="text" id="ed-phone" value="${esc(p.phone||'')}" inputmode="tel" autocomplete="off"></label><label>QID<input type="text" id="ed-qid" value="${esc(p.qid||'')}" inputmode="numeric" autocomplete="off"></label>
    <label>${t('Nationality')}<input type="text" id="ed-nat" value="${esc(p.nat||'')}" autocomplete="off"></label><label>${t('Role')}<select id="ed-role">${opt('Marshal',t('Marshal'),p.role)}${opt('Supervisor',t('Supervisor'),p.role)}</select></label>
-   <label>${t('Start date')}<input type="date" id="ed-join" min="${EVENT_START}" max="${EVENT_END}" value="${esc(p.joined||EVENT_START)}"></label></div>
+   <label>${t('Start date')}<input type="date" id="ed-join" min="${EVENT_START}" max="${EVENT_END}" value="${esc(p.joined||EVENT_START)}"></label>
+   <label>${ar?'الدور من تاريخ':'Role since'}<input type="date" id="ed-rfrom" min="${EVENT_START}" max="${EVENT_END}" value="${esc(p.roleFrom||EVENT_START)}"></label></div>
    <div class="small muted">${ar?'تاريخ البدء: قبلو ما بيطلع بالقوايم ولا بينحسبلو دوام أو فلوس.':'Start date: before it, the person is not listed and no hours or pay count.'}</div>
+   <div class="small muted">${ar?'الدور من تاريخ: قبلو بينحسب الدوام بسعر الدور التاني (مثلاً مارشال قبل ما يصير سوبرفايزر).':'Role since: before this date, hours are paid at the other role\'s rate (e.g. Marshal before becoming Supervisor).'}</div>
   <div class="row" id="ed-btns" style="justify-content:flex-end"><button class="btn" data-act="close">${t('Cancel')}</button><button class="btn pri" id="ed-save">${t('Save')}</button></div>
   <div class="panel" id="ed-cfm" hidden style="background:var(--accent-soft);border-color:var(--accent);display:flex;flex-direction:column;gap:10px"><b id="ed-cfm-t"></b><div class="small" id="ed-cfm-l" style="white-space:pre-line"></div><div class="row" style="justify-content:flex-end"><button class="btn" id="ed-back">${ar?'رجوع':'Back'}</button><button class="btn pri" id="ed-ok">${ar?'موافق':'OK'}</button></div></div>`,true);
   $('#ed-back').onclick=()=>{$('#ed-cfm').hidden=true;$('#ed-btns').hidden=false};
-  $('#ed-save').onclick=()=>{const v={name:$('#ed-name').value.trim(),code:$('#ed-code').value.trim(),phone:$('#ed-phone').value.trim(),qid:$('#ed-qid').value.trim(),nat:$('#ed-nat').value.trim(),role:$('#ed-role').value,joined:(()=>{const j=$('#ed-join').value;return !j||j<=EVENT_START?'':j})()};
+  $('#ed-role').onchange=()=>{const r=$('#ed-rfrom'),tm=addDays(doha().date,1);r.value=$('#ed-role').value===p.role?(p.roleFrom||EVENT_START):(tm>EVENT_END?EVENT_END:tm<EVENT_START?EVENT_START:tm)};
+  $('#ed-save').onclick=()=>{const v={name:$('#ed-name').value.trim(),code:$('#ed-code').value.trim(),phone:$('#ed-phone').value.trim(),qid:$('#ed-qid').value.trim(),nat:$('#ed-nat').value.trim(),role:$('#ed-role').value,joined:(()=>{const j=$('#ed-join').value;return !j||j<=EVENT_START?'':j})(),roleFrom:(()=>{const j=$('#ed-rfrom').value;return !j||j<=EVENT_START?'':j})()};
     if(!v.name||!v.code){toast(ar?'الاسم والرقم الوظيفي لازم.':'Name and ID are required.');return}
     if(S.staff.concat(S.trash||[]).some(x=>x.id!==p.id&&x.code===v.code)){toast(t('This ID is already used.'));return}
-    const L={name:t('Name'),code:t('Employee ID'),phone:t('Phone'),qid:'QID',nat:t('Nationality'),role:t('Role'),joined:t('Start date')},diff=Object.keys(v).filter(k=>String(p[k]||'')!==v[k]);
+    const L={name:t('Name'),code:t('Employee ID'),phone:t('Phone'),qid:'QID',nat:t('Nationality'),role:t('Role'),joined:t('Start date'),roleFrom:ar?'الدور من تاريخ':'Role since'},diff=Object.keys(v).filter(k=>String(p[k]||'')!==v[k]);
     if(!diff.length){closeModal();return}
     $('#ed-cfm-t').textContent=ar?'بدك تحفظ هالتغييرات؟':'Save these changes?';$('#ed-cfm-l').textContent=diff.map(k=>`${L[k]}: ${p[k]||'—'} → ${v[k]||'—'}`).join('\n');
     $('#ed-btns').hidden=true;$('#ed-cfm').hidden=false;$('#ed-ok').focus();
@@ -1225,8 +1228,10 @@ function staffEdit(id){const p=byId(id);if(!p)return;const ar=ui.lang==='ar';
       log('Staff update',`${was}: ${diff.map(k=>`${k==='qid'?'QID changed':`${L[k]} ${cur[k]||'-'} → ${v[k]||'-'}`}`).join(', ')}`);
       for(const k of diff)cur[k]=v[k];closeModal();save();render();toast(t('Saved'))}}}
 /* Hours & pay */
-const rateOf=s=>+(s.role==='Supervisor'?(S.settings.rateS||S.settings.rateM):S.settings.rateM)||0;
-const payOf=(s,mins)=>Math.round(mins/60*rateOf(s)*100)/100;
+/* A role can change from a date (s.roleFrom): before it the person had the other role, so the other rate applies */
+const roleOn=(s,d)=>s.roleFrom&&d&&d<s.roleFrom?(s.role==='Supervisor'?'Marshal':'Supervisor'):s.role;
+const rateOf=(s,d)=>+(roleOn(s,d)==='Supervisor'?(S.settings.rateS||S.settings.rateM):S.settings.rateM)||0;
+const payOf=(s,mins,d)=>Math.round(mins/60*rateOf(s,d)*100)/100;
 const money=v=>v.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2});
 const hasRate=()=>!!(+S.settings.rateM||+S.settings.rateS);
 function workedAll(s){let days=0,mins=0;for(const d of DAYS){const r=S.att[d+'|'+s.id];if(r&&r.in&&!r.absent&&!(s.joined&&d<s.joined)){days++;mins+=minsWorked(r)||0}}return{days,mins}}
@@ -1468,11 +1473,11 @@ const scExportRows=()=>shiftLog().map(a=>({Recorded:tsFmt(a.ts),'Employee ID':a.
 
 /* ---------- Reports: daily operational summary ---------- */
 function byPerson(rows){const m=new Map();for(const{d,s,st}of rows){let p=m.get(s.id);if(!p)m.set(s.id,p={s,days:0,on_time:0,late:0,lateMin:0,absent:0,not_in:0,mins:0});
-  p.days++;if(p[st.k]!=null&&st.k!=='days')p[st.k]++;p.lateMin+=st.late||0;p.mins+=minsWorked(st.r)||0;const o=otOn(s,d);if(o){p.mins+=o;p.ot=(p.ot||0)+o}if(st.r&&st.r.in)p.worked=(p.worked||0)+1}
+  p.days++;if(p[st.k]!=null&&st.k!=='days')p[st.k]++;p.lateMin+=st.late||0;const wm=minsWorked(st.r)||0;p.mins+=wm;const o=otOn(s,d);if(o){p.mins+=o;p.ot=(p.ot||0)+o}p.pay=(p.pay||0)+payOf(s,wm+o,d);if(st.r&&st.r.in)p.worked=(p.worked||0)+1}
   return [...m.values()].sort((a,b)=>(b.late+b.absent+b.not_in)-(a.late+a.absent+a.not_in)||b.lateMin-a.lateMin||a.s.name.localeCompare(b.s.name))}
-function personTable(list){if(!list.length)return `<div class="muted small">${t('None')}</div>`;const pay=hasRate()&&can('reports'),tm=list.reduce((n,p)=>n+p.mins,0),tp=list.reduce((n,p)=>n+payOf(p.s,p.mins),0);
+function personTable(list){if(!list.length)return `<div class="muted small">${t('None')}</div>`;const pay=hasRate()&&can('reports'),tm=list.reduce((n,p)=>n+p.mins,0),tp=list.reduce((n,p)=>n+(p.pay||0),0);
   return `<div class="tbl-wrap"><table><thead><tr><th>${t('ID')}</th><th>${t('Name')}</th><th>${t('Supervisor')}</th><th class="num">${t('Days worked')}</th><th class="num">${t('On time')}</th><th class="num">${t('Late')}</th><th class="num">${t('Late (min)')}</th><th class="num">${t('Absent')}</th><th class="num">${t('Not checked in')}</th><th class="num">${t('Hours')}</th>${pay?`<th class="num">${t('Pay (QAR)')}</th>`:''}<th>${t('Phone')}</th></tr></thead><tbody>
-  ${list.map(p=>`<tr><td class="mono">${esc(p.s.code)}</td><td>${esc(p.s.name)}${lifeChips(p.s)}</td><td class="small">${esc(p.s.role==='Marshal'?supName(p.s.sup):t('Supervisor'))}</td><td class="num">${p.worked||0}</td><td class="num">${p.on_time||''}</td><td class="num"${p.late?' style="color:var(--warn);font-weight:700"':''}>${p.late||''}</td><td class="num mono">${p.lateMin?'+'+p.lateMin:''}</td><td class="num"${p.absent?' style="color:var(--bad);font-weight:700"':''}>${p.absent||''}</td><td class="num">${p.not_in||''}</td><td class="num mono">${hm(p.mins)}</td>${pay?`<td class="num mono">${money(payOf(p.s,p.mins))}</td>`:''}<td class="mono small">${waLink(p.s.phone)}</td></tr>`).join('')}
+  ${list.map(p=>`<tr><td class="mono">${esc(p.s.code)}</td><td>${esc(p.s.name)}${lifeChips(p.s)}</td><td class="small">${esc(p.s.role==='Marshal'?supName(p.s.sup):t('Supervisor'))}</td><td class="num">${p.worked||0}</td><td class="num">${p.on_time||''}</td><td class="num"${p.late?' style="color:var(--warn);font-weight:700"':''}>${p.late||''}</td><td class="num mono">${p.lateMin?'+'+p.lateMin:''}</td><td class="num"${p.absent?' style="color:var(--bad);font-weight:700"':''}>${p.absent||''}</td><td class="num">${p.not_in||''}</td><td class="num mono">${hm(p.mins)}</td>${pay?`<td class="num mono">${money((p.pay||0))}</td>`:''}<td class="mono small">${waLink(p.s.phone)}</td></tr>`).join('')}
   <tr style="font-weight:700"><td></td><td>${t('Total')}</td><td colspan="7"></td><td class="num mono">${hm(tm)}</td>${pay?`<td class="num mono">${money(tp)}</td>`:''}<td></td></tr></tbody></table></div><div class="small muted">${list.length} ${t('results')}${pay?'':' · '+(ui.lang==='ar'?'حدّد أجر الساعة من البيانات › الإعدادات لحساب الرواتب.':'Set the hourly rate in Data & import › Settings to calculate pay.')} · ${ui.lang==='ar'?'الساعات تُحسب من الدخول إلى الخروج.':'Hours count from check-in to check-out.'}</div>`}
 function daySummary(sc){
   const rows=scopeRows(S.staff,sc),c=statsOf(rows),inc=scopeIncidents(sc),k=x=>rows.filter(r=>r.st.k===x);
@@ -1545,7 +1550,7 @@ function sumPdf(){const R=daySummary(SC()),sc=R.sc,multi=sc.days.length>1,fl=sco
   pdfSection(doc,'Teams by supervisor');pdfTeams(doc,R,sc,multi);
   pdfSection(doc,'By supervisor (overview)');pdfTable(doc,['Supervisor','Team','On time','Late','Absent','Not in'],br(groupsBySup(R.rows,sc)));
   pdfSection(doc,'By department');pdfTable(doc,['Department','Team','On time','Late','Absent','Not in'],br(groupsByDept(R.rows,sc)));
-  {const bp=byPerson(R.rows);pdfSection(doc,`By person (${bp.length})`);const pay=hasRate();pdfTable(doc,['ID','Name','Supervisor','Worked','On time','Late','Late min','Absent','Not in','Hours',...(pay?['Pay QAR']:[])],[...bp.map(p=>[p.s.code,p.s.name+(p.s.left?' (withdrew '+p.s.left.slice(5)+')':''),p.s.role==='Marshal'?supName(p.s.sup)||'-':'Supervisor',p.worked||0,p.on_time||'',p.late||'',p.lateMin?'+'+p.lateMin:'',p.absent||'',p.not_in||'',hm(p.mins),...(pay?[money(payOf(p.s,p.mins))]:[])]),['','Total','','','','','','','',hm(bp.reduce((n,p)=>n+p.mins,0)),...(pay?[money(bp.reduce((n,p)=>n+payOf(p.s,p.mins),0))]:[])]]);
+  {const bp=byPerson(R.rows);pdfSection(doc,`By person (${bp.length})`);const pay=hasRate();pdfTable(doc,['ID','Name','Supervisor','Worked','On time','Late','Late min','Absent','Not in','Hours',...(pay?['Pay QAR']:[])],[...bp.map(p=>[p.s.code,p.s.name+(p.s.left?' (withdrew '+p.s.left.slice(5)+')':''),p.s.role==='Marshal'?supName(p.s.sup)||'-':'Supervisor',p.worked||0,p.on_time||'',p.late||'',p.lateMin?'+'+p.lateMin:'',p.absent||'',p.not_in||'',hm(p.mins),...(pay?[money((p.pay||0))]:[])]),['','Total','','','','','','','',hm(bp.reduce((n,p)=>n+p.mins,0)),...(pay?[money(bp.reduce((n,p)=>n+(p.pay||0),0))]:[])]]);
     const lv=leavers(sc);pdfSection(doc,`Withdrawals and replacements (${lv.length})`);pdfTable(doc,['ID','Name','Role','Not working from','Reason','Days worked','Hours','Replaced by'],lv.map(s=>{const w=workedAll(s),n=byId(s.replacedBy);return [s.code,s.name,s.role,s.left,s.leftReason||'',w.days,hm(w.mins),n?n.code+' '+n.name:'-']}))}
   pdfSection(doc,`Late arrivals (${R.late.length})`);pdfTable(doc,[...DH,'ID','Name','Supervisor','Shift','In','Late'],R.late.map(({d,s,st})=>[...D(d),s.code,s.name,supName(s.sup),st.sh?.name||'',st.r.in,'+'+st.late+' min']));
   pdfSection(doc,`Absent and not checked in (${R.absent.length+R.notin.length})`);pdfTable(doc,[...DH,'ID','Name','Supervisor','Shift','Status'],[...R.absent,...R.notin].map(({d,s,st})=>[...D(d),s.code,s.name,supName(s.sup),st.sh?.name||'',STATUS_LABEL[st.k]]));
@@ -1553,7 +1558,7 @@ function sumPdf(){const R=daySummary(SC()),sc=R.sc,multi=sc.days.length>1,fl=sco
   pdfFinish(doc,sumName(sc,'pdf'))}
 function sumXlsx(){const R=daySummary(SC()),sc=R.sc,br=g=>g.map(([l,rows])=>{const c=statsOf(rows);return {Group:l,Team:c.total,'On time':c.on_time,Late:c.late,Absent:c.absent,'Not checked in':c.not_in}});
   xlsx(sumName(sc,'xlsx'),{Summary:[{From:sc.from,To:sc.to,Department:sc.dept||'All',Shift:sc.shift?shiftById(sc.shift)?.name:'All',Supervisor:sc.sup?supName(sc.sup):'All',Person:sc.person&&byId(sc.person)?byId(sc.person).code+' '+byId(sc.person).name:'All',Status:sc.status?(ST_OPTS.find(x=>x[0]===sc.status)||[,''])[1]:'All',Assigned:R.c.total,'On time':R.c.on_time,Late:R.c.late,Absent:R.c.absent,'Not checked in':R.c.not_in,'Checked out':R.c.out,Incidents:R.inc.length}],
-    'By person':byPerson(R.rows).map(p=>({'Employee ID':p.s.code,Name:p.s.name,Role:p.s.role,Supervisor:p.s.role==='Marshal'?supName(p.s.sup):'','On time':p.on_time,Late:p.late,'Late minutes':p.lateMin,Absent:p.absent,'Not checked in':p.not_in,'Days worked':p.worked||0,Hours:hm(p.mins),Overtime:p.ot?hm(p.ot):'','Hours (decimal)':Math.round(p.mins/60*100)/100,'Rate QAR/h':rateOf(p.s),'Pay QAR':payOf(p.s,p.mins),Status:p.s.left?'Withdrew '+p.s.left:p.s.replaces?'Replacement':''})),
+    'By person':byPerson(R.rows).map(p=>({'Employee ID':p.s.code,Name:p.s.name,Role:p.s.role,Supervisor:p.s.role==='Marshal'?supName(p.s.sup):'','On time':p.on_time,Late:p.late,'Late minutes':p.lateMin,Absent:p.absent,'Not checked in':p.not_in,'Days worked':p.worked||0,Hours:hm(p.mins),Overtime:p.ot?hm(p.ot):'','Hours (decimal)':Math.round(p.mins/60*100)/100,'Rate QAR/h':rateOf(p.s),'Pay QAR':(p.pay||0),Status:p.s.left?'Withdrew '+p.s.left:p.s.replaces?'Replacement':''})),
     'Withdrawals':leavers(sc).map(s=>{const w=workedAll(s),n=byId(s.replacedBy);return {'Employee ID':s.code,Name:s.name,Role:s.role,Supervisor:s.role==='Marshal'?supName(s.sup):'','Not working from':s.left,Reason:s.leftReason||'',Notes:s.leftNote||'','Days worked':w.days,Hours:hm(w.mins),'Replaced by':n?n.code+' '+n.name:''}}),'By supervisor':br(groupsBySup(R.rows,sc)),'By department':br(groupsByDept(R.rows,sc)),Attendance:attExportRows(R.rows),Incidents:incExportRows(R.inc),
     ...(sc.person&&byId(sc.person)?{'Person history':personEvents(byId(sc.person)).map(a=>({'When (Doha)':tsFmt(a.ts),Type:a.type,Details:a.detail,By:a.by||''}))}:{})})}
 
