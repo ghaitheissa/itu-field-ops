@@ -78,6 +78,7 @@ input[type=number]{height:42px;padding:0 12px;border:1px solid var(--line);borde
 .ck-bulk{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface);box-shadow:0 2px 8px rgb(0 0 0 / .06)}
 .ck-list.own .ck-row{grid-template-columns:auto 1fr auto auto}.ck-sel{width:20px;height:20px}
 @media (max-width:640px){.ck-list.own .ck-row{grid-template-columns:auto 1fr auto}}
+.xbtn{margin-inline-start:6px;width:22px;height:22px;border-radius:50%;border:1px solid var(--bad);background:transparent;color:var(--bad);font-size:11px;line-height:1;cursor:pointer;padding:0}
 .devmax{display:inline-flex;align-items:center;gap:4px;margin-inline-start:auto}.devmax select{height:30px;padding:0 6px;font-size:12px;border-radius:8px;max-width:120px}
 .duty-sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;margin-top:12px}.duty-sum button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface);cursor:pointer;text-align:start;color:var(--fg)}
 .duty-sum b{font-size:22px;line-height:1;font-family:var(--f-display)}.duty-sum span{font-size:11.5px;color:var(--muted)}.duty-sum button:first-child b{color:var(--bad)}.duty-sum .ok b{color:#1f9d55}.duty-sum button.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
@@ -1256,7 +1257,7 @@ RES.ck=()=>{const d=ckDay(),ar=ui.lang==='ar',q=ui.f.ck.q.trim().toLowerCase(),q
       :!r.out?`<button class="btn outb" data-act="ck-out" data-v="${v}">${t('Check out')}</button><button class="btn sm ghost" data-act="ck-undo" data-v="${v}" title="${t('Undo')}">↺</button>`
       :`<span class="small ok-t">✓ ${ar?'خلص':'Done'}</span><button class="btn sm ghost" data-act="ck-undo-out" data-v="${v}" title="${t('Undo')}">↺</button>`;
     return `<div class="ck-row${r&&r.in&&!r.out?' on':''}${r&&r.out?' done':''}">${isOwner()?`<input type="checkbox" class="ck-sel" data-ck-sel="${v}" ${ui.ckSel.has(v)?'checked':''} aria-label="${esc(s.name)}">`:''}<div class="ck-who"><b>${esc(s.name)}</b><span class="small muted mono">${esc(s.code)} · ${esc(s.phone||'')}</span><span class="small muted">${esc(sh?sh.name+' '+sh.start+'–'+sh.end:'')}${s.role==='Marshal'&&s.sup?' · '+esc(supName(s.sup)):''}</span></div>
-      <div class="ck-st">${r&&r.in?`<span class="mono">${t('In')} <b>${esc(r.in)}</b></span>`:''}${r&&r.out?`<span class="mono">${t('Out')} <b>${esc(r.out)}</b></span>`:''}${st.k==='late'||st.k==='on_time'?`<span class="nowrap">${chip(st.k)}${st.late?` <span class="small mono">+${st.late} min</span>`:''}</span>`:''}</div>
+      <div class="ck-st">${r&&r.in?`<span class="mono">${t('In')} <b>${esc(r.in)}</b>${isOwner()?`<button class="xbtn" data-act="ck-x" data-v="${v}|in" title="${ar?'شيل الدخول':'Remove check-in'}">✕</button>`:''}</span>`:''}${r&&r.out?`<span class="mono">${t('Out')} <b>${esc(r.out)}</b>${isOwner()?`<button class="xbtn" data-act="ck-x" data-v="${v}|out" title="${ar?'شيل الخروج':'Remove check-out'}">✕</button>`:''}</span>`:''}${st.k==='late'||st.k==='on_time'?`<span class="nowrap">${chip(st.k)}${st.late?` <span class="small mono">+${st.late} min</span>`:''}</span>`:''}</div>
       <div class="ck-btns">${btns}${isOwner()?`<button class="btn sm ghost" data-act="ck-edit" data-v="${v}" title="${t('Edit')}">✎</button>`:''}${isOwner()?`<button class="btn sm ghost" data-act="ot-open" data-id="${s.id}" title="Overtime">⏱ OT${otOn(s,d)?' +'+hm(otOn(s,d)):''}</button>`:''}</div>${isOwner()?ckOvr(v,s,d):''}</div>`}).join('')}</div>`:`<div class="panel empty">${t('Nothing matches these filters.')}</div>`}`};
 /* Owner only: record a person exactly on their shift (in = start, out = end), or late by H hours M minutes (in = start + late, out = end) */
 const mm2t=m=>{m=((m%1440)+1440)%1440;return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0')};
@@ -1265,7 +1266,7 @@ function ckOvr(v,s,d){const sh=shiftOf(s,d);if(!sh)return '';const r=S.att[v],ar
   return `<div class="ck-ovr"><span class="small muted">${ar?'غيث:':'Owner:'}</span><select data-ck-ovr="${v}"><option value="" ${mode?'':'selected'}>—</option><option value="on" ${mode==='on'?'selected':''}>${t('On time')} (${sh.start}–${sh.end})</option><option value="late" ${mode==='late'?'selected':''}>${t('Late')}</option></select>${mode==='late'?`<span class="stepper"><button class="btn sm" data-act="ck-m" data-v="${v}|-60">−</button><b class="mono">${Math.floor(lm/60)}</b><button class="btn sm" data-act="ck-m" data-v="${v}|60">+</button><span class="small muted">${ar?'ساعة':'h'}</span></span><span class="stepper"><button class="btn sm" data-act="ck-m" data-v="${v}|-1">−</button><b class="mono">${lm%60}</b><button class="btn sm" data-act="ck-m" data-v="${v}|1">+</button><span class="small muted">${ar?'دقيقة':'min'}</span></span><span class="small muted">→ ${t('In')} ${esc(r.in)} · ${t('Out')} ${esc(r.out||'')}</span>`:''}</div>`}
 const ovrLog={};
 /* Which side the owner's On time / Late applies to: 'in', 'out' or 'both' */
-const ckTgt=()=>ui.ckTarget||'both';
+const ckTgt=()=>ui.ckTarget||'in';
 function ckRec(v,lm){const [d,id]=v.split('|'),x=byId(id),sh=x&&shiftOf(x,d);if(!sh)return false;const tg=ckTgt(),old=S.att[v]||{};
   if(tg==='out'&&!old.in)return false;
   S.att[v]={...old,in:tg!=='out'?mm2t(toMin(sh.start)+lm):old.in,out:tg!=='in'?sh.end:(old.out||''),absent:false,by:old.by||actor(),at:old.at||new Date().toISOString(),setBy:actor()};delete S.att[v].ovr;delete S.att[v].ok;return true}
@@ -1926,6 +1927,8 @@ document.addEventListener('click',e=>{if(e.target.closest('a.tel,a.wa'))return;c
     case 'ot-bulk':if(isOwner())otOpen([...ui.sel]);break;
     case 'ot-del':if(isOwner()){const x=byId(id),o=(x?.ot||[]).find(y=>y.id===v);if(x&&o){x.ot=x.ot.filter(y=>y.id!==v);log('Overtime',`${x.code} ${x.name} ${o.d}: removed +${hm(+o.mins)} h`);save();render();otOpen([id])}}break;
     case 'ck-tg':ui.ckTarget=v;{const box=$('#res-ck'),y=window.scrollY;if(box)box.innerHTML=RES.ck();window.scrollTo(0,y)}break;
+    case 'ck-x':if(isOwner()){const i=v.lastIndexOf('|'),key=v.slice(0,i),w=v.slice(i+1),[d,id]=key.split('|'),x=byId(id),ar=ui.lang==='ar';
+      confirmBox(ar?`شيل ${whatTxt(w,ar)} تبع ${esc(x.name)}؟${w==='in'&&S.att[key]?.out?' (الخروج بيضل)':''}`:`Remove ${esc(x.name)}'s ${whatTxt(w)}?`,()=>{if(ckClear(key,w)){log('Undo',`${x.code} ${x.name} ${d}: ${whatTxt(w)} removed by the owner`);save()}const box=$('#res-ck'),y=window.scrollY;if(box)box.innerHTML=RES.ck();else render();window.scrollTo(0,y)},ar?'شيل':'Remove')}break;
     case 'ckb-del':ckBulkDel(v);break;
     case 'ck-edit':ckEdit(v);break;
     case 'ckb-on':ckBulk(0);break;
