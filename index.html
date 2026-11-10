@@ -1049,7 +1049,7 @@ function breakdown(groups,kind){
   ${groups.map(([label,rows,key])=>{const c=statsOf(rows);return `<tr class="go" data-act="grp" data-v="${esc(kind+'|'+(key||''))}"><td><span class="lnk">${esc(label)}</span> <span class="muted">›</span>${kind==='sup'&&key?supCall(key):''}</td><td class="num">${c.total}</td><td class="num">${c.on_time}</td><td class="num">${c.late}</td><td class="num">${c.absent}</td><td class="num">${c.not_in}</td></tr>`}).join('')}
   </tbody></table></div>`;
 }
-function groupsBySup(rows,sc){const g=[...sups().map(s=>[s.name,rows.filter(r=>r.s.sup===s.id),s.id]),[t('Unassigned'),rows.filter(r=>r.s.role==='Marshal'&&!r.s.sup),'']];return scopeActive(sc)?g.filter(x=>x[1].length):g}
+function groupsBySup(rows,sc){const days=sc&&sc.days&&sc.days.length?sc.days:[ui.day];const g=[...sups().filter(s=>days.some(d=>active(s,d))||rows.some(r=>r.s.sup===s.id)).map(s=>[s.name,rows.filter(r=>r.s.sup===s.id),s.id]),[t('Unassigned'),rows.filter(r=>r.s.role==='Marshal'&&!r.s.sup),'']];return scopeActive(sc)?g.filter(x=>x[1].length):g}
 function groupsByDept(rows,sc){const g=[...S.departments.map(d=>[d,rows.filter(r=>inDept(r.s,d)),d]),[t('Unassigned'),rows.filter(r=>!r.s.dept),'']];return scopeActive(sc)?g.filter(x=>x[1].length):g}
 const VIEWS={};
 /* Payments due: hours worked (check-in to check-out) x hourly rate, live from attendance */
