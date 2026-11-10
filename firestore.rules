@@ -27,6 +27,11 @@ service cloud.firestore {
       allow read: if true;
       allow write: if canP('accounts');
     }
+    // Owner's PDF signature: office accounts read it to print it, only the owner changes it
+    match /pmsig/{doc} {
+      allow read: if office();
+      allow write: if isPM();
+    }
     match /config/{doc} {
       allow read: if office() || isSup();
       allow write: if canP('settings');

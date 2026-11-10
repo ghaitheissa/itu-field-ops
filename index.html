@@ -570,6 +570,7 @@ const Cloud={db:null,auth:null,user:null,email:'',synced:{},unsubs:[],loaded:new
     this.watch(pm?db.collection('annReads'):db.collection('annReads').where('staffId','==',me),'annReads',m=>{S.annReads={};for(const v of m.values())S.annReads[v.annId+'|'+v.staffId]=v});
     if(pm&&can('staff'))this.watch(db.collection('requests'),'requests',m=>{S.requests=[...m.values()];setTimeout(reqPopup,400);reqNotify()});
     if(!pm)this.watch(db.collection('requests').where('supId','==',me),'requests',m=>{S.requests=[...m.values()]});
+    if(pm)this.unsubs.push(db.collection('pmsig').doc('main').onSnapshot(d=>{this.pmSig=d.exists?d.data():null;scheduleRender()},()=>{}));
     if(pm){this.watch(db.collection('audit').orderBy('ts','desc').limit(3000),'audit',m=>{S.audit=[...m.values()]});
       if(can('accounts')){this.unsubs.push(db.collection('access').onSnapshot(s=>{this.access=new Map();s.forEach(d=>this.access.set(d.id,d.data()));scheduleRender()}));
       this.unsubs.push(db.collection('logins').onSnapshot(s=>{this.logins=new Map();s.forEach(d=>this.logins.set(d.id,d.data()));scheduleRender()}));
@@ -687,7 +688,7 @@ function pdfTable(doc,head,body){
     didDrawCell:d=>{if(d.column.index===0){const y=d.cell.y+d.cell.height;d.doc.setLineDashPattern([0.25,1.1],0);d.doc.setDrawColor(...(d.section==='head'?PDF.mut:PDF.dot));d.doc.setLineWidth(d.section==='head'?0.35:0.25);d.doc.line(PDF.L,y,PDF.R,y);d.doc.setLineDashPattern([],0)}}});
   doc._y=doc.lastAutoTable.finalY+11;
 }
-function pdfFinish(doc,filename,noSave){
+function pdfFinish(doc,filename,noSave){if(!doc._noSig)try{pdfSign(doc)}catch(e){console.error(e)}
   const n=doc.getNumberOfPages(),stamp='Generated '+tsFmt(new Date().toISOString())+' (Doha) by '+actor();
   for(let i=1;i<=n;i++){doc.setPage(i);pdfDot(doc,PDF.H-15);doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(...PDF.mut);
     doc.text(pdfSafe('DECC, Doha · 9-27 November 2026 · '+stamp+(S.source==='sample'||S.demoScenario?' · DEMO DATA':'')),PDF.L,PDF.H-10);doc.text(`${i} / ${n}`,PDF.R,PDF.H-10,{align:'right'})}
@@ -1587,6 +1588,7 @@ VIEWS.data=()=>{const p=ui.importPreview;return `<h2>${t('Data & import')}</h2>
      <label>${t('Hourly rate, Supervisor (QAR)')}<input type="text" inputmode="decimal" id="set-rate-s" value="${esc(S.settings.rateS||'')}" placeholder="${ui.lang==='ar'?'نفس المارشال':'Same as Marshal'}"></label></div>
    ${rcpEditor()}
   </section>
+  ${isOwner()?pmSigPanel():''}
   <div class="grid2"><section class="panel" style="display:flex;flex-direction:column;gap:10px"><h3>${t('Departments')}</h3><div class="row">${S.departments.map(d=>`<span class="chip c-out" style="cursor:pointer" data-act="dept-del" data-v="${esc(d)}" title="Remove">${esc(d)} ×</span>`).join('')}</div>
      <div class="row"><input type="text" id="new-dept" placeholder="${t('Department')}"><button class="btn sm" data-act="dept-add">${t('Add')}</button></div></section>
     <section class="panel" style="display:flex;flex-direction:column;gap:10px"><h3>${t('Shifts')}</h3>${S.shifts.map(x=>`<div class="row small"><span class="mono">${esc(x.id)}</span><input type="text" data-shift="${x.id}" data-k="name" value="${esc(x.name)}" style="width:120px"><input type="time" data-shift="${x.id}" data-k="start" value="${x.start}"><input type="time" data-shift="${x.id}" data-k="end" value="${x.end}"></div>`).join('')}
@@ -1709,6 +1711,40 @@ async function delAdmin(adminId){const b=Cloud.db.batch();let who='';
   for(const[u2,l]of Cloud.logins)if(l.adminId===adminId)b.delete(Cloud.db.collection('logins').doc(u2));
   try{await b.commit();log('Account',`Team account ${who} removed`);save();toast(t('Saved'))}catch(e){toast('Not saved: '+e.code)}}
 
+/* ---------- Owner's signature on every PDF (stored in pmsig/main: office accounts can read it, only the owner can change it) ---------- */
+const pmSig=()=>{if(LIVE)return Cloud.pmSig||null;try{return JSON.parse(Prefs.get('pmSig','')||'null')}catch(e){return null}};
+async function pmSigSave(v){if(LIVE){try{await Cloud.db.collection('pmsig').doc('main').set(v);Cloud.pmSig=v}catch(e){console.error(e);toast((ui.lang==='ar'?'ما انحفظ: ':'Not saved: ')+(e.code||e.message)+(ui.lang==='ar'?' (لزّق الـ rules الجديدة بفايربيس)':' (paste the new Firestore rules)'));return false}}else Prefs.set('pmSig',JSON.stringify(v));
+  log('Settings','PDF signature updated');save();return true}
+function pmSigPanel(){const ar=ui.lang==='ar',v=pmSig()||{};
+  return `<section class="panel" style="display:flex;flex-direction:column;gap:12px"><h3>✍️ ${ar?'توقيعي على الـ PDF':'My signature on PDFs'}</h3>
+   <div class="small muted">${ar?'بيطلع بآخر كل PDF: التوقيع، وتحتو خط، والاسم والمنصب وتاريخ التنزيل. وبالطرف التاني خط فاضي ليوقّع الشخص التاني.':'Printed at the end of every PDF: your signature over a line, your name, position and the download date, with a blank line on the other side for the other party.'}</div>
+   ${v.img?`<img src="${esc(v.img)}" alt="" style="max-width:240px;height:auto;border:1px solid var(--line);border-radius:8px;background:#fff">`:`<div class="small" style="color:var(--warn)">${ar?'لسا ما في توقيع محفوظ.':'No signature saved yet.'}</div>`}
+   <div class="small"><b>${esc(v.name||'Ghaith Eissa')}</b> · ${esc(v.title||'Project Manager')}</div>
+   <div class="row"><button class="btn pri" data-act="pmsig-open">${v.img?(ar?'غيّر التوقيع':'Change signature'):(ar?'حط توقيعك':'Add your signature')}</button></div></section>`}
+function pmSigOpen(){const ar=ui.lang==='ar',v=pmSig()||{};
+  modal(`<h2>✍️ ${ar?'توقيعي على الـ PDF':'My signature on PDFs'}</h2>
+   <div style="display:flex;flex-direction:column;gap:6px"><div class="row between"><b>${t('Signature')}</b><button class="btn sm ghost" id="pms-clear">${t('Clear')}</button></div><canvas class="sig" id="pm-sig"></canvas>
+    <div class="small muted">${ar?'وقّع بإصبعك أو بالماوس، أو نزّل صورة توقيعك:':'Sign with your finger or mouse, or upload a picture of your signature:'}</div><input type="file" id="pms-file" accept="image/*"></div>
+   <div class="form"><label>${t('Name')}<input type="text" id="pms-name" value="${esc(v.name||'Ghaith Eissa')}"></label><label>${t('Position')}<input type="text" id="pms-title" value="${esc(v.title||'Project Manager')}"></label></div>
+   <div class="row" style="justify-content:flex-end"><button class="btn" data-act="close">${t('Cancel')}</button><button class="btn pri" id="pms-save">${t('Save')}</button></div>`,true);
+  requestAnimationFrame(()=>{const c=$('#pm-sig');if(!c)return;const r=c.getBoundingClientRect(),dpr=window.devicePixelRatio||1;c.width=r.width*dpr;c.height=r.height*dpr;
+    const x=c.getContext('2d');x.scale(dpr,dpr);x.lineWidth=2.4;x.lineCap='round';x.lineJoin='round';x.strokeStyle='#111111';let dirty=false,down=false;
+    const draw=src=>{const im=new Image();im.onload=()=>{x.save();x.setTransform(1,0,0,1,0,0);x.clearRect(0,0,c.width,c.height);x.restore();const k=Math.min(r.width/im.naturalWidth,r.height/im.naturalHeight);const w=im.naturalWidth*k,h=im.naturalHeight*k;x.drawImage(im,(r.width-w)/2,(r.height-h)/2,w,h);dirty=true};im.src=src};
+    if(v.img)draw(v.img);
+    const pt=e=>{const b=c.getBoundingClientRect();return[e.clientX-b.left,e.clientY-b.top]};
+    c.onpointerdown=e=>{down=true;c.setPointerCapture(e.pointerId);const[a,b]=pt(e);x.beginPath();x.moveTo(a,b);x.lineTo(a+.1,b+.1);x.stroke();dirty=true};
+    c.onpointermove=e=>{if(!down)return;const[a,b]=pt(e);x.lineTo(a,b);x.stroke()};c.onpointerup=c.onpointercancel=()=>{down=false};
+    $('#pms-clear').onclick=()=>{x.save();x.setTransform(1,0,0,1,0,0);x.clearRect(0,0,c.width,c.height);x.restore();dirty=false};
+    $('#pms-file').onchange=e=>{const f=e.target.files[0];if(!f)return;const fr=new FileReader();fr.onload=()=>draw(fr.result);fr.readAsDataURL(f)};
+    $('#pms-save').onclick=async()=>{const name=$('#pms-name').value.trim()||'Ghaith Eissa',title=$('#pms-title').value.trim()||'Project Manager';
+      const img=dirty?toJpeg(c,600,Math.round(600*c.height/c.width)):'';if(await pmSigSave({img,name,title,at:new Date().toISOString()})){closeModal();render();toast(t('Saved'))}}})}
+function pdfSign(doc){const v=pmSig()||{},n=doc.getNumberOfPages();doc.setPage(n);let y=doc._y||60;if(y>PDF.H-62){doc.addPage();y=26}else y+=4;
+  const half=(PDF.R-PDF.L)/2,lw=Math.min(72,half-10),xr=PDF.R-lw;
+  if(v.img)try{const p=doc.getImageProperties(v.img),h=20,w=Math.min(lw,h*p.width/p.height);doc.addImage(v.img,'JPEG',PDF.L,y,w,h)}catch(e){}
+  doc.setLineDashPattern([],0);doc.setDrawColor(...PDF.ink);doc.setLineWidth(0.35);doc.line(PDF.L,y+22,PDF.L+lw,y+22);doc.line(xr,y+22,PDF.R,y+22);
+  doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(...PDF.ink);doc.text(pdfSafe(v.name||'Ghaith Eissa'),PDF.L,y+27.5);
+  doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(...PDF.mut);doc.text(pdfSafe(v.title||'Project Manager'),PDF.L,y+32);doc.text(pdfSafe(fmtEn(doha().date)),PDF.L,y+36.5);
+  doc._y=y+42}
 /* ---------- Timesheet: sign, then send ---------- */
 const DEF_RCP=[{name:'Rabea Al Sabsabi',title:'Operations Director',email:'r.alsabsabi@eleganciagroup.com',phone:'30344565'}];
 const recips=()=>S.settings.recipients&&S.settings.recipients.length?S.settings.recipients:DEF_RCP;
@@ -1756,7 +1792,7 @@ function tsPdf(sc,rcp,sig){const rows=tsRows(sc),multi=sc.days.length>1,fl=scope
   const sg=signer();doc.setFont('helvetica','bold');doc.setFontSize(10.5);doc.setTextColor(...PDF.ink);doc.text(pdfSafe(sg.name),PDF.L,y+32);doc.setFont('helvetica','normal');
   doc.setFontSize(8.5);doc.setTextColor(...PDF.mut);doc.text(pdfSafe([sg.pos,'Elegancia Resources'].filter(Boolean).join(' · ')),PDF.L,y+37);doc.text(pdfSafe('Signed '+tsFmt(new Date().toISOString())+' (Doha)'),PDF.L,y+42);
   if(rcp&&rcp.name){doc.setFontSize(9.5);doc.setTextColor(...PDF.ink);doc.text(pdfSafe(rcp.name),PDF.L+half,y+8);doc.setFontSize(8);doc.setTextColor(...PDF.mut);doc.text(pdfSafe([rcp.title,rcp.email,rcp.phone].filter(Boolean).join(' · ')),PDF.L+half,y+13)}
-  doc._y=y+48;return pdfFinish(doc,tsName(sc),true)}
+  doc._y=y+48;doc._noSig=true;return pdfFinish(doc,tsName(sc),true)}
 function tsText(sc,rcp){const rows=tsRows(sc),c=statsOf(rows),tot=rows.reduce((n,r)=>n+(minsWorked(r.st.r)||0),0),first=(rcp.name||'').split(/\s+/)[0];
   return `Dear ${first||'Sir/Madam'},\n\nPlease find the signed ITU Field Ops 2026 timesheet for ${scopeLabelEn(sc)}${scopeFiltersEn(sc)?' ('+scopeFiltersEn(sc)+')':''}.\n\nStaff: ${c.total} · On time: ${c.on_time} · Late: ${c.late} · Absent: ${c.absent} · Not checked in: ${c.not_in} · Total hours: ${hm(tot)}\n\nBest regards,\n${signer().name}\n${signer().pos?signer().pos+', ':''}Elegancia Resources · ITU Field Ops 2026`}
 /* A signed timesheet is stored as a private link (shared/{random id}), so email and WhatsApp open straight to Rabea with the link ready */
@@ -1979,7 +2015,7 @@ document.addEventListener('click',e=>{if(e.target.closest('a.tel,a.wa'))return;c
     case 'att-edit':if(can('attendance'))attEdit(id,el.dataset.d);break;
     case 'ci':case 'co':case 'abs':case 'undo':case 'undo-out':mark(id,a);break;
     case 'inc-new':incNew();break;
-    case 'sum-pdf':sumPdf();break;case 'sum-xlsx':sumXlsx();break;
+    case 'sum-pdf':try{sumPdf()}catch(e){console.error(e);toast('PDF error: '+(e&&e.message||e));clearTimeout(toast.t);toast.t=setTimeout(()=>$('#toast').hidden=true,15000)}break;case 'sum-xlsx':try{sumXlsx()}catch(e){console.error(e);toast('Excel error: '+(e&&e.message||e));clearTimeout(toast.t);toast.t=setTimeout(()=>$('#toast').hidden=true,15000)}break;
     case 'att-xlsx':xlsx(`ITU-FieldOps-Attendance-${ui.f.att.from||ui.day}.xlsx`,{Attendance:attExportRows(attRows())});break;
     case 'att-pdf':{const rows=attRows(),f=ui.f.att,from=f.from||ui.day,to=f.to||from;const doc=pdfStart('Attendance Report',(from===to?fmtEn(from):fmtEn(from)+' to '+fmtEn(to))+' · '+rows.length+' records');if(!doc)break;
       const cnt=k=>rows.filter(r=>r.st.k===k).length;pdfKpis(doc,[{v:rows.length,l:'Records',c:PDF.acc},{v:cnt('on_time'),l:'On time'},{v:cnt('late'),l:'Late'},{v:cnt('absent'),l:'Absent'},{v:cnt('not_in'),l:'Not checked in'},{v:cnt('scheduled'),l:'Scheduled'}]);
@@ -2019,7 +2055,7 @@ document.addEventListener('click',e=>{if(e.target.closest('a.tel,a.wa'))return;c
     case 'adm-pw':if(LIVE&&can('accounts'))adminPassword(id);break;
     case 'adm-del':if(LIVE&&can('accounts'))confirmBox(ui.lang==='ar'?'سيتم إيقاف دخول هذا الحساب. متابعة؟':'This account will no longer be able to sign in. Continue?',()=>delAdmin(id));break;
     case 'ts-open':if(can('reports'))tsOpen();break;
-    case 'ts-clear':Sig.clear();break;
+    case 'ts-clear':Sig.clear();break;case 'pmsig-open':if(isOwner())pmSigOpen();break;
     case 'ts-pdf':tsSend('pdf');break;case 'ts-mail':tsSend('mail');break;case 'ts-wa':tsSend('wa');break;case 'ts-share':tsSend('share');break;
     case 'rcp-add':if(can('settings')){S.settings.recipients=[...recips(),{name:'',title:'',email:'',phone:''}];save();render()}break;
     case 'rcp-del':if(can('settings')){S.settings.recipients=recips().filter((_,i)=>i!==+v);log('Settings','Timesheet recipient removed');save();render()}break;
