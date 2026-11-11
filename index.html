@@ -531,6 +531,14 @@ const PM_EMAILS=(window.PM_EMAILS||[]).map(toEmail);
 let S=LIVE?{...freshState([],'live'),audit:[]}:(Store.load()||freshState(sampleStaff(),'sample'));if(!S.requests)S.requests=[];
 S.ann=S.ann||[];S.annReads=S.annReads||{};S.trash=S.trash||[];
 const save=()=>LIVE?Cloud.sync():Store.save(S);
+/* One-time change (Ghaith, 12 Nov 2026): two departments only. Last mile stays; every other department (Parking, Events, Taxi…) becomes one. Staff, deleted staff and incidents are updated. */
+const PET='Parking / Events / Taxi';
+function mergeDepts(){if((S.settings||{}).deptMerge==='pet1')return;const lm=d=>/^last\s*-?\s*mile$/i.test(String(d).trim()),md=d=>lm(d)?d:PET;let n=0;
+  for(const s of S.staff.concat(S.trash||[])){const was=s.dept||'',now=[...new Set(deptsOf(s).map(md))].join(DSEP);if(now!==was){s.dept=now;n++}}
+  for(const i of S.incidents)if(i.dept&&md(i.dept)!==i.dept)i.dept=md(i.dept);
+  S.departments=[...new Set([...S.departments.filter(lm),...(S.departments.some(lm)?[]:['Last mile']),PET])];
+  for(const k of ['scope','att','inc','staff'])if(ui.f[k]&&ui.f[k].dept&&ui.f[k].dept!=='none'&&!S.departments.includes(ui.f[k].dept))ui.f[k].dept='';
+  S.settings={...S.settings,deptMerge:'pet1'};log('Settings',`Departments merged: Last mile + ${PET} (${n} staff moved)`);save();scheduleRender()}
 /* Stable stringify so local state and Firestore docs compare equal regardless of key order */
 const stable=v=>JSON.stringify(v,(k,x)=>x&&typeof x==='object'&&!Array.isArray(x)?Object.keys(x).sort().reduce((o,kk)=>(x[kk]!==undefined&&(o[kk]=x[kk]),o),{}):x);
 const Cloud={db:null,auth:null,user:null,email:'',synced:{},unsubs:[],loaded:new Set(),access:new Map(),logins:new Map(),priv:new Map(),
@@ -579,7 +587,8 @@ const Cloud={db:null,auth:null,user:null,email:'',synced:{},unsubs:[],loaded:new
       if(!ui.owner)this.unsubs.push(db.collection('access').doc(this.email).onSnapshot(d=>{if(!d.exists||d.data().role!=='admin'){this.auth.signOut();return}
         const a=d.data(),before=stable(ui.perms);ui.perms=a.perms||{};ui.adminName=a.name||a.username||'';ui.adminPos=a.position||'';if(stable(ui.perms)!==before)location.reload();else scheduleRender()},()=>{}))}
   },
-  afterLoad(){ /* first PM sign-in on an empty database: create settings */
+  afterLoad(){ if(ui.role==='pm'&&ui.owner&&['config','staff','incidents'].every(c=>this.loaded.has(c))&&this.synced.config.has('main'))mergeDepts();
+    /* first PM sign-in on an empty database: create settings */
     if(ui.role==='pm'&&ui.owner&&this.loaded.has('config')&&this.loaded.has('staff')&&!this.synced.config.has('main')&&!this.initDone){this.initDone=true;
       const f=freshState([],'live');Object.assign(S,{departments:f.departments,shifts:f.shifts,settings:f.settings,source:'live'});log('Setup','System initialised');save()}}
 };
