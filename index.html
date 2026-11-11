@@ -649,10 +649,14 @@ async function saveFile(filename,blob){
   if(dl){try{await dl.save({filename,data:blob});toast(t('Saved')+': '+filename)}catch(e){if(e&&e.code!=='declined')toast('Could not save the file here ('+(e.code||'error')+').')}return}
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);
 }
+/* The line at the bottom of every PDF and Excel the system makes, linked to the website */
+const AI_URL='https://ghaitheissa.com';
+function aiStamp(){const n=doha(),[y,m,d]=n.date.split('-'),[h,mi]=n.time.split(':').map(Number);return `AI generated - ghaitheissa.com - ${+d} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m-1]} ${y}, ${h%12||12}:${String(mi).padStart(2,'0')} ${h<12?'AM':'PM'} Doha`}
 function xlsx(filename,sheets){
   if(!window.XLSX){toast('Excel library failed to load. Check the connection.');return}
-  const wb=XLSX.utils.book_new();
+  const wb=XLSX.utils.book_new(),stamp=/Template/.test(filename)?'':aiStamp();
   for(const [name,rows] of Object.entries(sheets)){const ws=XLSX.utils.json_to_sheet(rows.length?rows:[{Note:'No rows'}]);
+    if(stamp){const r=XLSX.utils.decode_range(ws['!ref']).e.r+2,a=XLSX.utils.encode_cell({r,c:0});ws[a]={t:'s',v:stamp,l:{Target:AI_URL,Tooltip:'ghaitheissa.com'}};const rg=XLSX.utils.decode_range(ws['!ref']);rg.e.r=r;ws['!ref']=XLSX.utils.encode_range(rg)}
     const keys=Object.keys(rows[0]||{Note:1});ws['!cols']=keys.map(k=>({wch:Math.min(42,Math.max(k.length,...rows.map(r=>String(r[k]??'').length))+2)}));
     XLSX.utils.book_append_sheet(wb,ws,name.slice(0,31));}
   saveFile(filename,new Blob([XLSX.write(wb,{type:'array',bookType:'xlsx'})]));
@@ -691,7 +695,8 @@ function pdfTable(doc,head,body){
 function pdfFinish(doc,filename,noSave){if(!doc._noSig)try{pdfSign(doc)}catch(e){console.error(e)}
   const n=doc.getNumberOfPages(),stamp='Generated '+tsFmt(new Date().toISOString())+' (Doha) by '+actor();
   for(let i=1;i<=n;i++){doc.setPage(i);pdfDot(doc,PDF.H-15);doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(...PDF.mut);
-    doc.text(pdfSafe('DECC, Doha · 9-27 November 2026 · '+stamp+(S.source==='sample'||S.demoScenario?' · DEMO DATA':'')),PDF.L,PDF.H-10);doc.text(`${i} / ${n}`,PDF.R,PDF.H-10,{align:'right'})}
+    doc.text(pdfSafe('DECC, Doha · 9-27 November 2026 · '+stamp+(S.source==='sample'||S.demoScenario?' · DEMO DATA':'')),PDF.L,PDF.H-10);doc.text(`${i} / ${n}`,PDF.R,PDF.H-10,{align:'right'});
+    doc.setFont('helvetica','italic');doc.setFontSize(6.5);const ai=aiStamp(),aw=doc.getTextWidth(ai),ax=(PDF.L+PDF.R)/2-aw/2;doc.textWithLink(ai,ax,PDF.H-5.5,{url:AI_URL})}
   const blob=doc.output('blob');if(!noSave)saveFile(filename,blob);return blob;
 }
 
@@ -1589,7 +1594,7 @@ function loadJs(src){return new Promise((ok,no)=>{const x=document.createElement
 async function elegXlsx(sc){if(!window.ExcelJS)await loadJs('https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js');
   const wb=new ExcelJS.Workbook(),B1={style:'thin'},BM={style:'medium'},F1={type:'pattern',pattern:'solid',fgColor:{argb:'FFDEEBF7'}},F2={type:'pattern',pattern:'solid',fgColor:{argb:'FFBDD7EE'}},F3={type:'pattern',pattern:'solid',fgColor:{argb:'FFFBE5D6'}};
   const iE=wb.addImage({base64:LOGO,extension:'png'}),iI=wb.addImage({base64:ITU_LOGO,extension:'jpeg'}),used=new Set();let sheets=0;
-  const depts=sc.depts&&sc.depts.length?sc.depts:[...S.departments,''],sg=pmSig()||{},stamp=(()=>{const n=doha(),[y,m,d]=n.date.split('-'),[h,mi]=n.time.split(':').map(Number);return `${+d} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m-1]} ${y}, ${h%12||12}:${String(mi).padStart(2,'0')} ${h<12?'AM':'PM'}`})(),gen=`AI generated - ghaitheissa.com - ${stamp} Doha`;
+  const depts=sc.depts&&sc.depts.length?sc.depts:[...S.departments,''],sg=pmSig()||{},gen=aiStamp();
   const iS=sg.img?wb.addImage({base64:sg.img,extension:/^data:image\/png/.test(sg.img)?'png':'jpeg'}):null;
   for(const d of sc.days){const rows=scopeRows(S.staff,{...sc,dept:'',days:[d]});
     for(const dp of depts){const list=rows.filter(r=>dp?inDept(r.s,dp):!deptsOf(r.s).length).sort((a,b)=>(a.s.role===b.s.role?0:a.s.role==='Supervisor'?-1:1)||a.s.code.localeCompare(b.s.code,undefined,{numeric:true}));
@@ -1624,7 +1629,7 @@ async function elegXlsx(sc){if(!window.ExcelJS)await loadJs('https://cdn.jsdeliv
       st('E'+(y+1),{v:'SUPERVISOR',bd:{left:BM,right:B1,top:B1,bottom:B1}});st('F'+(y+1),{v:{formula:`COUNTIFS(E7:E${last},"SUPERVISOR")`,result:cnt('SUPERVISOR')},h:'center',bd:{left:B1,right:BM,top:B1,bottom:B1}});
       st('E'+(y+2),{v:'MARSHAL',bd:{left:BM,right:B1,top:B1,bottom:B1}});st('F'+(y+2),{v:{formula:`COUNTIFS(E7:E${last},"MARSHAL")`,result:cnt('MARSHAL')},h:'center',bd:{left:B1,right:BM,top:B1,bottom:B1}});
       st('E'+(y+3),{v:'TOTAL',b:1,f:F3,bd:{left:BM,right:B1,top:B1,bottom:BM}});st('F'+(y+3),{v:{formula:`SUM(F${y+1}:F${y+2})`,result:list.length},b:1,f:F3,h:'center',bd:{left:B1,right:BM,top:B1,bottom:BM}});
-      ws.mergeCells(y+5,1,y+5,6);const gc=ws.getCell(y+5,1);gc.value={text:gen,hyperlink:'https://ghaitheissa.com',tooltip:'ghaitheissa.com'};gc.font={name:'Calibri',size:9,italic:true,color:{argb:'FF8C8C8C'}};gc.alignment={horizontal:'center',vertical:'middle'};
+      ws.mergeCells(y+5,1,y+5,6);const gc=ws.getCell(y+5,1);gc.value={text:gen,hyperlink:AI_URL,tooltip:'ghaitheissa.com'};gc.font={name:'Calibri',size:9,italic:true,color:{argb:'FF8C8C8C'}};gc.alignment={horizontal:'center',vertical:'middle'};
       ws.pageSetup.printArea=`A1:F${y+5}`}}
   if(!sheets){toast(ui.lang==='ar'?'ما في حدا شغال بهالأيام وهالقسم.':'Nobody is working on these days in this department.');return}
   const buf=await wb.xlsx.writeBuffer(),name=`ITU-FieldOps-Elegancia-Form-${fnRange(sc.from,sc.to)}${sc.depts&&sc.depts.length?'-'+sc.depts.join('-').replace(/[^\w-]+/g,'-'):''}.xlsx`;
