@@ -651,7 +651,8 @@ async function saveFile(filename,blob){
 }
 /* The line at the bottom of every PDF and Excel the system makes, linked to the website */
 const AI_URL='https://ghaitheissa.com';
-function aiStamp(){const n=doha(),[y,m,d]=n.date.split('-'),[h,mi]=n.time.split(':').map(Number);return `AI generated - ghaitheissa.com - ${+d} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m-1]} ${y}, ${h%12||12}:${String(mi).padStart(2,'0')} ${h<12?'AM':'PM'} Doha`}
+function aiStamp(){const n=doha(),[,m,d]=n.date.split('-'),[h,mi]=n.time.split(':').map(Number),a=actor(),nm=isOwner()?((pmSig()||{}).name||'Ghaith Eissa'):'';
+  return `AI generated - ghaitheissa.com - Generated ${+d} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m-1]}, ${h%12||12}:${String(mi).padStart(2,'0')} ${h<12?'AM':'PM'} (Doha) by ${a}${nm&&nm!==a?'/'+nm:''}`}
 function xlsx(filename,sheets){
   if(!window.XLSX){toast('Excel library failed to load. Check the connection.');return}
   const wb=XLSX.utils.book_new(),stamp=/Template/.test(filename)?'':aiStamp();
@@ -695,8 +696,8 @@ function pdfTable(doc,head,body){
 function pdfFinish(doc,filename,noSave){if(!doc._noSig)try{pdfSign(doc)}catch(e){console.error(e)}
   const n=doc.getNumberOfPages(),stamp='Generated '+tsFmt(new Date().toISOString())+' (Doha) by '+actor();
   for(let i=1;i<=n;i++){doc.setPage(i);pdfDot(doc,PDF.H-15);doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(...PDF.mut);
-    doc.text(pdfSafe('DECC, Doha · 9-27 November 2026 · '+stamp+(S.source==='sample'||S.demoScenario?' · DEMO DATA':'')),PDF.L,PDF.H-10);doc.text(`${i} / ${n}`,PDF.R,PDF.H-10,{align:'right'});
-    doc.setFont('helvetica','italic');doc.setFontSize(6.5);const ai=aiStamp(),aw=doc.getTextWidth(ai),ax=(PDF.L+PDF.R)/2-aw/2;doc.textWithLink(ai,ax,PDF.H-5.5,{url:AI_URL})}
+    doc.text(pdfSafe('DECC, Doha · 9-27 November 2026'+(S.source==='sample'||S.demoScenario?' · DEMO DATA':'')),PDF.L,PDF.H-10);doc.text(`${i} / ${n}`,PDF.R,PDF.H-10,{align:'right'});
+    doc.setFont('helvetica','normal');doc.setFontSize(6.5);doc.setTextColor(165,163,160);const ai=pdfSafe(aiStamp()),aw=doc.getTextWidth(ai),ax=(PDF.L+PDF.R)/2-aw/2;doc.textWithLink(ai,ax,PDF.H-5.5,{url:AI_URL})}
   const blob=doc.output('blob');if(!noSave)saveFile(filename,blob);return blob;
 }
 
@@ -1600,7 +1601,7 @@ async function elegXlsx(sc){if(!window.ExcelJS)await loadJs('https://cdn.jsdeliv
     for(const dp of depts){const list=rows.filter(r=>dp?inDept(r.s,dp):!deptsOf(r.s).length).sort((a,b)=>(a.s.role===b.s.role?0:a.s.role==='Supervisor'?-1:1)||a.s.code.localeCompare(b.s.code,undefined,{numeric:true}));
       if(!list.length)continue;
       let nm=(new Date(d+'T00:00:00Z').toLocaleDateString('en-GB',{timeZone:'UTC',day:'numeric',month:'short'})+' '+(dp||'No department')).replace(/[\\\/?*\[\]:]/g,' ').slice(0,31);while(used.has(nm))nm=nm.slice(0,28)+' '+(used.size%100);used.add(nm);sheets++;
-      const ws=wb.addWorksheet(nm,{views:[{state:'frozen',ySplit:7,zoomScale:85}],pageSetup:{paperSize:9,orientation:'portrait',fitToPage:true,fitToWidth:1,fitToHeight:0,horizontalCentered:true,printTitlesRow:'1:7',margins:{left:0.24,right:0.24,top:0.39,bottom:0.46,header:0.36,footer:0.24}},headerFooter:{oddFooter:'&L&8&"Calibri,Italic"'+gen+'&R&10Page &P of &N'}});
+      const ws=wb.addWorksheet(nm,{views:[{state:'frozen',ySplit:7,zoomScale:85}],pageSetup:{paperSize:9,orientation:'portrait',fitToPage:true,fitToWidth:1,fitToHeight:0,horizontalCentered:true,printTitlesRow:'1:7',margins:{left:0.24,right:0.24,top:0.39,bottom:0.46,header:0.36,footer:0.24}},headerFooter:{oddFooter:'&L&8&"Calibri Light,Regular"&KA6A6A6'+gen+'&R&10&K000000Page &P of &N'}});
       ws.columns=[10.71,15.71,42.43,28.14,24.29,39.71].map(w=>({width:w}));
       const st=(a,o)=>{const c=ws.getCell(a);if(o.v!==undefined)c.value=o.v;c.font={name:'Calibri',size:o.sz||14,bold:!!o.b};if(o.f)c.fill=o.f;c.alignment={horizontal:o.h,vertical:'middle',wrapText:!!o.w};if(o.nf)c.numFmt=o.nf;c.border=o.bd||{top:B1,left:B1,bottom:B1,right:B1};return c};
       const box=(r1,c1,r2,c2,o)=>{ws.mergeCells(r1,c1,r2,c2);for(let r=r1;r<=r2;r++)for(let c=c1;c<=c2;c++)st(ws.getCell(r,c).address,{...o,v:r===r1&&c===c1?o.v:undefined})};
@@ -1629,7 +1630,7 @@ async function elegXlsx(sc){if(!window.ExcelJS)await loadJs('https://cdn.jsdeliv
       st('E'+(y+1),{v:'SUPERVISOR',bd:{left:BM,right:B1,top:B1,bottom:B1}});st('F'+(y+1),{v:{formula:`COUNTIFS(E7:E${last},"SUPERVISOR")`,result:cnt('SUPERVISOR')},h:'center',bd:{left:B1,right:BM,top:B1,bottom:B1}});
       st('E'+(y+2),{v:'MARSHAL',bd:{left:BM,right:B1,top:B1,bottom:B1}});st('F'+(y+2),{v:{formula:`COUNTIFS(E7:E${last},"MARSHAL")`,result:cnt('MARSHAL')},h:'center',bd:{left:B1,right:BM,top:B1,bottom:B1}});
       st('E'+(y+3),{v:'TOTAL',b:1,f:F3,bd:{left:BM,right:B1,top:B1,bottom:BM}});st('F'+(y+3),{v:{formula:`SUM(F${y+1}:F${y+2})`,result:list.length},b:1,f:F3,h:'center',bd:{left:B1,right:BM,top:B1,bottom:BM}});
-      ws.mergeCells(y+5,1,y+5,6);const gc=ws.getCell(y+5,1);gc.value={text:gen,hyperlink:AI_URL,tooltip:'ghaitheissa.com'};gc.font={name:'Calibri',size:9,italic:true,color:{argb:'FF8C8C8C'}};gc.alignment={horizontal:'center',vertical:'middle'};
+      ws.mergeCells(y+5,1,y+5,6);const gc=ws.getCell(y+5,1);gc.value={text:gen,hyperlink:AI_URL,tooltip:'ghaitheissa.com'};gc.font={name:'Calibri Light',size:9,color:{argb:'FFA6A6A6'}};gc.alignment={horizontal:'center',vertical:'middle'};
       ws.pageSetup.printArea=`A1:F${y+5}`}}
   if(!sheets){toast(ui.lang==='ar'?'ما في حدا شغال بهالأيام وهالقسم.':'Nobody is working on these days in this department.');return}
   const buf=await wb.xlsx.writeBuffer(),name=`ITU-FieldOps-Elegancia-Form-${fnRange(sc.from,sc.to)}${sc.depts&&sc.depts.length?'-'+sc.depts.join('-').replace(/[^\w-]+/g,'-'):''}.xlsx`;
