@@ -1225,17 +1225,19 @@ function staffEdit(id){const p=byId(id);if(!p)return;const ar=ui.lang==='ar';
    <label>${t('Phone')}<input type="text" id="ed-phone" value="${esc(p.phone||'')}" inputmode="tel" autocomplete="off"></label><label>QID<input type="text" id="ed-qid" value="${esc(p.qid||'')}" inputmode="numeric" autocomplete="off"></label>
    <label>${t('Nationality')}<input type="text" id="ed-nat" value="${esc(p.nat||'')}" autocomplete="off"></label><label>${t('Role')}<select id="ed-role">${opt('Marshal',t('Marshal'),p.role)}${opt('Supervisor',t('Supervisor'),p.role)}</select></label>
    <label>${t('Start date')}<input type="date" id="ed-join" min="${EVENT_START}" max="${EVENT_END}" value="${esc(p.joined||EVENT_START)}"></label>
+   <label>${ar?'الدور التاني من تاريخ':'Other role from'}<input type="date" id="ed-ralt" min="${EVENT_START}" max="${EVENT_END}" value="${esc(p.roleAltFrom||EVENT_START)}"></label>
    <label>${ar?'الدور من تاريخ':'Role since'}<input type="date" id="ed-rfrom" min="${EVENT_START}" max="${EVENT_END}" value="${esc(p.roleFrom||EVENT_START)}"></label></div>
    <div class="small muted">${ar?'تاريخ البدء: قبلو ما بيطلع بالقوايم ولا بينحسبلو دوام أو فلوس.':'Start date: before it, the person is not listed and no hours or pay count.'}</div>
    <div class="small muted">${ar?'الدور من تاريخ: قبلو بينحسب الدوام بسعر الدور التاني (مثلاً مارشال قبل ما يصير سوبرفايزر).':'Role since: before this date, hours are paid at the other role\'s rate (e.g. Marshal before becoming Supervisor).'}</div>
+   <div class="small muted">${ar?'الدور التاني من تاريخ: إذا تغيّر دوره وبعدين رجع (مثلاً مارشال ← سوبرفايزر ← مارشال)، حط هون أول يوم بالدور التاني، وبـ "الدور من تاريخ" أول يوم رجع فيه. بين التاريخين بينحسب بسعر الدور التاني. إذا ما رجع، خلّيه أول يوم بالإيفنت.':'Other role from: if the role changed and then changed back (e.g. Marshal → Supervisor → Marshal), put the first day in the other role here, and the day they went back in Role since. Days between the two are paid at the other role\'s rate. Otherwise leave it on the first event day.'}</div>
   <div class="row" id="ed-btns" style="justify-content:flex-end"><button class="btn" data-act="close">${t('Cancel')}</button><button class="btn pri" id="ed-save">${t('Save')}</button></div>
   <div class="panel" id="ed-cfm" hidden style="background:var(--accent-soft);border-color:var(--accent);display:flex;flex-direction:column;gap:10px"><b id="ed-cfm-t"></b><div class="small" id="ed-cfm-l" style="white-space:pre-line"></div><div class="row" style="justify-content:flex-end"><button class="btn" id="ed-back">${ar?'رجوع':'Back'}</button><button class="btn pri" id="ed-ok">${ar?'موافق':'OK'}</button></div></div>`,true);
   $('#ed-back').onclick=()=>{$('#ed-cfm').hidden=true;$('#ed-btns').hidden=false};
   $('#ed-role').onchange=()=>{const r=$('#ed-rfrom'),tm=addDays(doha().date,1);r.value=$('#ed-role').value===p.role?(p.roleFrom||EVENT_START):(tm>EVENT_END?EVENT_END:tm<EVENT_START?EVENT_START:tm)};
-  $('#ed-save').onclick=()=>{const v={name:$('#ed-name').value.trim(),code:$('#ed-code').value.trim(),phone:$('#ed-phone').value.trim(),qid:$('#ed-qid').value.trim(),nat:$('#ed-nat').value.trim(),role:$('#ed-role').value,joined:(()=>{const j=$('#ed-join').value;return !j||j<=EVENT_START?'':j})(),roleFrom:(()=>{const j=$('#ed-rfrom').value;return !j||j<=EVENT_START?'':j})()};
+  $('#ed-save').onclick=()=>{const v={name:$('#ed-name').value.trim(),code:$('#ed-code').value.trim(),phone:$('#ed-phone').value.trim(),qid:$('#ed-qid').value.trim(),nat:$('#ed-nat').value.trim(),role:$('#ed-role').value,joined:(()=>{const j=$('#ed-join').value;return !j||j<=EVENT_START?'':j})(),roleFrom:(()=>{const j=$('#ed-rfrom').value;return !j||j<=EVENT_START?'':j})(),roleAltFrom:(()=>{const j=$('#ed-ralt').value;return !j||j<=EVENT_START?'':j})()};
     if(!v.name||!v.code){toast(ar?'الاسم والرقم الوظيفي لازم.':'Name and ID are required.');return}
     if(S.staff.concat(S.trash||[]).some(x=>x.id!==p.id&&x.code===v.code)){toast(t('This ID is already used.'));return}
-    const L={name:t('Name'),code:t('Employee ID'),phone:t('Phone'),qid:'QID',nat:t('Nationality'),role:t('Role'),joined:t('Start date'),roleFrom:ar?'الدور من تاريخ':'Role since'},diff=Object.keys(v).filter(k=>String(p[k]||'')!==v[k]);
+    const L={name:t('Name'),code:t('Employee ID'),phone:t('Phone'),qid:'QID',nat:t('Nationality'),role:t('Role'),joined:t('Start date'),roleFrom:ar?'الدور من تاريخ':'Role since',roleAltFrom:ar?'الدور التاني من تاريخ':'Other role from'},diff=Object.keys(v).filter(k=>String(p[k]||'')!==v[k]);
     if(!diff.length){closeModal();return}
     $('#ed-cfm-t').textContent=ar?'بدك تحفظ هالتغييرات؟':'Save these changes?';$('#ed-cfm-l').textContent=diff.map(k=>`${L[k]}: ${p[k]||'—'} → ${v[k]||'—'}`).join('\n');
     $('#ed-btns').hidden=true;$('#ed-cfm').hidden=false;$('#ed-ok').focus();
@@ -1244,8 +1246,8 @@ function staffEdit(id){const p=byId(id);if(!p)return;const ar=ui.lang==='ar';
       log('Staff update',`${was}: ${diff.map(k=>`${k==='qid'?'QID changed':`${L[k]} ${cur[k]||'-'} → ${v[k]||'-'}`}`).join(', ')}`);
       for(const k of diff)cur[k]=v[k];closeModal();save();render();toast(t('Saved'))}}}
 /* Hours & pay */
-/* A role can change from a date (s.roleFrom): before it the person had the other role, so the other rate applies */
-const roleOn=(s,d)=>s.roleFrom&&d&&d<s.roleFrom?(s.role==='Supervisor'?'Marshal':'Supervisor'):s.role;
+/* A role can change from a date (s.roleFrom): before it the person had the other role, so the other rate applies. s.roleAltFrom (optional) is when that other role started, for Marshal → Supervisor → Marshal */
+const roleOn=(s,d)=>s.roleFrom&&d&&d<s.roleFrom&&d>=(s.roleAltFrom||'')?(s.role==='Supervisor'?'Marshal':'Supervisor'):s.role;
 const rateOf=(s,d)=>+(roleOn(s,d)==='Supervisor'?(S.settings.rateS||S.settings.rateM):S.settings.rateM)||0;
 const payOf=(s,mins,d)=>Math.round(mins/60*rateOf(s,d)*100)/100;
 const money=v=>v.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2});
